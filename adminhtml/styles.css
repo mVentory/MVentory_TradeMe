@@ -15,10 +15,6 @@
  * @author Anatoly A. Kazantsev <anatoly@mventory.com>
  */
 
-#promote-mventory-blurb {
-  margin-bottom: 20px;
-  font-weight:bold;
-}
 
 #trademe-rules {
   margin-bottom: 20px;
@@ -177,7 +173,14 @@ fieldset[id^="trademe_account_"] > .comment {
 }
 
 .trademe-setting-hint {
-  font-weight:bold;
-  margin:0 0 10px;
+  border: 1px solid #d6d6d6;
+  background: #fafafa;
+  margin:0 0 11px;
+  padding: 2px 10px;
 }
+
+#mventory-promo {
+  font-weight:bold;
+}
+
 

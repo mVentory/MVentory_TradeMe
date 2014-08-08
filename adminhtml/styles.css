@@ -183,4 +183,15 @@ fieldset[id^="trademe_account_"] > .comment {
   font-weight:bold;
 }
 
+.trademe-setting-help-table td, th {
+  padding: 0.5rem;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.trademe-setting-help-table td:nth-child(1) {
+  font-weight:bold;
+  width: 100px;
+}
+
 

@@ -1,0 +1,131 @@
+<?php
+
+/**
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Creative Commons License BY-NC-ND.
+ * NonCommercial — You may not use the material for commercial purposes.
+ * NoDerivatives — If you remix, transform, or build upon the material,
+ * you may not distribute the modified material.
+ * See the full license at http://creativecommons.org/licenses/by-nc-nd/4.0/
+ *
+ * See http://mventory.com/legal/licensing/ for other licensing options.
+ *
+ * @package MVentory/TradeMe
+ * @copyright Copyright (c) 2014 mVentory Ltd. (http://mventory.com)
+ * @license http://creativecommons.org/licenses/by-nc-nd/4.0/
+ */
+
+?>
+<div class="entry-edit-head">
+  CSV configuration file fields description
+</div>
+
+<div class="trademe-setting-hint">
+  <table class="trademe-setting-help-table">
+    <tr>
+      <td>
+        Account
+      </td>
+      <td>
+        Account Name (as specified above.)
+      </td>
+    </tr>
+    <tr>
+      <td>
+        Shipping type
+      </td>
+      <td>
+        Values from the shipping type attribute mv_shipping_. Each shipping type value can be configured separately in separate rows or an asterix can be used as a wildcat to configure all shipping types that do not have their own configurations.
+      </td>
+    </tr>
+    <tr>
+      <td>
+        Minimal price
+      </td>
+      <td>
+        Products with cost below minimal price will not be considered for automatic submission to Trade Me.
+      </td>
+    </tr>
+    <tr>
+      <td>
+        Free shipping cost
+      </td>
+      <td>
+        
+      </td>
+    </tr>
+    <tr>
+      <td>
+        Allow Buy Now
+      </td>
+      <td>
+        Buy Now option will be added to each auction. Buy Now price will be the same as the starting price.
+      </td>
+    </tr>
+    <tr>
+      <td>
+        Avoid withdrawal
+      </td>
+      <td>
+        Instead of withdrawing an auction, the price will be increased by XXX and the auction will be left to expire.
+      </td>
+    </tr>
+    <tr>
+      <td>
+        Add fees
+      </td>
+      <td>
+        Trade Me fees will be added to product cost to calculate the starting price.
+      </td>
+    </tr>
+    <tr>
+      <td>
+        Allow pickup
+      </td>
+      <td>
+        'Pick-ups are allowed' will be set in auction shipping details.
+      </td>
+    </tr>
+    <tr>
+      <td>
+        Add category image
+      </td>
+      <td>
+        An category image to appear in category listing will be added to the auction.
+      </td>
+    </tr>
+    <tr>
+      <td>
+        Buyer ID
+      </td>
+      <td>
+        Magento customer ID to be used to create a transaction when a product is sold through Trade Me.
+      </td>
+    </tr>
+    <tr>
+      <td>
+        Listing duration
+      </td>
+      <td>
+        Duration of a product listing in days.
+      </td>
+    </tr> 
+    <tr>
+      <td>
+        Shipping options
+      </td>
+      <td>
+        Dollar amount followed by a comma and a description. Shipping cost and description that corresponds to this shipping type - will be displayed under shipping options in the auction.
+      </td>
+    </tr>
+    <tr>
+      <td>
+        Footer description
+      </td>
+      <td>
+        Any text that should be attached to the auction description as a footer. The following special tags can be used: {{fd}} - product description, {{sd}} - product short description, {{attr}} - ???
+      </td>
+    </tr>
+  </table>
+</div>

@@ -117,8 +117,8 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
    * @see Mage_CatalogRule_Model_Observer::processAdminFinalPrice()
    *
    * @param Mage_Catalog_Model_Product $product
-   * @param Mage_Core_Model_Website $store Product's wesbite
-   * @return bool
+   * @param Mage_Core_Model_Website $website Product's website
+   * @return float
    */
   public function getProductPrice ($product, $website) {
     Mage::register(

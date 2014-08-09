@@ -111,24 +111,30 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
   }
 
   /**
-   * Check if product has current special price
+   * Return product's final price.
+   *
+   * Set data for calculation of catalog price rule as required in
+   * @see Mage_CatalogRule_Model_Observer::processAdminFinalPrice()
    *
    * @param Mage_Catalog_Model_Product $product
-   * @param Mage_Core_Model_Store $store Product's store
+   * @param Mage_Core_Model_Website $store Product's wesbite
    * @return bool
    */
-  public function hasSpecialPrice ($product, $store) {
-    $special = $product->getSpecialPrice();
+  public function getProductPrice ($product, $website) {
+    Mage::register(
+      'rule_data',
+      new Varien_Object(array(
+        'website_id' => $website->getId(),
+        'customer_group_id' => Mage_Customer_Model_Group::NOT_LOGGED_IN_ID
+      )),
+      true
+    );
 
-    return $special !== null
-           && $special !== false
-           && Mage::app()
-                ->getLocale()
-                ->isStoreDateInInterval(
-                    $store,
-                    $product->getSpecialFromDate(),
-                    $product->getSpecialToDate()
-                  );
+    $price = $product->getFinalPrice();
+
+    Mage::unregister('rule_data');
+
+    return $price;
   }
 
   /**

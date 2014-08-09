@@ -51,14 +51,8 @@ class MVentory_TradeMe_Block_Tab
     $this->_helper = Mage::helper('mventory/product');
     $this->_website = $this->_helper->getWebsite($product);
 
-    $this->_hasSpecialPrice = $trademe->hasSpecialPrice(
-      $product,
-      $this->_website->getDefaultStore()
-    );
-
-    $this->_productPrice = $this->_hasSpecialPrice
-                             ? $product->getSpecialPrice()
-                               : $product->getPrice();
+    $this->_productPrice = $trademe->getProductPrice($product, $this->_website);
+    $this->_hasSpecialPrice = $this->_productPrice < $product->getPrice();
 
     $productId = $product->getId();
 

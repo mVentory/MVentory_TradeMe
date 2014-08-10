@@ -4,12 +4,12 @@
 
 ##Features
 
-1. List a Magento product via an [Android app](https://play.google.com/store/apps/details?id=com.mageventory) ([source code repository](https://github.com/mVentory/app))
-2. List a product with one click in Magento Admin
-3. Configure automated rule-based listing of Magento products on TradeMe
-4. Automatic synching of TradeMe sales to update Magento inventory
-5. Automatically withdraw an auction if a product goes out of stock while being listed on TradeMe
-6. Rule based mapping of TradeMe categories depending on product attributes
+* List a Magento product via an [Android app](https://play.google.com/store/apps/details?id=com.mageventory) ([source code repository](https://github.com/mVentory/app))
+* List a product with one click in Magento Admin
+* Configure automated rule-based listing of Magento products on TradeMe
+* Automatic synching of TradeMe sales to update Magento inventory
+* Automatically withdraw an auction if a product goes out of stock while being listed on TradeMe
+* Rule based mapping of TradeMe categories depending on product attributes
 
 ##Stability
 

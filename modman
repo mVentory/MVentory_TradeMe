@@ -14,3 +14,5 @@ adminhtml/styles.css   skin/adminhtml/default/default/trademe/css/styles.css
 email/                 app/locale/en_US/template/email/trademe/
 
 js/                    js/trademe/
+
+build.xml              var/connect/MVentory_TradeMe.xml

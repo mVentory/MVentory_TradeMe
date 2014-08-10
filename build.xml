@@ -1,0 +1,163 @@
+<_>
+   <form_key>4jtOVx9LkDT6dpcv</form_key>
+   <_create/>
+   <name>MVentory_TradeMe</name>
+   <channel>community</channel>
+   <version_ids>
+      <version_ids>2</version_ids>
+   </version_ids>
+   <summary>List products on TradeMe from Magento Admin, Android app or using a cron. Sync stock levels and much more.</summary>
+   <description>TradeMe (http://trademe.co.nz) is the leading New Zealand online auction site. This extension integrates Magento directly into TradeMe.
+
+Features
+
+* List a Magento product via an Android app (https://play.google.com/store/apps/details?id=com.mageventory)
+* List a product with one click in Magento Admin
+* Configure automated rule-based listing of Magento products on TradeMe
+* Automatic synching of TradeMe sales to update Magento inventory
+* Automatically withdraw an auction if a product goes out of stock while being listed on TradeMe
+* Rule based mapping of TradeMe categories depending on product attributes
+* Support for multiple TradeMe accounts, e.g. one for Wellington, one for Auckland
+* Rule-based shipping options
+* Listing products at a set interval for even spread across pages
+
+Stability
+
+This extension has been used by our customers for more than a year, but we only released it to the public in July 2014. Please, treat it as a beta version and feel free to report any problems to info@mventory.com
+
+Dependencies
+
+Note, this extension requires installation of our Mobile API extension for Magento (http://www.magentocommerce.com/magento-connect/mobile-pos-inventory-barcode-scanning-photos-and-more-on-android.html), but you do not have to use the Android app (https://play.google.com/store/apps/details?id=com.mageventory) that comes with it.
+
+License
+
+This extension is subject to Creative Commons License BY-NC-ND (http://creativecommons.org/licenses/by-nc-nd/4.0/)
+
+* NonCommercial — You may use it for commercial purposes after requesting a free waiver.
+* NoDerivatives — If you remix, transform, or build upon the material, you may not distribute the modified material. Please, contribute your changes back to the project on Github (https://github.com/mVentory/MVentory_TradeMe)
+
+About the extension
+
+This extension was developed to support our combined PoS, Inventory and Website control app for Android to bring Magento closer to the realities of a retail / warehousing business. We took several unconventional approaches to make the product listing process as quick and simple to the end user as possible. On the other hand we moved most of the essential admin tasks into an Android app, including listing on TradeMe.
+
+Watch our demo videos on http://mventory.com/demo
+
+Help and support
+
+Please, contact us on info@mventory.com if you need help installing and configuring it</description>
+   <license>CC BY-NC-ND 4.0</license>
+   <license_uri>http://creativecommons.org/licenses/by-nc-nd/4.0/</license_uri>
+   <version>1.1.1</version>
+   <stability>stable</stability>
+   <notes>* Fix calculation of listing price to include various price rules
+* Small fixes in interface</notes>
+   <authors>
+      <name>
+         <name>Anatoly A. Kazantsev</name>
+      </name>
+      <user>
+         <user>anatoly</user>
+      </user>
+      <email>
+         <email>anatoly@mventory.com</email>
+      </email>
+   </authors>
+   <depends_php_min>5.3.0</depends_php_min>
+   <depends_php_max>6.0.0</depends_php_max>
+   <depends>
+      <package>
+         <name>
+            <name/>
+            <name>MVentory_JQuery</name>
+            <name>MVentory_API</name>
+         </name>
+         <channel>
+            <channel/>
+            <channel>community</channel>
+            <channel>community</channel>
+         </channel>
+         <min>
+            <min/>
+            <min/>
+            <min/>
+         </min>
+         <max>
+            <max/>
+            <max/>
+            <max/>
+         </max>
+         <files>
+            <files>                                                                                    </files>
+            <files>                                                                                    </files>
+            <files>                                                                                    </files>
+         </files>
+      </package>
+      <extension>
+         <name>
+            <name>Core</name>
+         </name>
+         <min>
+            <min/>
+         </min>
+         <max>
+            <max/>
+         </max>
+      </extension>
+   </depends>
+   <contents>
+      <target>
+         <target>magelocal</target>
+         <target>mageetc</target>
+         <target>magecommunity</target>
+         <target>magedesign</target>
+         <target>magedesign</target>
+         <target>magelocale</target>
+         <target>mageskin</target>
+         <target>mageweb</target>
+      </target>
+      <path>
+         <path/>
+         <path>modules/MVentory_TradeMe.xml</path>
+         <path>MVentory/TradeMe</path>
+         <path>adminhtml/default/default/layout/trademe.xml</path>
+         <path>adminhtml/default/default/template/trademe</path>
+         <path>en_US/template/email/trademe</path>
+         <path>adminhtml/default/default/trademe</path>
+         <path>js/trademe</path>
+      </path>
+      <type>
+         <type>file</type>
+         <type>file</type>
+         <type>dir</type>
+         <type>file</type>
+         <type>dir</type>
+         <type>dir</type>
+         <type>dir</type>
+         <type>dir</type>
+      </type>
+      <include>
+         <include/>
+         <include/>
+         <include/>
+         <include/>
+         <include/>
+         <include/>
+         <include/>
+         <include/>
+      </include>
+      <ignore>
+         <ignore/>
+         <ignore/>
+         <ignore/>
+         <ignore/>
+         <ignore/>
+         <ignore/>
+         <ignore/>
+         <ignore/>
+      </ignore>
+   </contents>
+   <page>1</page>
+   <limit>200</limit>
+   <folder/>
+   <package/>
+</_>

@@ -172,13 +172,6 @@ fieldset[id^="trademe_account_"] > .comment {
   margin: 0 0 0 5px;
 }
 
-.trademe-setting-hint {
-  border: 1px solid #d6d6d6;
-  background: #fafafa;
-  margin:0 0 11px;
-  padding: 2px 10px;
-}
-
 #mventory-promo {
   font-weight:bold;
 }

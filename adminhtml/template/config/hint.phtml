@@ -17,19 +17,17 @@
  */
 
 ?>
-<?php
-if (Mage::getSingleton('adminhtml/config_data')->getScope()==='default') {
-?>
+
+<?php if (Mage::getSingleton('adminhtml/config_data')->getScope() == 'default'): ?>
 <ul class="messages">
-    <li class="notice-msg">
-        <ul>
-            <li><?php echo $this->__('Trade Me has additional settings at website configuration scope.') ?></li>
-        </ul>
-    </li>
+  <li class="notice-msg">
+    <ul>
+      <li><?php echo $this->__('Trade Me has additional settings at website configuration scope.') ?></li>
+    </ul>
+  </li>
 </ul>
-<?php
-}
-?>
+<?php endif; ?>
+
 <div class="box">
   List products on Trade Me from Magento Admin or using cron. Or try our <a id="mventory-promo" target="_blank" href="http://mventory.com/why-mventory/">Android app</a> for Magento admins and do it all from your smartphone. See <a target="_blank" href="https://github.com/mVentory/MVentory_TradeMe/">project page</a> for Trade Me extension documentation and source code.
 </div>

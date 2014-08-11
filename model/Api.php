@@ -88,20 +88,23 @@ class MVentory_TradeMe_Model_Api {
     //Remove <table> tag and its content completely
     '#<table[^<>]*>.*</table>#is' => '',
 
+    //Replace empty tags with new lines
+    '#<([a-z1-9]+)[^<>]*>\s*</\g{1}>#is' => "\r\n",
+
     //Replace <li> tag with '* ' string
     '#<li[^<>]*>#i' => '* ',
 
     //Replace opening and ending <div>, <p>, <hx> tags with 2 empty lines
     '#</?(div|p|h[1-6])[^<>]*>#i' => "\r\n\r\n",
 
-    //Replace multiple empty lines with single line
-    '#\R{2,}#s' => "\r\n\r\n",
-
     //Replace <br>, </br>, </li> tags with newline symbol
     '#</?br[^<>]*>|</li>#i' => "\r\n",
 
     //Remove remained tags
     '#<[^<>]+>#s' => '',
+
+    //Replace multiple empty lines with single line
+    '#\R{2,}#s' => "\r\n\r\n",
 
     //Remove all CR and LF symbols from start and end
     '#|^\R+|\R+$#s' => '',

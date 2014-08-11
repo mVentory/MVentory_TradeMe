@@ -463,13 +463,11 @@ class MVentory_TradeMe_Model_Api {
       if ($xml) {
         if ((string)$xml->Success == 'true') {
 
-          if ($isUpdateOptions) {
-            $_data['account_id'] = $this->_accountId;
-
+          if ($isUpdateOptions)
             $helper->setFields($product, $data);
-          }
 
-          $product->setTmCurrentAccountId($this->_accountId);
+          $product['tm_account_id'] = $this->_accountId;
+          $product['tm_current_account_id'] = $this->_accountId;
 
           $return = (int)$xml->ListingId;
         } elseif ((string)$xml->ErrorDescription) {

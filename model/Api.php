@@ -979,10 +979,8 @@ class MVentory_TradeMe_Model_Api {
     $attrs = '';
 
     foreach ($_attrs as $_attr)
-      $attrs .= $_attr['label']
-                . ': '
-                . $this->_removeHtml(trim($_attr['value']))
-                . "\r\n";
+      if ($value = $this->_removeHtml(trim($_attr['value'])))
+        $attrs .= $_attr['label'] . ': ' . $value . "\r\n";
 
     $search[] = '{{attrs}}';
     $replace[] = rtrim($attrs);

@@ -36,3 +36,13 @@ Watch our demo videos on http://mventory.com/demo.
 The extension is poorly documented. We are working on it.
 
 Please, contact us on info@mventory.com if you need help installing and configuring it.
+
+##Technical details
+
+#### Listing descriptions
+
+Listing description is built from a template specified in ... column of the config file.
+
+The code starts at the top of the template, extracts the data one element at a time and there is room left inserts the data into the listing. HTML is converted into plain text, where possible. HTML tables are ignored, white space is excessive white space is removed where possible.
+
+Tags: ...

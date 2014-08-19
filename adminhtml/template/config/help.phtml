@@ -78,6 +78,13 @@
       </td>
       <td>
         Trade Me fees will be added to product cost to calculate the starting price.
+        <br />
+        The field has 3 options:
+        <ul>
+          <li><code>0</code> or empty - No comission</li>
+          <li><code>1</code> or <code>always</code> - Always add commission</li>
+          <li><code>2</code> or <code>special</code> - Only if the product has a current special price</li>
+        </ul>
       </td>
     </tr>
     <tr>
@@ -125,7 +132,16 @@
         Footer description
       </td>
       <td>
-        Any text that should be attached to the auction description as a footer. The following special tags can be used: {{fd}} - product description, {{sd}} - product short description, {{attr}} - ???
+        Any text that should be attached to the auction description as a footer.
+        <br />
+        The following special tags can be used:
+        <ul>
+          <li><code>{{url}}</code> - product URL</li>
+          <li><code>{{fd}}</code> - product description</li>
+          <li><code>{{sd}}</code> - product short description</li>
+          <li><code style="text-decoration: line-through">{{fs}}</code> - free shipping text (not used currently)</li>
+          <li><code>{{attr}}</code> - product attributes (only visible on frontend)</li>
+        </ul>
       </td>
     </tr>
   </table>

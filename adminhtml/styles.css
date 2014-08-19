@@ -186,3 +186,17 @@ fieldset[id^="trademe_account_"] > .comment {
   font-weight: bold;
   width: 100px;
 }
+
+.trademe-setting-help-table ul {
+  list-style: disc inside;
+}
+
+.trademe-setting-help-table ol {
+  list-style: decimal inside;
+}
+
+.trademe-setting-help-table code {
+  white-space: pre-wrap;
+  padding: 1px 5px;
+  background-color: #eaeaea;
+}

@@ -674,8 +674,12 @@ EOT;
     if (isset($product['mv_shipping_']) && $account) {
       $do = false;
 
+      //!!!TODO: this needs to be optimised and cached
+      $attrs = Mage::getModel('mventory/product_attribute_api')
+        ->fullInfoList($product['set']);
+
       //Iterate over all attributes...
-      foreach ($product['set_attributes'] as $attribute)
+      foreach ($attrs as $attribute)
         //... to find attribute with shipping type info, then...
         if ($attribute['attribute_code'] == 'mv_shipping_')
           //... iterate over all its options...

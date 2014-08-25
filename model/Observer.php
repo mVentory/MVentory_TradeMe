@@ -366,7 +366,7 @@ EOT;
 
       if (!is_array($syncData))
         $syncData = array(
-          'free_slots' => 0,
+          'free_slots' => 1,
           'duration' => MVentory_TradeMe_Helper_Data::LISTING_DURATION_MAX
         );
 

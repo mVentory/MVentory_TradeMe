@@ -187,7 +187,8 @@ fieldset[id^="trademe_account_"] > .comment {
   width: 100px;
 }
 
-.trademe-setting-help-table ul {
+.trademe-setting-help-table ul,
+.trademe-setting-list {
   list-style: disc inside;
 }
 

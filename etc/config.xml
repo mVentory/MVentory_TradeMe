@@ -197,6 +197,16 @@
       <settings>
         <enable_listing>1</enable_listing>
       </settings>
+
+      <one_dollar>
+
+        <!-- 1 = If stock allows -->
+        <list_full_price>1</list_full_price>
+
+        <!-- 0 = No -->
+        <allow_withdrawal>0</allow_withdrawal>
+
+      </one_dollar>
     </trademe>
   </default>
 </config>

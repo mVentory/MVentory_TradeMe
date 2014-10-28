@@ -201,6 +201,114 @@
             </export>
           </fields>
         </settings>
+
+        <one_dollar translate="label footer">
+          <label>$1 auctions</label>
+          <footer>
+            <![CDATA[
+              <ul class="messages">
+                <li class="notice-msg">
+                  <ul>
+                    <li>Any product can be marked for $1 auctions. The site will list one per day marked in "Auction end days", minus auction duration. It can also list the same product at full price. The day and time of the listing are chosen to achieve the desired closing day/time. No $1 auctions are created if no end-days are selected.
+                    </li>
+                  </ul>
+                </li
+              </ul>
+            ]]></footer>
+          <frontend_model>trademe/setting_fieldset</frontend_model>
+
+          <show_in_default>1</show_in_default>
+          <show_in_website>1</show_in_website>
+          <show_in_store>0</show_in_store>
+
+          <sort_order>2</sort_order>
+
+          <fields>
+            <end_days translate="label comment tooltip">
+              <label>Auction end days</label>
+              <comment>Crtl+Click to select / deselect multiple days</comment>
+              <tooltip><![CDATA[Products will be listed one per day while stock lasts to finish at the specified day/time.<br />Use Ctrl+Click to deselect the last item and disable $1 auctions.]]></tooltip>
+              <frontend_type>multiselect</frontend_type>
+              <source_model>adminhtml/system_config_source_locale_weekdays</source_model>
+
+              <show_in_default>1</show_in_default>
+              <show_in_website>1</show_in_website>
+              <show_in_store>0</show_in_store>
+
+              <sort_order>1</sort_order>
+            </end_days>
+
+            <end_time translate="label comment tooltip">
+              <label>Auction end time</label>
+              <comment>Auction end time, +/- 30min, e.g. 21:30 for 9pm to 10pm</comment>
+              <tooltip><![CDATA[Auctions will start at this approximate time +/- 30 min.<br />E.g. 21:30 may create auctions between 9pm and 10pm.]]></tooltip>
+              <frontend_type>text</frontend_type>
+
+              <show_in_default>1</show_in_default>
+              <show_in_website>1</show_in_website>
+              <show_in_store>0</show_in_store>
+
+              <sort_order>2</sort_order>
+            </end_time>
+
+            <duration translate="label comment">
+              <label>Auction duration</label>
+              <comment>Auction duration</comment>
+              <frontend_type>select</frontend_type>
+              <source_model>trademe/setting_source_7days</source_model>
+
+              <show_in_default>1</show_in_default>
+              <show_in_website>1</show_in_website>
+              <show_in_store>0</show_in_store>
+
+              <sort_order>3</sort_order>
+            </duration>
+
+            <list_full_price translate="label comment tooltip">
+              <label>List full price</label>
+              <comment>Full price auctions for $1 products</comment>
+              <tooltip>
+                <![CDATA[
+                  <ul class="trademe-setting-list">
+                    <li>Always - maintain at least one full price auction</li>
+                    <li>If stock allows - if there are more items than $1 auctions</li>
+                    <li>Never - do not list full price auctions</li>
+                  </ul>
+                ]]>
+              </tooltip>
+              <frontend_type>select</frontend_type>
+              <source_model>trademe/setting_source_listfullprice</source_model>
+
+              <show_in_default>1</show_in_default>
+              <show_in_website>1</show_in_website>
+              <show_in_store>0</show_in_store>
+
+              <sort_order>4</sort_order>
+            </list_full_price>
+
+            <allow_withdrawal translate="label comment tooltip">
+              <label>Allow withdrawal</label>
+              <comment>Allow withdrawal of $1 auctions</comment>
+              <tooltip>
+                <![CDATA[
+                  <ul class="trademe-setting-list">
+                    <li>Yes - follow the withdrawal rules for full price auctions in the main config section</li>
+                    <li>No - do not withdraw $1 auctions</li>
+                  </ul>
+                ]]>
+              </tooltip>
+              <frontend_type>select</frontend_type>
+              <source_model>adminhtml/system_config_source_yesno</source_model>
+
+              <show_in_default>1</show_in_default>
+              <show_in_website>1</show_in_website>
+              <show_in_store>0</show_in_store>
+
+              <sort_order>5</sort_order>
+            </allow_withdrawal>
+          </fields>
+        </one_dollar>
+
         <help>
           <frontend_model>trademe/setting_help</frontend_model>
 
@@ -208,7 +316,7 @@
           <show_in_website>1</show_in_website>
           <show_in_store>0</show_in_store>
 
-          <sort_order>2</sort_order>
+          <sort_order>3</sort_order>
         </help>
       </groups>
     </trademe>

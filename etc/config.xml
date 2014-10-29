@@ -22,7 +22,7 @@
 <config>
   <modules>
     <MVentory_TradeMe>
-      <version>3</version>
+      <version>4</version>
     </MVentory_TradeMe>
   </modules>
 
@@ -40,6 +40,10 @@
           <matching_rules>
             <table>trademe_matching_rules</table>
           </matching_rules>
+
+          <auction>
+            <table>trademe_auction</table>
+          </auction>
         </entities>
       </trademe_resource>
     </models>

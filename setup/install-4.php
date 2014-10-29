@@ -179,5 +179,6 @@ $this->startSetup();
 $this->addAttributes($attrs);
 
 $this->createTable('matching_rules');
+$this->createTable('auction');
 
 $this->endSetup();

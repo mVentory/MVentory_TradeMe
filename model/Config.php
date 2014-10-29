@@ -54,4 +54,7 @@ class MVentory_TradeMe_Model_Config
 
   const CACHE_TYPE = 'trademe';
   const CACHE_TAG = 'TRADEME';
+
+  const AUCTION_NORMAL = 0;
+  const AUCTION_FIXED_END_DATE = 1;
 }

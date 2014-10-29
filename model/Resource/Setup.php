@@ -87,6 +87,36 @@ class MVentory_TradeMe_Model_Resource_Setup
   }
 
   /**
+   * Remove attributes and their data if requested
+   *
+   * @param array $attrs List of attributes IDs or codes
+   * @param bool $removeData Remove attribute data
+   * @return MVentory_TradeMe_Model_Resource_Setup
+   */
+  public function removeAttributes ($attrs, $removeData = false) {
+    $entityTypeId = $this->getEntityTypeId('catalog_product');
+
+    foreach ($attrs as $attr) {
+      if ($removeData) {
+        $_attr = Mage::getModel('eav/entity_attribute')->loadByCode(
+          $entityTypeId,
+          $attr
+        );
+
+        $this->deleteTableRow(
+          $_attr->getBackendTable(),
+          'attribute_id',
+          $_attr->getAttributeId()
+        );
+      }
+
+      $this->removeAttribute($entityTypeId, $attr);
+    }
+
+    return $this;
+  }
+
+  /**
    * Include file with PHP code to create table by table name
    *
    * @param string $name Name of table

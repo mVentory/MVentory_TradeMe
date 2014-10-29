@@ -85,4 +85,33 @@ class MVentory_TradeMe_Model_Resource_Setup
           $value
         );
   }
+
+  /**
+   * Include file with PHP code to create table by table name
+   *
+   * @param string $name Name of table
+   * @return bool Result of including file
+   */
+  public function createTable ($name) {
+    $tableName = $this->getTable('trademe/' . $name);
+    $module = (string) $this->_moduleConfig[0]->getName();
+
+    $file = Mage::getModuleDir('sql', $module)
+            . DS . $this->_resourceName
+            . DS . 'tables'
+            . DS . $name . '.php';
+
+    return file_exists($file) ? $this->_incl($file, $tableName) : false;
+  }
+
+  /**
+   * Include specified file
+   *
+   * @param string $file Path to file
+   * @param string $tableName Full name of table
+   * @return bool Result of including file
+   */
+  protected function _incl ($file, $tableName) {
+    return include $file;
+  }
 }

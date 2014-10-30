@@ -1074,7 +1074,7 @@ class MVentory_TradeMe_Model_Api {
 
     $client = $accessToken->getHttpClient($this->getConfig());
 
-    $url = 'http://api.'
+    $url = 'https://api.'
            . $this->_host
            . '.co.nz/v1/Listings/'
            . $listingId

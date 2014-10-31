@@ -34,7 +34,7 @@ class MVentory_TradeMe_ListingController
     $productId = isset($params['id']) ? $params['id'] : null;
 
     $data = isset($params['product']) && is_array($params['product'])
-              ? Mage::helper('trademe')->getFields($params['product'])
+              ? Mage::helper('trademe')->getFormFields($params['product'])
                 : array();
 
     $data['category'] = isset($params['trademe_category'])
@@ -65,11 +65,13 @@ class MVentory_TradeMe_ListingController
       return;
     }
 
+    $auction = Mage::getModel('trademe/auction')->loadByProduct($product);
+
     $stock = Mage::getModel('cataloginventory/stock_item')
                ->loadByProduct($product);
 
     if ($stock->getManageStock() && $stock->getQty() == 0
-        && !$product->getTmCurrentListingId()) {
+        && !$auction['listing_id']) {
       $session->addError($helper->__('Item is not available in inventory'));
 
       $this->_redirect('adminhtml/catalog_product/edit/id/' . $productId);
@@ -89,6 +91,14 @@ class MVentory_TradeMe_ListingController
       return;
     }
 
+    $auction
+      ->setData(array(
+          'product_id' => $product->getId(),
+          'listing_id' => $result,
+          'account_id' => $data['account_id']
+        ))
+      ->save();
+
     $path = MVentory_TradeMe_Model_Config::SANDBOX;
     $website = $helper->getWebsite($product);
 
@@ -98,11 +108,6 @@ class MVentory_TradeMe_ListingController
     $link = '<a href="' . $url . '">' . $url . '</a>';
 
     $session->addSuccess($helper->__('Listing URL') . ': ' . $link);
-
-    $product
-      ->setTmListingId($result)
-      ->setTmCurrentListingId($result)
-      ->save();
 
     //Remove TradeMe data from the session on successful submit
     $session->unsetData('trademe_data');
@@ -115,32 +120,43 @@ class MVentory_TradeMe_ListingController
     $product = Mage::getModel('catalog/product')->load($id);
     $result = 'Error';
 
-    if ($product->getId()) {
-      $connector = new MVentory_TradeMe_Model_Api();
-      $result = $connector->remove($product);
-    }
-
     $helper = Mage::helper('mventory/product');
 
-    if ($result === true) {
-      $path = MVentory_TradeMe_Model_Config::SANDBOX;
+    if ($product->getId()) {
+      $auction = Mage::getModel('trademe/auction')->loadByProduct($product);
+
+      if (!$auction->getId()) {
+        Mage::getSingleton('adminhtml/session')
+          ->addError($helper->__('Can\'t load auction'));
+
+        $this->_redirect('adminhtml/catalog_product/edit/id/' . $id);
+
+        return;
+      }
+
       $website = $helper->getWebsite($product);
+
+      $connector = new MVentory_TradeMe_Model_Api();
+      $result = $connector
+        ->setWebsiteId($website)
+        ->remove($auction);
+    }
+
+    if ($result === true) {
+      $auction->delete();
+
+      $path = MVentory_TradeMe_Model_Config::SANDBOX;
 
       $host = $helper->getConfig($path, $website) ? 'tmsandbox' : 'trademe';
       $url = 'http://www.'
              . $host
              . '.co.nz/Browse/Listing.aspx?id='
-             . $product->getTmCurrentListingId();
+             . $auction['listing_id'];
 
       $link = '<a href="' . $url . '">' . $url . '</a>';
 
       Mage::getSingleton('adminhtml/session')
         ->addSuccess($helper->__('Removed from') . ': ' . $link);
-
-      $product
-        ->setTmCurrentListingId(0)
-        ->setTmCurrentAccountId(null)
-        ->save();
     } else
       Mage::getSingleton('adminhtml/session')->addError($helper->__($result));
 
@@ -154,17 +170,31 @@ class MVentory_TradeMe_ListingController
     $helper = Mage::helper('mventory/product');
 
     if ($product->getId()) {
+      $auction = Mage::getModel('trademe/auction')->loadByProduct($product);
+
+      if (!$auction->getId()) {
+        Mage::getSingleton('adminhtml/session')
+          ->addError($helper->__('Can\'t load auction'));
+
+        $this->_redirect('adminhtml/catalog_product/edit/id/' . $id);
+
+        return;
+      }
+
+      $website = $helper->getWebsite($product);
+
       $connector = new MVentory_TradeMe_Model_Api();
-      $result = $connector->check($product);
+      $result = $connector
+        ->setWebsiteId($website)
+        ->check($auction);
 
       $path = MVentory_TradeMe_Model_Config::SANDBOX;
-      $website = $helper->getWebsite($product);
 
       $host = $helper->getConfig($path, $website) ? 'tmsandbox' : 'trademe';
       $url = 'http://www.'
              . $host
              . '.co.nz/Browse/Listing.aspx?id='
-             . $product->getTmCurrentListingId();
+             . $auction['listing_id'];
 
       $link = '<a href="' . $url . '">' . $url . '</a>';
 
@@ -173,10 +203,7 @@ class MVentory_TradeMe_ListingController
           Mage::getSingleton('adminhtml/session')
             ->addSuccess($helper->__('Wasn\'t sold') . ': ' . $link);
 
-          $product
-            ->setTmCurrentListingId(0)
-            ->setTmCurrentAccountId(null)
-            ->save();
+          $auction->delete();
 
           break;
         case 2:
@@ -189,13 +216,12 @@ class MVentory_TradeMe_ListingController
           if ($stock->getManageStock() && $stock->getQty()) {
             $stockData = $stock->getData();
             $stockData['qty'] -= 1;
-            $product->setStockData($stockData);
+            $product
+              ->setStockData($stockData)
+              ->save();
           }
 
-          $product
-            ->setTmCurrentListingId(0)
-            ->setTmCurrentAccountId(null)
-            ->save();
+          $auction->delete();
 
           break;
         case 3:
@@ -229,7 +255,7 @@ class MVentory_TradeMe_ListingController
     }
 
     $data = isset($params['product']) && is_array($params['product'])
-              ? Mage::helper('trademe')->getFields($params['product'])
+              ? Mage::helper('trademe')->getFormFields($params['product'])
                 : array();
 
     $data['category'] = isset($params['trademe_category'])
@@ -247,8 +273,19 @@ class MVentory_TradeMe_ListingController
       return;
     }
 
+    $auction = Mage::getModel('trademe/auction')->loadByProduct($product);
+
+    if (!$auction->getId()) {
+      Mage::getSingleton('adminhtml/session')
+        ->addError($helper->__('Can\'t load auction'));
+
+      $this->_redirect('adminhtml/catalog_product/edit/id/' . $params['id']);
+
+      return;
+    }
+
     $api = new MVentory_TradeMe_Model_Api();
-    $result = $api->update($product, null, $data);
+    $result = $api->update($product, $auction, null, $data);
 
     if (!is_int($result)) {
       Mage::getSingleton('adminhtml/session')->addError($helper->__($result));

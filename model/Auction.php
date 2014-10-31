@@ -30,4 +30,42 @@ class MVentory_TradeMe_Model_Auction extends Mage_Core_Model_Abstract
   protected function _construct () {
     $this->_init('trademe/auction');
   }
+
+  /**
+   * Load auction data by product
+   *
+   * @param mixed $product
+   * @return MVentory_TradeMe_Model_Auction
+   */
+  public function loadByProduct ($product) {
+    $this
+      ->_getResource()
+      ->loadByProductId(
+          $this,
+          $product instanceof Mage_Catalog_Model_Product
+            ? $product->getId()
+            : $product
+        );
+
+    return $this->setOrigData();
+  }
+
+  /**
+   * Return URL to auction
+   *
+   * @param Mage_Core_Model_Website $website Website
+   * @return string Auction URL
+   */
+  public function getUrl ($website) {
+    return
+      ($id = $this->_data['listing_id'])
+        ? 'http://www.'
+          . (Mage::helper('trademe')->isSandboxMode($website)
+               ? 'tmsandbox'
+               : 'trademe'
+            )
+          . '.co.nz/Browse/Listing.aspx?id='
+          . $id
+        : '';
+  }
 }

@@ -18,6 +18,7 @@
  */
 
 $_product = $this->getProduct();
+$_auction = $this->getAuction();
 
 $_categories = $this->getCategories();
 $_preselectedCategories = $this->getPreselectedCategories();
@@ -137,18 +138,18 @@ $_totalPrice = $_price + $_shippingRate + $_fees;
   <tbody>
     <tr>
       <td>
-        <?php if ($_product->getTmCurrentListingId()): ?>
+        <?php if ($_auction['listing_id']): ?>
           <?php echo $this->__('Listing URL'); ?>:
-          <?php $_listingUrl = Mage::helper('trademe')->getListingUrl($_product); ?>
+          <?php $_listingUrl = $_auction->getUrl($this->_website); ?>
         <a target="_blank" href="<?php echo $_listingUrl ?>">
           <?php echo $_listingUrl ?>
         </a>
-        (<?php echo $this->__('ID'); ?>: <?php echo $_product->getTmCurrentListingId(); ?>  )
+        (<?php echo $this->__('ID'); ?>: <?php echo $_auction['listing_id']; ?>  )
         <?php endif; ?>
       </td>
       <td class="a-right">
       <?php
-        if ($_product->getTmCurrentListingId()) {
+        if ($_auction['listing_id']) {
           echo $this->getStatusButton();
           echo $this->getRemoveButton();
           echo $this->getUpdateButton();

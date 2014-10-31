@@ -29,4 +29,34 @@ class MVentory_TradeMe_Model_Resource_Auction
   protected function _construct() {
     $this->_init('trademe/auction', 'id');
   }
+
+  /**
+   * Loading stock item data by product
+   *
+   * @param Varien_Object $auction
+   * @param int $productId
+   * @return MVentory_TradeMe_Model_Resource_Auction
+   */
+  public function loadByProductId ($auction, $productId) {
+    $adp = $this->_getReadAdapter();
+    $table = $this->getMainTable();
+
+    $type = $adp->quoteIdentifier(array($table, 'type'));
+
+    $select = $this
+      ->_getLoadSelect('product_id', $productId, $auction)
+      ->where($type . ' = :type');
+
+    $data = $adp->fetchRow(
+      $select,
+      array('type' => MVentory_TradeMe_Model_Config::AUCTION_NORMAL)
+    );
+
+    if ($data)
+      $auction->setData($data);
+
+    $this->_afterLoad($auction);
+
+    return $this;
+  }
 }

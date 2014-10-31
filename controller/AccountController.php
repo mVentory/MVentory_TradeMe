@@ -129,11 +129,23 @@ class MVentory_TradeMe_AccountController
         'message' => $this->__('Specified account doesn\'t exist')
       ));
 
+    $auctions = Mage::getResourceModel('trademe/auction_collection')
+      ->addFieldToFilter('account_id', $accountId);
+
+    if (!count($auctions))
+      return $this->_response(array('hasProducts' => false));
+
+    $productIds = array();
+
+    foreach ($auctions as $auction)
+      $productIds[] = $auction['product_id'];
+
+    unset($auctions);
+
     $products = Mage::getModel('catalog/product')
       ->getCollection()
+      ->addIdFilter($productIds)
       ->addAttributeToFilter('type_id', 'simple')
-      ->addAttributeToFilter('tm_current_listing_id', array('neq' => ''))
-      ->addAttributeToFilter('tm_current_account_id', $accountId)
       ->addStoreFilter($website->getDefaultStore());
 
     return $this->_response(array('hasProducts' => $products->count() > 0));

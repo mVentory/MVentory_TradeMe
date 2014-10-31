@@ -29,11 +29,13 @@ class MVentory_TradeMe_Block_Tab
   const URL = 'http://www.trademe.co.nz';
 
   private $_helper = null;
-  private $_website = null;
+  protected $_website = null;
   private $_preselectedCategories = null;
 
   //TradeMe options from the session
   private $_session = null;
+
+  private $_auction;
 
   private $_accounts = null;
   private $_accountId = null;
@@ -47,6 +49,9 @@ class MVentory_TradeMe_Block_Tab
     $trademe = Mage::helper('trademe');
 
     $product = $this->getProduct();
+
+    $this->_auction = Mage::getModel('trademe/auction')
+      ->loadByProduct($product);
 
     $this->_helper = Mage::helper('mventory/product');
     $this->_website = $this->_helper->getWebsite($product);
@@ -64,8 +69,7 @@ class MVentory_TradeMe_Block_Tab
 
     $this->_accountId = isset($this->_session['account_id'])
                           ? $this->_session['account_id']
-                            : $trademe
-                                ->getAccountId($productId, $this->_website);
+                            : $this->_auction['account_id'];
 
     $this->_accounts = $trademe->prepareAccounts(
       $trademe->getAccounts($this->_website),
@@ -127,6 +131,10 @@ class MVentory_TradeMe_Block_Tab
 
   public function getProduct () {
     return Mage::registry('current_product');
+  }
+
+  public function getAuction () {
+    return $this->_auction;
   }
 
   /**

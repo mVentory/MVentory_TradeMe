@@ -44,9 +44,12 @@ class MVentory_TradeMe_Model_Product_Api extends MVentory_API_Model_Product_Api
     );
 
     if (is_int($result))
-      $product
-        ->setTmCurrentListingId($result)
-        ->setTmListingId($result)
+      Mage::getModel('trademe/auction')
+        ->setData(array(
+            'product_id' => $product->getId(),
+            'listing_id' => $result,
+            'account_id' => $data['account_id']
+          ))
         ->save();
 
     $_result = $this->fullInfo($productId, 'id');

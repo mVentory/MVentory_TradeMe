@@ -66,7 +66,6 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
   );
 
   protected $_fields = array(
-    'account_id' => 'tm_account_id',
     'shipping_type' => 'tm_shipping_type',
     'allow_buy_now' => 'tm_allow_buy_now',
     'add_fees' => 'tm_add_fees',
@@ -90,24 +89,6 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
       $attr['Type'] = $model->getAttrTypeName($attr['Type']);
 
     return $attrs;
-  }
-
-  /**
-   * Returns URL to the product's listing on TradeMe
-   *
-   * @param Mage_Catalog_Model_Product
-   * @return string URL to the listing
-   */
-  public function getListingUrl ($product) {
-    if (!$id = $product->getData('tm_current_listing_id'))
-      return;
-
-    $website = Mage::helper('mventory/product')->getWebsite($product);
-
-    return 'http://www.'
-           . ($this->isSandboxMode($website) ? 'tmsandbox' : 'trademe')
-           . '.co.nz/Browse/Listing.aspx?id='
-           . $id;
   }
 
   /**
@@ -364,94 +345,6 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
   }
 
   /**
-   * Return account ID which will be used for the next listing of specified
-   * product on TradeMe
-   *
-   * @param int $productId
-   * @param int|string|Mage_Core_Model_Website $website Website, its ID or code
-   * @return string Account ID
-   */
-  public function getAccountId ($productId, $website) {
-    return Mage::helper('mventory')
-      ->getAttributesValue($productId, 'tm_account_id', $website);
-  }
-
-  /**
-   * Set account ID which will be used for the next listing of specified
-   * product on TradeMe
-   *
-   * @param int $productId
-   * @param string $accountId
-   * @param int|string|Mage_Core_Model_Website $website Website, its ID or code
-   * @return MVentory_TradeMe_Helper_Data
-   */
-  public function setAccountId ($productId, $accountId, $website) {
-    Mage::helper('mventory')->setAttributesValue(
-      $productId,
-      array('tm_account_id' => $accountId),
-      $website
-    );
-
-    return $this;
-  }
-
-  /**
-   * Return account ID used for listing specified product on TradeMe
-   *
-   * @param int $productId
-   * @return string Account ID
-   */
-  public function getCurrentAccountId ($productId) {
-    return Mage::helper('mventory')
-      ->getAttributesValue($productId, 'tm_current_account_id');
-  }
-
-  /**
-   * Set account ID used for listing specified product on TradeMe
-   *
-   * @param int $productId
-   * @param string $accountId
-   * @return MVentory_TradeMe_Helper_Data
-   */
-  public function setCurrentAccountId ($productId, $accountId) {
-    Mage::helper('mventory')->setAttributesValue(
-      $productId,
-      array('tm_current_account_id' => $accountId)
-    );
-
-    return $this;
-  }
-
-  /**
-   * Returns listing ID linked to the product
-   *
-   * @param int $productId Product's ID
-   * @return string Listing ID
-   */
-  public function getListingId ($productId) {
-    return Mage::helper('mventory')->getAttributesValue(
-      $productId,
-      'tm_current_listing_id'
-    );
-  }
-
-  /**
-   * Sets value of listing ID attribute in the product
-   *
-   * @param int|string $listingId Listing ID
-   * @param int $productId Product's ID
-   * @return MVentory_TradeMe_Helper_Data
-   */
-  public function setListingId ($listingId, $productId) {
-    Mage::helper('mventory')->setAttributesValue(
-      $productId,
-      array('tm_current_listing_id' => $listingId)
-    );
-
-    return $this;
-  }
-
-  /**
    * Extracts data for TradeMe options from product or from optional
    * account data if the product doesn't have attribute values
    *
@@ -464,23 +357,59 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
     if ($product instanceof Mage_Catalog_Model_Product)
       $product = $product->getData();
 
-    $fields = array();
+    return $this->_getFields(
+      $product,
+      $account,
+      $this->_fields,
+      $this->_fieldsWithoutDefaults
+    );
+  }
 
-    foreach ($this->_fields as $name => $code) {
-      $value = isset($product[$code])
-                         ? $product[$code]
-                           : null;
+  /**
+   * Extract data from form data or from optional account data
+   * if the form data doesn't have field values
+   *
+   * @param array $formData Form data
+   * @param array $account Auction account data
+   * @return array List of fields and their values
+   */
+  public function getFormFields ($formData, $account = null) {
+    return $this->_getFields(
+      $formData,
+      $account,
+      $this->_fields,
+      $this->_fieldsWithoutDefaults + array('account_id' => 'tm_account_id')
+    );
+  }
 
-      if (!($account && ($value == '-1' || $value === null)))
-        $fields[$name] = $value;
+  /**
+   * Return values for all fields from input values (or from default values),
+   * for all fields without default values returns only from input values
+   *
+   * @param array $in Input values
+   * @param array $def Default values
+   * @param array $flds List of fields
+   * @param array $_flds List of fields without default values
+   * @return array List of fields with values
+   */
+  protected function _getFields ($in, $def, $flds, $_flds) {
+    $out = array();
+
+    //Process fields
+    foreach ($flds as $name => $code) {
+      $val = isset($in[$code]) ? $in[$code] : null;
+
+      if (!($def && ($val == '-1' || $val === null)))
+        $out[$name] = $val;
       else
-        $fields[$name] = isset($account[$name]) ? $account[$name] : null;
+        $out[$name] = isset($def[$name]) ? $def[$name] : null;
     }
 
-    foreach ($this->_fieldsWithoutDefaults as $name => $code)
-      $fields[$name] = isset($product[$code]) ? $product[$code] : null;
+    //Process fields without default values
+    foreach ($_flds as $name => $code)
+      $out[$name] = isset($in[$code]) ? $in[$code] : null;
 
-    return $fields;
+    return $out;
   }
 
   /**

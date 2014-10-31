@@ -18,56 +18,6 @@
  */
 
 $attrs = array(
-  'tm_listing_id' => array(
-    //Fields from Mage_Eav_Model_Entity_Setup
-    'type' => 'int',
-    'input' => 'hidden',
-    'label' => 'Previous listing ID',
-    'required' => false,
-    'global' => Mage_Catalog_Model_Resource_Eav_Attribute::SCOPE_GLOBAL,
-
-    //Fields from Mage_Catalog_Model_Resource_Setup
-    'visible' => false,
-    'is_configurable' => false
-  ),
-
-  'tm_current_listing_id' => array(
-    //Fields from Mage_Eav_Model_Entity_Setup
-    'type' => 'int',
-    'input' => 'hidden',
-    'label' => 'Listing ID',
-    'required' => false,
-    'global' => Mage_Catalog_Model_Resource_Eav_Attribute::SCOPE_GLOBAL,
-
-    //Fields from Mage_Catalog_Model_Resource_Setup
-    'used_in_product_listing' => true,
-    'is_configurable' => false
-  ),
-
-  'tm_account_id' => array(
-    //Fields from Mage_Eav_Model_Entity_Setup
-    'input' => 'select',
-    'label' => 'Previous account ID',
-    'required' => false,
-    'global' => Mage_Catalog_Model_Resource_Eav_Attribute::SCOPE_GLOBAL,
-
-    //Fields from Mage_Catalog_Model_Resource_Setup
-    'visible' => false,
-    'is_configurable' => false
-  ),
-
-  'tm_current_account_id' => array(
-    //Fields from Mage_Eav_Model_Entity_Setup
-    'input' => 'hidden',
-    'label' => 'Account ID',
-    'source' => 'trademe/attribute_source_accounts',
-    'required' => false,
-    'global' => Mage_Catalog_Model_Resource_Eav_Attribute::SCOPE_GLOBAL,
-
-    //Fields from Mage_Catalog_Model_Resource_Setup
-    'is_configurable' => false
-  ),
-
   'tm_relist' => array(
     //Fields from Mage_Eav_Model_Entity_Setup
     'type' => 'int',

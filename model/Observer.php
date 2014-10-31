@@ -203,35 +203,27 @@ EOT;
     }
 
     foreach ($accounts as $accountId => &$accountData) {
-      $products = Mage::getModel('catalog/product')
-        ->getCollection()
-        ->addAttributeToSelect('tm_relist')
-        ->addAttributeToSelect('price')
-        ->addAttributeToFilter('type_id', 'simple')
-        ->addAttributeToFilter('tm_current_listing_id', array('neq' => ''))
-        ->addAttributeToFilter('tm_current_account_id', $accountId)
-        ->addStoreFilter($store);
-
-      //!!!Commented to allow loading out of stock products
-      //If customer exists and loaded add price data to the product collection
-      //filtered by customer's group ID
-      //if ($customer->getId())
-      //  $products->addPriceData($customer->getGroupId());
+      $auctions = Mage::getResourceModel('trademe/auction_collection')
+        ->addFieldToFilter(
+            'type',
+            MVentory_TradeMe_Model_Config::AUCTION_NORMAL
+          )
+        ->addFieldToFilter('account_id', $accountId);
 
       $connector = new MVentory_TradeMe_Model_Api();
 
       $connector
-        ->setWebsiteId($website->getId())
+        ->setWebsiteId($website)
         ->setAccountId($accountId);
 
-      $accountData['listings'] = $connector->massCheck($products);
+      $accountData['listings'] = $connector->massCheck($auctions);
 
-      foreach ($products as $product) {
+      foreach ($auctions as $auction) {
         try {
-          if ($product->getIsSelling())
+          if ($auction['is_selling'])
             continue;
 
-          $result = $connector->check($product);
+          $result = $connector->check($auction);
 
           if (!$result || $result == 3)
             continue;
@@ -239,22 +231,22 @@ EOT;
           --$accountData['listings'];
 
           if ($result == 2) {
+            $product = Mage::getModel('catalog/product')->load(
+              $auction['product_id']
+            );
+
             $sku = $product->getSku();
             $price = $product->getPrice();
             $qty = 1;
 
-            $shipping = $helper->getAttributesValue(
-              $product->getId(),
-              'mv_shipping_',
-              $website
-            );
+            $shipping = $helper->getShippingType($product, true);
 
             if (!(isset($accountData['shipping_types'][$shipping]['buyer'])
                   || isset($accountData['shipping_types']['*']['buyer']))) {
               MVentory_TradeMe_Model_Api::debug(
-                'Error: shipping type ' . $shippingType . ' doesn\t exists in '
-                . $accountData['name'] . ' account. Product SKU: '
-                . $sku
+                'Error: shipping type ' . $helper->getShippingType($product)
+                . ' doesn\t exists in ' . $accountData['name']
+                . ' account. Product SKU: ' . $sku
               );
 
               continue;
@@ -291,7 +283,7 @@ EOT;
             Mage::unregister('mventory_website');
           }
 
-          $trademe->setListingId(0, $product->getId());
+          $auction->delete();
         } catch (Exception $e) {
           Mage::unregister('mventory_website');
 
@@ -322,18 +314,20 @@ EOT;
     if (!count($accounts))
       return;
 
+    $auctions = Mage::getResourceModel('trademe/auction_collection')
+      ->addFieldToFilter('type', MVentory_TradeMe_Model_Config::AUCTION_NORMAL);
+
+    $productIds = array();
+
+    foreach ($auctions as $auction)
+      $productIds[] = $auction['product_id'];
+
+    unset($auctions);
+
     $products = Mage::getModel('catalog/product')
       ->getCollection()
       ->addAttributeToFilter('type_id', 'simple')
       ->addAttributeToFilter('tm_relist', '1')
-      ->addAttributeToFilter(
-          'tm_current_listing_id',
-          array(
-            array('null' => true),
-            array('in' => array('', 0))
-          ),
-          'left'
-        )
       ->addAttributeToFilter('image', array('nin' => array('no_selection', '')))
       ->addAttributeToFilter(
           'status',
@@ -341,11 +335,16 @@ EOT;
         )
       ->addStoreFilter($store);
 
+    if ($productIds)
+      $products->addIdFilter($productIds, true);
+
     Mage::getSingleton('cataloginventory/stock')
       ->addInStockFilterToCollection($products);
 
     if (!$poolSize = count($products))
       return;
+
+    unset($productIds);
 
     //Calculate avaiable slots for current run of the sync script
     foreach ($accounts as $accountId => &$accountData) {
@@ -415,11 +414,12 @@ EOT;
       if (!$product->getId())
         continue;
 
-      if ($accountId = $product->getTmAccountId())
-        if (!isset($allAccountsIDs[$accountId]))
-          $product->setTmAccountId($accountId = null);
-        else if (!isset($accounts[$accountId]))
-          continue;
+      //??? Do we need it?
+      //if ($accountId = $product->getTmAccountId())
+      //  if (!isset($allAccountsIDs[$accountId]))
+      //    $product->setTmAccountId($accountId = null);
+      //  else if (!isset($accounts[$accountId]))
+      //    continue;
 
       $matchResult = Mage::getModel('trademe/matching')
         ->matchCategory($product);
@@ -427,9 +427,12 @@ EOT;
       if (!(isset($matchResult['id']) && $matchResult['id'] > 0))
         continue;
 
-      $accountIds = $accountId
-                      ? (array) $accountId
-                        : array_keys($accounts);
+      //??? Do we need it?
+      //$accountIds = $accountId
+      //                ? (array) $accountId
+      //                  : array_keys($accounts);
+
+      $accountIds = array_keys($accounts);
 
       shuffle($accountIds);
 
@@ -489,9 +492,12 @@ EOT;
         }
 
         if (is_int($result)) {
-          $product
-            ->setTmListingId($result)
-            ->setTmCurrentListingId($result)
+          Mage::getModel('trademe/auction')
+            ->setData(array(
+                'product_id' => $product->getId(),
+                'listing_id' => $result,
+                'account_id' => $accountId
+              ))
             ->save();
 
           if (!--$accounts[$accountId]['free_slots']) {
@@ -533,10 +539,9 @@ EOT;
     foreach ($items as $item) {
       $productId = (int) $item->getProductId();
 
-      //We can use default store ID because the attribute is global
-      $listingId = $trademe->getListingId($productId);
+      $auction = Mage::getModel('trademe/auction')->loadByProduct($productId);
 
-      if (!$listingId)
+      if (!$auction->getId())
         continue;
 
       $stockItem = Mage::getModel('cataloginventory/stock_item')
@@ -551,8 +556,7 @@ EOT;
       $accounts = $trademe->getAccounts($website);
       $accounts = $trademe->prepareAccounts($accounts, $product);
 
-      $accountId = $product->getTmCurrentAccountId();
-
+      $accountId = $auction['account_id'];
       $account = $accountId && isset($accounts[$accountId])
                    ? $accounts[$accountId]
                      : null;
@@ -587,12 +591,18 @@ EOT;
         if ($fields['add_fees'])
           $price = $trademe->addFees($price);
 
-        $result = $api->update($product, array('StartPrice' => $price));
+        $result = $api->update(
+          $product,
+          $auction,
+          array('StartPrice' => $price)
+        );
 
         if (!is_int($result))
           $hasError = true;
       } else {
-        $result = $api->remove($product);
+        $result = $api
+          ->setWebsiteId($website)
+          ->remove($auction);
 
         if ($result !== true)
           $hasError = true;
@@ -602,7 +612,7 @@ EOT;
         //Send email with error message to website's general contact address
 
         $productUrl = $productHelper->getUrl($product);
-        $listingId = $trademe->getListingUrl($product);
+        $listingId = $auction->getUrl($website);
 
         $subject = 'TradeMe: error on removing listing';
         $message = 'Error on increasing price or withdrawing listing ('
@@ -617,9 +627,7 @@ EOT;
         continue;
       }
 
-      $trademe
-        ->setListingId(0, $productId)
-        ->setCurrentAccountId($productId, null);
+      $auction->delete();
     }
   }
 
@@ -633,20 +641,17 @@ EOT;
     $trademe = Mage::helper('trademe');
 
     $accounts = $trademe->getAccounts($website);
+    $auction = Mage::getModel('trademe/auction')->loadByProduct(
+      $product['product_id']
+    );
 
-    $id = isset($product['tm_account_id']) ? $product['tm_account_id'] : null;
+    $id = $auction['account_id'];
     $account = $id && isset($accounts[$id]) ? $accounts[$id] : null;
 
     $data = $trademe->getFields($product, $account);
 
-    //!!!TODO: fix getFields() method and all code which is used it
-    //to use 'account' instead 'account _id'
-    $data['account'] = $data['account_id'];
-    unset($data['account_id']);
-
-    $data['listing'] = $product['tm_current_listing_id'] > 0
-                         ? (int) $product['tm_current_listing_id']
-                           : null;
+    $data['account'] = $id;
+    $data['listing'] = $auction['listing_id'];
 
     if ($data['listing']) {
       $data['listing_url']

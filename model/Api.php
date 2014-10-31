@@ -469,9 +469,6 @@ class MVentory_TradeMe_Model_Api {
           if ($isUpdateOptions)
             $helper->setFields($product, $data);
 
-          $product['tm_account_id'] = $this->_accountId;
-          $product['tm_current_account_id'] = $this->_accountId;
-
           $return = (int)$xml->ListingId;
         } elseif ((string)$xml->ErrorDescription) {
           $return = (string)$xml->ErrorDescription;
@@ -488,15 +485,20 @@ class MVentory_TradeMe_Model_Api {
     return $return;
   }
 
-  public function remove($product) {
+  /**
+   * NOTE: requires $this->_website to be set
+   *
+   * @param MVentory_TradeMe_Model_Auction $auction Auction
+   * @return bool|string
+   */
+  public function remove ($auction) {
     self::debug();
 
-    $this->getWebsiteId($product);
+    if (!$this->_website)
+      return;
 
-    $accountId = Mage::helper('trademe')
-                   ->getCurrentAccountId($product->getId());
-
-    $this->setAccountId($accountId);
+    $this->setAccountId($auction['account_id']);
+    $listingId = $auction['listing_id'];
 
     $error = 'error';
 
@@ -506,7 +508,7 @@ class MVentory_TradeMe_Model_Api {
       $client->setMethod(Zend_Http_Client::POST);
 
       $xml = '<WithdrawRequest xmlns="http://api.trademe.co.nz/v1">
-<ListingId>' . $product->getTmCurrentListingId() . '</ListingId>
+<ListingId>' . $listingId . '</ListingId>
 <Type>ListingWasNotSold</Type>
 <Reason>Withdraw</Reason>
 </WithdrawRequest>';
@@ -523,7 +525,7 @@ class MVentory_TradeMe_Model_Api {
           $error = (string)$xml->Description;
 
           self::debug('Error on removing listing '
-                      . $product->getTmCurrentListingId()
+                      . $listingId
                       . ' (' . $error . ')');
         }
       }
@@ -532,13 +534,20 @@ class MVentory_TradeMe_Model_Api {
     return $error;
   }
 
-  public function check ($product) {
+  /**
+   * NOTE: requires $this->_website to be set
+   *
+   * @param MVentory_TradeMe_Model_Auction $auction Auction
+   * @return null|int Status of auction
+   */
+  public function check ($auction) {
     self::debug();
 
-    $listingId = $product->getTmCurrentListingId();
+    if (!$this->_website)
+      return;
 
-    $this->getWebsiteId($product);
-    $this->setAccountId($product->getTmCurrentAccountId());
+    $this->setAccountId($auction['account_id']);
+    $listingId = $auction['listing_id'];
 
     $json = $this->_loadListingDetailsAuth($listingId);
 
@@ -571,7 +580,11 @@ class MVentory_TradeMe_Model_Api {
     return 1;
   }
 
-  public function update ($product, $parameters = null, $_formData = null) {
+  public function update ($product,
+                          $auction,
+                          $parameters = null,
+                          $_formData = null)
+  {
     self::debug();
 
     $helper = Mage::helper('trademe');
@@ -581,8 +594,7 @@ class MVentory_TradeMe_Model_Api {
     if ($_formData && isset($_formData['account_id']))
       unset($_formData['account_id']);
 
-    $accountId = $product->getTmCurrentAccountId();
-    $this->setAccountId($accountId);
+    $this->setAccountId($auction['account_id']);
 
     $account = $helper->prepareAccounts(array($this->_accountData), $product);
     $account = $account[0];
@@ -590,7 +602,7 @@ class MVentory_TradeMe_Model_Api {
     if (!isset($account['shipping_type']))
       return 'No settings for product\'s shipping type';
 
-    $listingId = $product->getTmCurrentListingId();
+    $listingId = $auction['listing_id'];
     $return = 'Error';
 
     if ($accessToken = $this->auth()) {
@@ -813,14 +825,9 @@ class MVentory_TradeMe_Model_Api {
     return $return;
   }
 
-  public function massCheck($products) {
+  public function massCheck ($auctions) {
     if (!$accessToken = $this->auth())
       return;
-
-    if ($products instanceof Mage_Catalog_Model_Product) {
-      $collection = new Varien_Data_Collection();
-      $products = $collection->addItem($products);
-    }
 
     $client = $accessToken->getHttpClient($this->getConfig());
     $client->setUri(
@@ -829,9 +836,9 @@ class MVentory_TradeMe_Model_Api {
     );
     $client->setMethod(Zend_Http_Client::GET);
 
-    //Request more rows than number of products to be sure that all listings
+    //Request more rows than number of auctions to be sure that all listings
     //from account will be included in a response
-    $client->setParameterGet('rows', count($products) * 10);
+    $client->setParameterGet('rows', count($auctions) * 10);
 
     $response = $client->request();
 
@@ -840,21 +847,26 @@ class MVentory_TradeMe_Model_Api {
 
     $items = json_decode($response->getBody(), true);
 
-    foreach ($products as $product)
+    foreach ($auctions as $auction)
       foreach ($items['List'] as $item)
-        if ($item['ListingId'] == $product->getTmCurrentListingId())
-          $product->setIsSelling(true);
+        if ($item['ListingId'] == $auction['listing_id'])
+          $auction['is_selling'] = true;
 
     return $items['TotalCount'];
   }
 
+  /**
+   * NOTE: this function requires $this->_accountId and $this->_accountData
+   * to be set
+   *
+   * @param Mage_Catalog_Model_Product $product Product
+   * @return bool
+   */
   public function relist ($product) {
+    if (!($this->_accountId && $this->_accountData))
+      return false;
+
     $this->getWebsiteId($product);
-
-    $accountId = Mage::helper('trademe')
-      ->getCurrentAccountId($product->getId());
-
-    $this->setAccountId($accountId);
 
     if (!$listingId = $product->getTmCurrentListingId())
       return false;

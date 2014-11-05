@@ -197,7 +197,7 @@ class MVentory_TradeMe_Model_Api {
     return $token->setParams(unserialize($data));
   }
 
-  public function send ($product, $categoryId, $data) {
+  public function send ($product, $categoryId, $data, $overwrite = array()) {
     self::debug();
 
     $helper = Mage::helper('trademe');
@@ -326,47 +326,14 @@ class MVentory_TradeMe_Model_Api {
       else
         $title = htmlspecialchars($title);
 
-      //elseif ($productShippingType == 'tab_ShipParcel'
-      //        && $shippingType == MVentory_TradeMe_Model_Config::SHIPPING_FREE
-      //        && isset($account['free_shipping_cost'])
-      //        && $account['free_shipping_cost'] > 0) {
-      //  $freeShippingTitle = $title . ', free shipping';
-
-      //  if (strlen($freeShippingTitle) <= MVentory_TradeMe_Model_Config::TITLE_MAX_LENGTH)
-      //    $title = $freeShippingTitle;
-      //}
-
-      $price = $helper->getProductPrice($product, $this->_website);
-
-      //if ($shippingType != MVentory_TradeMe_Model_Config::SHIPPING_FREE) {
-
-        //Add shipping rate using Volume/Weight based shipping method
-        $price += $helper->getShippingRate(
-          $product,
-          $account['name'],
-          $this->_website
-        );
-      //} else {
-
-      //  //Add free shippih cost if product's shipping type is 'tab_ShipParcel'
-      //  if ($productShippingType == 'tab_ShipParcel'
-      //      && isset($account['free_shipping_cost'])
-      //      && $account['free_shipping_cost'] > 0) {
-      //    $price += (float) $account['free_shipping_cost'];
-      //  }
-      //}
-
-      //Apply fees to price of the product if it's allowed
-      $price = $this->_getAddFees($product, $_data)
-                  ? $helper->addFees($price)
-                    : $price;
+      $price = $this->_getPrice ($product, $account, $_data, $overwrite);
 
       $buyNow = '';
 
-      if (isset($_data['allow_buy_now']) && $_data['allow_buy_now'])
+      if ($this->_getAllowBuyNow($_data, $overwrite))
         $buyNow = '<BuyNowPrice>' . $price . '</BuyNowPrice>';
 
-      $duration = $this->_durations[$helper->getDuration($account)];
+      $duration = $this->_durations[$this->_getDuration($account, $overwrite)];
 
       $shippingTypes
         = Mage::getModel('trademe/attribute_source_freeshipping')
@@ -1212,19 +1179,35 @@ class MVentory_TradeMe_Model_Api {
     return false;
   }
 
-  //!!!TODO: remove method
-  protected function _getDuration ($account) {
-    if (!(isset($account['duration'])
-          && $duration = (int) $account['duration']))
-      return MVentory_TradeMe_Helper_Data::LISTING_DURATION_MAX;
+  protected function _getPrice ($product, $account, $data, $overwrite) {
+    if (isset($overwrite['price']))
+      return $overwrite['price'];
 
-    if ($duration < MVentory_TradeMe_Helper_Data::LISTING_DURATION_MIN)
-      return MVentory_TradeMe_Helper_Data::LISTING_DURATION_MIN;
+    $helper = Mage::helper('trademe');
 
-    if ($duration > MVentory_TradeMe_Helper_Data::LISTING_DURATION_MAX)
-      return MVentory_TradeMe_Helper_Data::LISTING_DURATION_MAX;
+    $price = $helper->getProductPrice($product, $this->_website);
 
-    return $duration;
+    $price += $helper->getShippingRate(
+      $product,
+      $account['name'],
+      $this->_website
+    );
+
+    return $this->_getAddFees($product, $data)
+               ? $helper->addFees($price)
+                 : $price;
+  }
+
+  protected function _getAllowBuyNow ($data, $overwrite) {
+    return isset($overwrite['allow_buy_now'])
+             ? $overwrite['allow_buy_now']
+             : (isset($data['allow_buy_now']) && $data['allow_buy_now']);
+  }
+
+  protected function _getDuration ($account, $overwrite) {
+    return isset($overwrite['duration'])
+             ? $overwrite['duration']
+             : Mage::helper('trademe')->getDuration($account);
   }
 
   public function getCategories () {

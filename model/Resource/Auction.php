@@ -59,4 +59,64 @@ class MVentory_TradeMe_Model_Resource_Auction
 
     return $this;
   }
+
+  public function getNumberPerProduct ($exclude = null) {
+    $adp = $this->_getReadAdapter();
+    $table = $this->getMainTable();
+    $productId = $adp->quoteIdentifier(array($table, 'product_id'));
+
+    $select = $adp
+      ->select()
+      ->from(
+          $table,
+          array(
+            'product_id',
+            'auctions_number' => 'COUNT(' . $productId . ')'
+          )
+        )
+      ->group('product_id');
+
+    if (is_array($exclude))
+      if (count($exclude) > 1)
+        $select->where('product_id NOT IN (?)', $exclude);
+      elseif (count($exclude) == 1)
+        $select->where('product_id != ?', reset($exclude));
+
+    return $adp->fetchPairs($select);
+  }
+
+  public function getListedProducts ($type, $fromData, $toDate) {
+    $adp = $this->_getReadAdapter();
+    $table = $this->getMainTable();
+
+    $select = $adp
+      ->select()
+      ->from($table, 'product_id')
+      ->where('type = :type')
+      ->where('listed_at > :from_date')
+      ->where('listed_at < :to_date')
+      ->group('product_id');
+
+    return $adp->fetchCol(
+      $select,
+      array(
+        'type' => $type,
+        'from_date' => $fromData,
+        'to_date' => $toDate
+      )
+    );
+  }
+
+  /**
+   * Perform actions before object save
+   *
+   * @param Varien_Object $object
+   * @return Mage_Core_Model_Resource_Db_Abstract
+   */
+  protected function _beforeSave (Mage_Core_Model_Abstract $object) {
+    if ($object->isObjectNew() && $object['listed_at'] === null)
+      $object['listed_at'] = Varien_Date::now();
+
+    return parent::_beforeSave($object);
+  }
 }

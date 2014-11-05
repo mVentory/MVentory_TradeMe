@@ -60,6 +60,16 @@ $table->addColumn(
   'Account ID'
 );
 
+$table->addColumn(
+  'listed_at',
+  Varien_Db_Ddl_Table::TYPE_TIMESTAMP,
+  null,
+  array(
+    'nullable' => false
+  ),
+  'Time of listing'
+);
+
 $table->addForeignKey(
   $this->getFkName(
     $tableName,

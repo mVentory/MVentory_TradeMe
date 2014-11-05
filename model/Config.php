@@ -30,6 +30,10 @@ class MVentory_TradeMe_Model_Config
   const ENABLE_LISTING = 'trademe/settings/enable_listing';
   const LIST_AS_NEW = 'trademe/settings/list_as_new';
 
+  const _1AUC_ENDTIME = 'trademe/one_dollar/end_time';
+  const _1AUC_ENDDAYS = 'trademe/one_dollar/end_days';
+  const _1AUC_DURATION = 'trademe/one_dollar/duration';
+
   const TITLE_MAX_LENGTH = 50;
   const DESCRIPTION_MAX_LENGTH = 2048;
 

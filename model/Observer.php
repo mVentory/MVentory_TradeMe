@@ -161,7 +161,12 @@ EOT;
     Mage::register('trademe_config_accounts', $accounts);
   }
 
-  public function sync ($schedule) {
+  public function sync ($job) {
+    $this->_listNormalAuctions($job);
+    $this->_listFixedEndAuctions($job);
+  }
+
+  protected function _listNormalAuctions ($schedule) {
     //Get cron job config
     $jobsRoot = Mage::getConfig()->getNode('default/crontab/jobs');
     $jobConfig = $jobsRoot->{$schedule->getJobCode()};
@@ -523,6 +528,171 @@ EOT;
     }
   }
 
+  public function _listFixedEndAuctions ($job) {
+    //Get website and its default store from current cron job
+    list($website, $store) = $this->_getWebsiteAndStore($job);
+
+    $helper = Mage::helper('trademe/auction');
+    $productHelper = Mage::helper('mventory/product');
+
+    if (!$helper->isInAllowedPeriod($store))
+      return;
+
+    //Load TradeMe accounts which are used in the specified website
+    $accounts = $helper->getAccounts($website);
+
+    //Unset Random pseudo-account
+    unset($accounts[null]);
+
+    if (!count($accounts))
+      return;
+
+    $storeManageStock = (int) Mage::getStoreConfigFlag(
+      Mage_CatalogInventory_Model_Stock_Item::XML_PATH_MANAGE_STOCK,
+      $store
+    );
+
+    $filterIds = $helper->getProductsListedToday(
+      $store,
+      MVentory_TradeMe_Model_Config::AUCTION_FIXED_END_DATE
+    );
+
+    $auctions = Mage::getResourceSingleton('trademe/auction')
+      ->getNumberPerProduct($filterIds);
+
+    foreach ($auctions as $id => $auctionsNumber) {
+      $stock = Mage::getModel('cataloginventory/stock_item')
+        ->loadByProduct($id);
+
+      if (!$stock->getId())
+        continue;
+
+      $manageStock = $stock->getUseConfigManageStock()
+                       ? $storeManageStock
+                       : (int) $stock['manage_stock'];
+
+      if ($manageStock && ($stock->getQty() - $auctionsNumber < 1))
+        $filterIds[] = $id;
+    }
+
+    unset($auctions);
+
+    $products = Mage::getModel('catalog/product')
+      ->getCollection()
+      ->addAttributeToFilter('type_id', 'simple')
+      ->addAttributeToFilter('tm_relist', '1')
+      ->addAttributeToFilter('image', array('nin' => array('no_selection', '')))
+      ->addAttributeToFilter(
+          'status',
+          Mage_Catalog_Model_Product_Status::STATUS_ENABLED
+        )
+      ->addStoreFilter($store);
+
+    if ($filterIds)
+      $products->addIdFilter($filterIds, true);
+
+    Mage::getSingleton('cataloginventory/stock')
+      ->addInStockFilterToCollection($products);
+
+    if (!$ids = $products->getAllIds())
+      return;
+
+    unset($products, $filterIds);
+
+    shuffle($ids);
+
+    foreach ($ids as $id) {
+      $product = Mage::getModel('catalog/product')->load($id);
+
+      if (!$product->getId())
+        continue;
+
+      $matchResult = Mage::getModel('trademe/matching')
+        ->matchCategory($product);
+
+      if (!(isset($matchResult['id']) && $matchResult['id'] > 0))
+        continue;
+
+      $accountIds = array_keys($accounts);
+
+      shuffle($accountIds);
+
+      $shippingType = $productHelper->getShippingType($product, true);
+
+      foreach ($accountIds as $accountId) {
+        $accountData = $accounts[$accountId];
+        $shippingTypes = $accountData['shipping_types'];
+
+        if (isset($shippingTypes[$shippingType]))
+          $_data = $shippingTypes[$shippingType];
+        else if (isset($shippingTypes['*']))
+          $_data = $shippingTypes['*'];
+        else
+          continue;
+
+        $minimalPrice = $_data['minimal_price'];
+
+        if ($minimalPrice && ($product->getPrice() < $minimalPrice))
+          continue;
+
+        $api = new MVentory_TradeMe_Model_Api();
+        $result = $api->send(
+          $product,
+          $matchResult['id'],
+          $accountId,
+          array(
+            'price' => 1,
+            'allow_buy_now' => false,
+            'duration' => (int) $store->getConfig(
+              MVentory_TradeMe_Model_Config::_1AUC_DURATION
+            )
+          )
+        );
+
+        if (trim($result) == 'Insufficient balance') {
+          $cacheId = array(
+            $website->getCode(),
+            $accountData['name'],
+            'negative_balance'
+          );
+
+          $cacheId = implode('_', $cacheId);
+
+          if (!Mage::app()->loadCache($cacheId)) {
+            $productHelper->sendEmailTmpl(
+              'mventory_negative_balance',
+              array('account' => $accountData['name']),
+              $website
+            );
+
+            Mage::app()
+              ->saveCache(true, $cacheId, array(self::TAG_EMAILS), 3600);
+          }
+
+          if (count($accounts) == 1)
+            return;
+
+          unset($accounts[$accountId]);
+
+          continue;
+        }
+
+        if (is_int($result)) {
+          Mage::getModel('trademe/auction')
+            ->setData(array(
+                'product_id' => $product->getId(),
+                'type' => MVentory_TradeMe_Model_Config::AUCTION_FIXED_END_DATE,
+                'listing_id' => $result,
+                'account_id' => $accountId
+              ))
+            ->save();
+
+          break;
+        }
+      }
+    }
+  }
+
   public function removeListing ($observer) {
     if (Mage::registry('trademe_disable_withdrawal'))
       return;
@@ -762,6 +932,17 @@ EOT;
         implode(', ', $noOptions)
       )
     );
+  }
+
+  protected function _getWebsiteAndStore ($job) {
+    $website = Mage::app()->getWebsite(
+      (string) Mage::getConfig()
+        ->getNode('default/crontab/jobs')
+        ->{$job->getJobCode()}
+        ->website
+    );
+
+    return array($website, $website->getDefaultStore());
   }
 
   /**

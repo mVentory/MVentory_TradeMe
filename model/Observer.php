@@ -162,52 +162,32 @@ EOT;
   }
 
   public function sync ($job) {
-    $this->_listNormalAuctions($job);
+    $helper = Mage::helper('trademe');
+    $productHelper = Mage::helper('mventory/product');
+
+    //Get website and its default store from current cron job
+    list($website, $store) = $this->_getWebsiteAndStore($job);
+
+    //Load TradeMe accounts which are used in specified website
+    //Unset Random pseudo-account
+    $accounts = $helper->getAccounts($website);
+    unset($accounts[null]);
+
+    //Cache loaded objects and data for re-using
+    $this->_helper = $helper;
+    $this->_productHelper = $productHelper;
+    $this->_website = $website;
+    $this->_store = $store;
+    $this->_accounts = $accounts;
+
+    //Synch current auctions and list new
+    $this->_syncAllAuctions();
+    $this->_listNormalAuctions();
     $this->_listFixedEndAuctions($job);
   }
 
-  protected function _listNormalAuctions ($schedule) {
-    //Get cron job config
-    $jobsRoot = Mage::getConfig()->getNode('default/crontab/jobs');
-    $jobConfig = $jobsRoot->{$schedule->getJobCode()};
-
-    //Get website from the job config
-    $website = Mage::app()->getWebsite((string) $jobConfig->website);
-
-    //Get website's default store
-    $store = $website->getDefaultStore();
-
-    $trademe = Mage::helper('trademe');
-
-    //Load TradeMe accounts which are used in specified website
-    $accounts = $trademe->getAccounts($website);
-
-    //Unset Random pseudo-account
-    unset($accounts[null]);
-
-    $helper = Mage::helper('mventory/product');
-
-    //Get time with Magento timezone offset
-    $now = localtime(Mage::getModel('core/date')->timestamp(time()), true);
-
-    //Check if we are in allowed hours
-    $allowSubmit = $now['tm_hour'] >= self::SYNC_START_HOUR
-                   && $now['tm_hour'] < self::SYNC_END_HOUR;
-
-    if ($allowSubmit) {
-      $cronInterval = (int) $helper->getConfig(
-        MVentory_TradeMe_Model_Config::CRON_INTERVAL,
-        $website
-      );
-
-      //Calculate number of runnings of the sync script during 1 day
-      $runsNumber = $cronInterval
-                      ? (self::SYNC_END_HOUR - self::SYNC_START_HOUR) * 60
-                          / $cronInterval - 1
-                        : 0;
-    }
-
-    foreach ($accounts as $accountId => &$accountData) {
+  protected function _syncAllAuctions () {
+    foreach ($this->_accounts as $accountId => &$accountData) {
       $auctions = Mage::getResourceModel('trademe/auction_collection')
         ->addFieldToFilter(
             'type',
@@ -218,7 +198,7 @@ EOT;
       $connector = new MVentory_TradeMe_Model_Api();
 
       $connector
-        ->setWebsiteId($website)
+        ->setWebsiteId($this->_website)
         ->setAccountId($accountId);
 
       $accountData['listings'] = $connector->massCheck($auctions);
@@ -244,12 +224,15 @@ EOT;
             $price = $product->getPrice();
             $qty = 1;
 
-            $shipping = $helper->getShippingType($product, true);
+            $shipping = $this
+              ->_productHelper
+              ->getShippingType($product, true);
 
             if (!(isset($accountData['shipping_types'][$shipping]['buyer'])
                   || isset($accountData['shipping_types']['*']['buyer']))) {
               MVentory_TradeMe_Model_Api::debug(
-                'Error: shipping type ' . $helper->getShippingType($product)
+                'Error: shipping type '
+                . $this->_productHelper->getShippingType($product)
                 . ' doesn\t exists in ' . $accountData['name']
                 . ' account. Product SKU: ' . $sku
               );
@@ -262,12 +245,12 @@ EOT;
                          : $accountData['shipping_types']['*']['buyer'];
 
             //API function for creating order requires curren store to be set
-            Mage::app()->setCurrentStore($store);
+            Mage::app()->setCurrentStore($this->_store);
 
             //Remember current website to use in API functions. The value is
             //used in getCurrentWebsite() helper function
             Mage::unregister('mventory_website');
-            Mage::register('mventory_website', $website, true);
+            Mage::register('mventory_website', $this->_website, true);
 
             //Set global flag to prevent removing product from TradeMe during
             //order creating. No need to remove it because it was bought
@@ -299,11 +282,37 @@ EOT;
       if ($accountData['listings'] < 0)
         $accountData['listings'] = 0;
     }
+  }
 
-    unset($accountId, $accountData);
+  protected function _listNormalAuctions () {
+    //Get time with Magento timezone offset
+    $now = localtime(Mage::getModel('core/date')->timestamp(time()), true);
+
+    //Check if we are in allowed hours
+    $allowSubmit = $now['tm_hour'] >= self::SYNC_START_HOUR
+                   && $now['tm_hour'] < self::SYNC_END_HOUR;
+
+    if ($allowSubmit) {
+      $cronInterval = (int) $this
+        ->_productHelper
+        ->getConfig(
+            MVentory_TradeMe_Model_Config::CRON_INTERVAL,
+            $this->_website
+          );
+
+      //Calculate number of runnings of the sync script during 1 day
+      $runsNumber = $cronInterval
+                      ? (self::SYNC_END_HOUR - self::SYNC_START_HOUR) * 60
+                          / $cronInterval - 1
+                        : 0;
+    }
 
     if (!($allowSubmit && $runsNumber))
       return;
+
+    //Assign to local variable to preserve original data because the array
+    //can be modified
+    $accounts = $this->_accounts;
 
     foreach ($accounts as $accountId => $accountData) {
 
@@ -314,11 +323,13 @@ EOT;
         unset($accounts[$accountId]);
     }
 
-    unset($accountId, $accountData);
-
     if (!count($accounts))
       return;
 
+    unset($accountId, $accountData);
+
+    //!!!TODO: replace with call to
+    //MVentory_TradeMe_Model_Resource_Auction::getListedProducts() method
     $auctions = Mage::getResourceModel('trademe/auction_collection')
       ->addFieldToFilter('type', MVentory_TradeMe_Model_Config::AUCTION_NORMAL);
 
@@ -338,7 +349,7 @@ EOT;
           'status',
           Mage_Catalog_Model_Product_Status::STATUS_ENABLED
         )
-      ->addStoreFilter($store);
+      ->addStoreFilter($this->_store);
 
     if ($productIds)
       $products->addIdFilter($productIds, true);
@@ -357,7 +368,7 @@ EOT;
         '_',
         array(
           'trademe_sync',
-          $website->getCode(),
+          $this->_website->getCode(),
           $accountId,
         )
       );
@@ -441,7 +452,9 @@ EOT;
 
       shuffle($accountIds);
 
-      $shippingType = $helper->getShippingType($product, true);
+      $shippingType = $this
+        ->_productHelper
+        ->getShippingType($product, true);
 
       foreach ($accountIds as $accountId) {
         $accountData = $accounts[$accountId];
@@ -470,7 +483,7 @@ EOT;
 
         if (trim($result) == 'Insufficient balance') {
           $cacheId = array(
-            $website->getCode(),
+            $this->_website->getCode(),
             $accountData['name'],
             'negative_balance'
           );
@@ -478,11 +491,13 @@ EOT;
           $cacheId = implode('_', $cacheId);
 
           if (!Mage::app()->loadCache($cacheId)) {
-            $helper->sendEmailTmpl(
-              'mventory_negative_balance',
-              array('account' => $accountData['name']),
-              $website
-            );
+            $this
+              ->_productHelper
+              ->sendEmailTmpl(
+                  'mventory_negative_balance',
+                  array('account' => $accountData['name']),
+                  $this->_website
+                );
 
             Mage::app()
               ->saveCache(true, $cacheId, array(self::TAG_EMAILS), 3600);
@@ -506,7 +521,8 @@ EOT;
             ->save();
 
           if (!--$accounts[$accountId]['free_slots']) {
-            $accountData['sync_data']['duration'] = $trademe
+            $accountData['sync_data']['duration'] = $this
+              ->_helper
               ->getDuration($shippingTypes[$shippingType]);
 
             Mage::app()->saveCache(

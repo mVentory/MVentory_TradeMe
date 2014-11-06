@@ -199,97 +199,97 @@ EOT;
 
       $accountData['listings'] = $connector->massCheck($auctions);
 
-      foreach ($auctions as $auction) {
-        try {
-          if ($auction['is_selling']) {
-            //We don't include $1 auctions in the total quota
-            //for the number of listings.
-            if ($auction['type']
-                  == MVentory_TradeMe_Model_Config::AUCTION_FIXED_END_DATE)
-              --$accountData['listings'];
-
-            continue;
-          }
-
-          $result = $connector->check($auction);
-
-          if (!$result || $result == 3) {
-            //We don't include $1 auctions in the total quota
-            //for the number of listings.
-            if ($auction['type']
-                  == MVentory_TradeMe_Model_Config::AUCTION_FIXED_END_DATE)
-              --$accountData['listings'];
-
-            continue;
-          }
+      foreach ($auctions as $auction) try {
+        if ($auction['is_selling']) {
 
           //We don't include $1 auctions in the total quota
           //for the number of listings.
-          if ($auction['type'] == MVentory_TradeMe_Model_Config::AUCTION_NORMAL)
+          if ($auction['type']
+                == MVentory_TradeMe_Model_Config::AUCTION_FIXED_END_DATE)
             --$accountData['listings'];
 
-          if ($result == 2) {
-            $product = Mage::getModel('catalog/product')->load(
-              $auction['product_id']
+          continue;
+        }
+
+        $result = $connector->check($auction);
+
+        if (!$result || $result == 3) {
+
+          //We don't include $1 auctions in the total quota
+          //for the number of listings.
+          if ($auction['type']
+                == MVentory_TradeMe_Model_Config::AUCTION_FIXED_END_DATE)
+            --$accountData['listings'];
+
+          continue;
+        }
+
+        //We don't include $1 auctions in the total quota
+        //for the number of listings.
+        if ($auction['type'] == MVentory_TradeMe_Model_Config::AUCTION_NORMAL)
+          --$accountData['listings'];
+
+        if ($result == 2) {
+          $product = Mage::getModel('catalog/product')->load(
+            $auction['product_id']
+          );
+
+          $sku = $product->getSku();
+          $price = $product->getPrice();
+          $qty = 1;
+
+          $shipping = $this
+            ->_productHelper
+            ->getShippingType($product, true);
+
+          if (!(isset($accountData['shipping_types'][$shipping]['buyer'])
+                || isset($accountData['shipping_types']['*']['buyer']))) {
+            MVentory_TradeMe_Model_Api::debug(
+              'Error: shipping type '
+              . $this->_productHelper->getShippingType($product)
+              . ' doesn\t exists in ' . $accountData['name']
+              . ' account. Product SKU: ' . $sku
             );
 
-            $sku = $product->getSku();
-            $price = $product->getPrice();
-            $qty = 1;
-
-            $shipping = $this
-              ->_productHelper
-              ->getShippingType($product, true);
-
-            if (!(isset($accountData['shipping_types'][$shipping]['buyer'])
-                  || isset($accountData['shipping_types']['*']['buyer']))) {
-              MVentory_TradeMe_Model_Api::debug(
-                'Error: shipping type '
-                . $this->_productHelper->getShippingType($product)
-                . ' doesn\t exists in ' . $accountData['name']
-                . ' account. Product SKU: ' . $sku
-              );
-
-              continue;
-            }
-
-            $buyer = isset($accountData['shipping_types'][$shipping]['buyer'])
-                       ? $accountData['shipping_types'][$shipping]['buyer']
-                         : $accountData['shipping_types']['*']['buyer'];
-
-            //API function for creating order requires curren store to be set
-            Mage::app()->setCurrentStore($this->_store);
-
-            //Remember current website to use in API functions. The value is
-            //used in getCurrentWebsite() helper function
-            Mage::unregister('mventory_website');
-            Mage::register('mventory_website', $this->_website, true);
-
-            //Set global flag to prevent removing product from TradeMe during
-            //order creating. No need to remove it because it was bought
-            //on TradeMe. The flag is used in removeListing() method
-            Mage::register('trademe_disable_withdrawal', true, true);
-
-            //Set global flag to enable dummy shipping method in MVentory API
-            //extension
-            Mage::register('mventory_allow_dummyshipping', true, true);
-
-            //Set customer ID for API access checks in MVentory API extension
-            Mage::register('mventory_api_customer', $buyer, true);
-
-            //Make order for the product
-            Mage::getModel('mventory/cart_api')
-              ->createOrderForProduct($sku, $price, $qty, $buyer);
-
-            Mage::unregister('mventory_website');
+            continue;
           }
 
-          $auction->delete();
-        } catch (Exception $e) {
-          Mage::unregister('mventory_website');
+          $buyer = isset($accountData['shipping_types'][$shipping]['buyer'])
+                     ? $accountData['shipping_types'][$shipping]['buyer']
+                     : $accountData['shipping_types']['*']['buyer'];
 
-          Mage::logException($e);
+          //API function for creating order requires curren store to be set
+          Mage::app()->setCurrentStore($this->_store);
+
+          //Remember current website to use in API functions. The value is
+          //used in getCurrentWebsite() helper function
+          Mage::unregister('mventory_website');
+          Mage::register('mventory_website', $this->_website, true);
+
+          //Set global flag to prevent removing product from TradeMe during
+          //order creating. No need to remove it because it was bought
+          //on TradeMe. The flag is used in removeListing() method
+          Mage::register('trademe_disable_withdrawal', true, true);
+
+          //Set global flag to enable dummy shipping method in MVentory API
+          //extension
+          Mage::register('mventory_allow_dummyshipping', true, true);
+
+          //Set customer ID for API access checks in MVentory API extension
+          Mage::register('mventory_api_customer', $buyer, true);
+
+          //Make order for the product
+          Mage::getModel('mventory/cart_api')
+            ->createOrderForProduct($sku, $price, $qty, $buyer);
+
+          Mage::unregister('mventory_website');
         }
+
+        $auction->delete();
+      } catch (Exception $e) {
+        Mage::unregister('mventory_website');
+
+        Mage::logException($e);
       }
 
       if ($accountData['listings'] < 0)

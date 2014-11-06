@@ -189,10 +189,6 @@ EOT;
   protected function _syncAllAuctions () {
     foreach ($this->_accounts as $accountId => &$accountData) {
       $auctions = Mage::getResourceModel('trademe/auction_collection')
-        ->addFieldToFilter(
-            'type',
-            MVentory_TradeMe_Model_Config::AUCTION_NORMAL
-          )
         ->addFieldToFilter('account_id', $accountId);
 
       $connector = new MVentory_TradeMe_Model_Api();
@@ -205,15 +201,32 @@ EOT;
 
       foreach ($auctions as $auction) {
         try {
-          if ($auction['is_selling'])
+          if ($auction['is_selling']) {
+            //We don't include $1 auctions in the total quota
+            //for the number of listings.
+            if ($auction['type']
+                  == MVentory_TradeMe_Model_Config::AUCTION_FIXED_END_DATE)
+              --$accountData['listings'];
+
             continue;
+          }
 
           $result = $connector->check($auction);
 
-          if (!$result || $result == 3)
-            continue;
+          if (!$result || $result == 3) {
+            //We don't include $1 auctions in the total quota
+            //for the number of listings.
+            if ($auction['type']
+                  == MVentory_TradeMe_Model_Config::AUCTION_FIXED_END_DATE)
+              --$accountData['listings'];
 
-          --$accountData['listings'];
+            continue;
+          }
+
+          //We don't include $1 auctions in the total quota
+          //for the number of listings.
+          if ($auction['type'] == MVentory_TradeMe_Model_Config::AUCTION_NORMAL)
+            --$accountData['listings'];
 
           if ($result == 2) {
             $product = Mage::getModel('catalog/product')->load(

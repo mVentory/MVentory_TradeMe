@@ -435,7 +435,7 @@ class MVentory_TradeMe_Block_Tab
 
     return $attribute
              ->getSource()
-             ->getOptionArray();
+             ->getAllOptions();
   }
 
   public function getAttributeLabel ($code) {

@@ -44,20 +44,6 @@ class MVentory_TradeMe_Model_Attribute_Source_Accounts
   }
 
   /**
-   * Retrieve option array
-   *
-   * @return array
-   */
-  public function getOptionArray () {
-    $_options = array();
-
-    foreach ($this->getAllOptions() as $option)
-      $_options[$option['value']] = $option['label'];
-
-    return $_options;
-  }
-
-  /**
    * Get a text for option value
    *
    * @param string|integer $value

@@ -60,8 +60,8 @@ $__remove = $this->__('Remove');
     <label class="trademe-option">
       <?php echo $this->getAttributeLabel('tm_relist'); ?>:
       <select class="select" name="product[tm_relist]">
-        <?php foreach ($this->getAttributeOptions('tm_relist') as $value => $label): ?>
-        <option value="<?php echo $value; ?>" <?php if ($value == $_relist) echo 'selected="selected"'; ?>><?php echo $label; ?></option>
+        <?php foreach ($this->getAttributeOptions('tm_relist') as $_option): ?>
+        <option value="<?php echo $_option['value']; ?>" <?php if ($_option['value'] == $_relist) echo 'selected="selected"'; ?>><?php echo $_option['label']; ?></option>
         <?php endforeach; ?>
       </select>
     </label>
@@ -69,8 +69,8 @@ $__remove = $this->__('Remove');
     <label class="trademe-option">
       <?php echo $this->getAttributeLabel('tm_avoid_withdrawal'); ?>:
       <select class="select" name="product[tm_avoid_withdrawal]">
-        <?php foreach ($this->getAttributeOptions('tm_avoid_withdrawal') as $value => $label): ?>
-        <option value="<?php echo $value; ?>" <?php if ($value == $_avoidWithdrawal) echo 'selected="selected"'; ?>><?php echo $label; ?></option>
+        <?php foreach ($this->getAttributeOptions('tm_avoid_withdrawal') as $_option): ?>
+        <option value="<?php echo $_option['value']; ?>" <?php if ($_option['value'] == $_avoidWithdrawal) echo 'selected="selected"'; ?>><?php echo $_option['label']; ?></option>
         <?php endforeach; ?>
       </select>
     </label>
@@ -78,8 +78,8 @@ $__remove = $this->__('Remove');
     <label class="trademe-option">
       <?php echo $this->getAttributeLabel('tm_allow_buy_now'); ?>:
       <select class="select" name="product[tm_allow_buy_now]">
-        <?php foreach ($this->getAttributeOptions('tm_allow_buy_now') as $value => $label): ?>
-        <option value="<?php echo $value; ?>" <?php if ($value == $_allowBuyNow) echo 'selected="selected"'; ?>><?php echo $label; ?></option>
+        <?php foreach ($this->getAttributeOptions('tm_allow_buy_now') as $_option): ?>
+        <option value="<?php echo $_option['value']; ?>" <?php if ($_option['value'] == $_allowBuyNow) echo 'selected="selected"'; ?>><?php echo $_option['label']; ?></option>
         <?php endforeach; ?>
       </select>
     </label>
@@ -87,8 +87,8 @@ $__remove = $this->__('Remove');
     <label class="trademe-option">
       <?php echo $this->getAttributeLabel('tm_add_fees'); ?>:
       <select id="trademe-tab-add-fees" class="select" name="product[tm_add_fees]">
-        <?php foreach ($this->getAttributeOptions('tm_add_fees') as $value => $label): ?>
-        <option value="<?php echo $value; ?>" <?php if ($value == $_addFees) echo 'selected="selected"'; ?>><?php echo $label; ?></option>
+        <?php foreach ($this->getAttributeOptions('tm_add_fees') as $_option): ?>
+        <option value="<?php echo $_option['value']; ?>" <?php if ($_option['value'] == $_addFees) echo 'selected="selected"'; ?>><?php echo $_option['label']; ?></option>
         <?php endforeach; ?>
       </select>
     </label>
@@ -109,8 +109,8 @@ $__remove = $this->__('Remove');
     <label class="trademe-option">
       <?php echo $this->getAttributeLabel('tm_shipping_type'); ?>:
       <select id="trademe-tab-shipping-type" class="select" name="product[tm_shipping_type]">
-        <?php foreach ($this->getAttributeOptions('tm_shipping_type') as $value => $label): ?>
-        <option value="<?php echo $value; ?>" <?php if ($value == $_shippingType) echo 'selected="selected"'; ?>><?php echo $label; ?></option>
+        <?php foreach ($this->getAttributeOptions('tm_shipping_type') as $_option): ?>
+        <option value="<?php echo $_option['value']; ?>" <?php if ($_option['value'] == $_shippingType) echo 'selected="selected"'; ?>><?php echo $_option['label']; ?></option>
         <?php endforeach; ?>
       </select>
     </label>
@@ -118,8 +118,8 @@ $__remove = $this->__('Remove');
     <label class="trademe-option">
       <?php echo $this->getAttributeLabel('tm_pickup'); ?>:
       <select class="select" name="product[tm_pickup]">
-        <?php foreach ($this->getAttributeOptions('tm_pickup') as $value => $label): ?>
-        <option value="<?php echo $value; ?>" <?php if ($value == $_pickup) echo 'selected="selected"'; ?>><?php echo $label; ?></option>
+        <?php foreach ($this->getAttributeOptions('tm_pickup') as $_option): ?>
+        <option value="<?php echo $_option['value']; ?>" <?php if ($_option['value'] == $_pickup) echo 'selected="selected"'; ?>><?php echo $_option['label']; ?></option>
         <?php endforeach; ?>
       </select>
     </label>

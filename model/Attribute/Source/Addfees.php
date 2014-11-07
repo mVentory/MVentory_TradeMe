@@ -23,73 +23,26 @@
  * @author Anatoly A. Kazantsev <anatoly@mventory.com>
  */
 class MVentory_TradeMe_Model_Attribute_Source_Addfees
-  extends Mage_Eav_Model_Entity_Attribute_Source_Abstract
+  extends MVentory_TradeMe_Model_Attribute_Source_WithDefault
 {
   /**
-   * Retrieve all options array
+   * Generate array of options
    *
    * @return array
    */
-  public function getAllOptions () {
-    if (is_null($this->_options)) {
-      $helper = Mage::helper('trademe');
-
-      $this->_options = array(
-        array(
-          'label' => $helper->__('Default'),
-          'value' => -1
-        ),
-
-        array(
-          'label' => $helper->__('No'),
-          'value' => MVentory_TradeMe_Model_Config::FEES_NO,
-        ),
-
-        array(
-          'label' => $helper->__('Always'),
-          'value' => MVentory_TradeMe_Model_Config::FEES_ALWAYS,
-        ),
-
-        array(
-          'label' => $helper->__('On special price'),
-          'value' => MVentory_TradeMe_Model_Config::FEES_SPECIAL,
-        ),
-      );
-    }
-
-    return $this->_options;
+  protected function _getOptions () {
+    return array(
+      MVentory_TradeMe_Model_Config::FEES_NO => 'No',
+      MVentory_TradeMe_Model_Config::FEES_ALWAYS => 'Always',
+      MVentory_TradeMe_Model_Config::FEES_SPECIAL => 'On special price'
+    );
   }
 
   /**
-   * Retrieve option array
+   * Retrieve options for using in exporting of account settings
+   * Labels are different from the original array of options
    *
-   * @return array
-   */
-  public function getOptionArray () {
-    $options = array();
-
-    foreach ($this->getAllOptions() as $option)
-      $options[$option['value']] = $option['label'];
-
-    return $options;
-  }
-
-  /**
-   * Options getter
-   *
-   * @return array
-   */
-  public function toOptionArray () {
-    $options = $this->getOptionArray();
-
-    unset($options[-1]);
-
-    return $options;
-  }
-
-  /**
-   * Get options in "key-value" format
-   *
+   * @see MVentory_TradeMe_Block_Options::_getAddfeesValues()
    * @return array
    */
   public function toArray () {

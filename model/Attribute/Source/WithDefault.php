@@ -17,23 +17,39 @@
  */
 
 /**
- * Source model for Yes/No/Default field
+ * Entity/Attribute/Model - attribute selection source abstract with default
+ * value
  *
  * @package MVentory/TradeMe
  * @author Anatoly A. Kazantsev <anatoly@mventory.com>
  */
-class MVentory_TradeMe_Model_Attribute_Source_Boolean
-  extends MVentory_TradeMe_Model_Attribute_Source_WithDefault
+abstract class MVentory_TradeMe_Model_Attribute_Source_WithDefault
+  extends MVentory_TradeMe_Model_Attribute_Source_Abstract
 {
   /**
-   * Generate array of options
+   * Value of Default option
+   * @var integer
+   */
+  protected $_defaultValue = -1;
+
+  /**
+   * Label of Default option
+   * @var string
+   */
+  protected $_defaultLabel = 'Default';
+
+  /**
+   * Initiates options array for getAllOptions() method with Default options
+   * on first position
    *
    * @return array
    */
-  protected function _getOptions () {
+  protected function _initAllOptionsArray () {
     return array(
-      Mage_Eav_Model_Entity_Attribute_Source_Boolean::VALUE_YES => 'Yes',
-      Mage_Eav_Model_Entity_Attribute_Source_Boolean::VALUE_NO => 'No',
+      array(
+        'value' => $this->_defaultValue,
+        'label' => Mage::helper('trademe')->__($this->_defaultLabel)
+      )
     );
   }
 }

@@ -23,54 +23,25 @@
  * @author Anatoly A. Kazantsev <anatoly@mventory.com>
  */
 class MVentory_TradeMe_Model_Attribute_Source_Freeshipping
-  extends Mage_Eav_Model_Entity_Attribute_Source_Boolean
+  extends MVentory_TradeMe_Model_Attribute_Source_WithDefault
 {
   /**
-   * Retrieve all options array
+   * Generate array of options
    *
    * @return array
    */
-  public function getAllOptions () {
-    if (is_null($this->_options)) {
-      $helper = Mage::helper('trademe');
-
-      $this->_options = array(
-        array(
-          'label' => $helper->__('Default'),
-          'value' => -1
-        ),
-
-        array(
-          'label' => $helper->__('Yes'),
-          'value' => MVentory_TradeMe_Model_Config::SHIPPING_FREE,
-        ),
-
-        array(
-          'label' => $helper->__('No'),
-          'value' => MVentory_TradeMe_Model_Config::SHIPPING_UNDECIDED,
-        ),
-      );
-    }
-
-    return $this->_options;
+  protected function _getOptions () {
+    return array(
+      MVentory_TradeMe_Model_Config::SHIPPING_FREE => 'Yes',
+      MVentory_TradeMe_Model_Config::SHIPPING_UNDECIDED => 'No',
+    );
   }
 
   /**
-   * Options getter
+   * Retrieve options for using in submitting/updated listing
+   * Labels are different from the original array of options
    *
-   * @return array
-   */
-  public function toOptionArray () {
-    $options = $this->getOptionArray();
-
-    unset($options[-1]);
-
-    return $options;
-  }
-
-  /**
-   * Get options in "key-value" format
-   *
+   * @see MVentory_TradeMe_Model_Api::send()
    * @return array
    */
   public function toArray () {

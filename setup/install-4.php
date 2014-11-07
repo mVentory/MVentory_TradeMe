@@ -23,7 +23,7 @@ $attrs = array(
     'type' => 'int',
     'input' => 'select',
     'label' => 'Allow to list',
-    'source' => 'eav/entity_attribute_source_boolean',
+    'source' => 'trademe/attribute_source_relist',
     'required' => false,
     'global' => Mage_Catalog_Model_Resource_Eav_Attribute::SCOPE_GLOBAL,
 

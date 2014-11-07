@@ -29,4 +29,9 @@ $this->removeAttributes(
   true
 );
 
+$this->updateAttributes(
+  array('tm_relist' => array('source' => 'trademe/attribute_source_relist'))
+);
+
+
 $this->endSetup();

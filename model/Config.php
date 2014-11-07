@@ -56,6 +56,11 @@ class MVentory_TradeMe_Model_Config
   const FEES_ALWAYS = 1;  //Always add commission
   const FEES_SPECIAL = 2; //Only if the product has a current special price
 
+  //Allow to list options
+  const LIST_NO = 0;
+  const LIST_YES = 1;
+  const LIST_FIXEDEND = 2;
+
   const CACHE_TYPE = 'trademe';
   const CACHE_TAG = 'TRADEME';
 

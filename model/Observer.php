@@ -356,7 +356,9 @@ EOT;
     $products = Mage::getModel('catalog/product')
       ->getCollection()
       ->addAttributeToFilter('type_id', 'simple')
-      ->addAttributeToFilter('tm_relist', '1')
+
+      //Load all allowed to list products (incl. for $1 dollar auctions)
+      ->addAttributeToFilter('tm_relist', array('gt' => 0))
       ->addAttributeToFilter('image', array('nin' => array('no_selection', '')))
       ->addAttributeToFilter(
           'status',
@@ -609,7 +611,12 @@ EOT;
     $products = Mage::getModel('catalog/product')
       ->getCollection()
       ->addAttributeToFilter('type_id', 'simple')
-      ->addAttributeToFilter('tm_relist', '1')
+
+      //Allow only product enabled for $1 auctions
+      ->addAttributeToFilter(
+          'tm_relist',
+          MVentory_TradeMe_Model_Config::LIST_FIXEDEND
+        )
       ->addAttributeToFilter('image', array('nin' => array('no_selection', '')))
       ->addAttributeToFilter(
           'status',

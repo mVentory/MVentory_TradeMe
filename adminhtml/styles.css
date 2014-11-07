@@ -162,6 +162,13 @@
   padding-right: 10px;
 }
 
+#trademe-fixed-end-auctions {
+  margin: 0 0 1em 0;
+}
+#trademe-fixed-end-auctions-table {
+  width: auto;
+}
+
 /* Settings */
 
 fieldset[id^="trademe_account_"] > .comment {

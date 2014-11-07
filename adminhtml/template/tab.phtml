@@ -19,6 +19,7 @@
 
 $_product = $this->getProduct();
 $_auction = $this->getAuction();
+$_fixedEndAuctions = $this->getFixedEndAuctions();
 
 $_categories = $this->getCategories();
 $_preselectedCategories = $this->getPreselectedCategories();
@@ -39,6 +40,12 @@ $_shippingRate = $this->getShippingRate();
 $_fees = $this->getFees();
 $_price = $this->getProductPrice();
 $_totalPrice = $_price + $_shippingRate + $_fees;
+
+$__accountName = $this->__('Account name');
+$__listingId = $this->__('Listing ID');
+$__listed = $this->__('Listed');
+$__action = $this->__('Action');
+$__remove = $this->__('Remove');
 
 ?>
 
@@ -133,6 +140,41 @@ $_totalPrice = $_price + $_shippingRate + $_fees;
     </span>)
   </span>
 </p>
+
+<?php if ($_fixedEndAuctions): ?>
+<div id="trademe-fixed-end-auctions" class="grid">
+  <h6>$1 auctions:</h6>
+
+  <table id="trademe-fixed-end-auctions-table" class="data" cellspacing="0">
+    <colgroup>
+      <col/>
+      <col/>
+      <col/>
+      <col width='1' />
+    </colgroup>
+
+    <thead>
+      <tr class="headings">
+        <th><?php echo $__accountName; ?></th>
+        <th><?php echo $__listingId; ?></th>
+        <th><?php echo $__listed; ?></th>
+        <th class="last"><?php echo $__action; ?></th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <?php foreach ($_fixedEndAuctions as $_fixedAuction): ?>
+      <tr>
+        <td><?php echo $_fixedAuction['account']; ?></td>
+        <td><a target="_blank" href="<?php echo $_fixedAuction['listing_url']; ?>"><?php echo $_fixedAuction['listing']; ?></a></td>
+        <td><?php echo $_fixedAuction['listed']; ?></td>
+        <td class="last"><a href="<?php echo $_fixedAuction['remove_url']; ?>"><?php echo $__remove; ?></a></td>
+      </tr>
+      <?php endforeach ?>
+    </tbody>
+  </table>
+</div>
+<?php endif; ?>
 
 <table cellspacing="0" class="actions">
   <tbody>
@@ -250,6 +292,8 @@ $_totalPrice = $_price + $_shippingRate + $_fees;
 //<![CDATA[
 
 trademe_categories(<?php echo $this->getUrlTemplates() ?>);
+
+decorateTable('trademe-fixed-end-auctions');
 
 jQuery(document).ready(function ($) {
   var data = <?php echo Zend_Json::encode($this->prepareDataForJs()) ?>;

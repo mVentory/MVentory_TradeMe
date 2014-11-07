@@ -231,8 +231,10 @@ class MVentory_TradeMe_Block_Tab
   public function getRemoveButton () {
     $label = $this->__('Remove');
     $onclick = 'setLocation(\''
-               . $this->getUrl('trademe/listing/remove/',
-                               array('id' => $this->getProduct()->getId()))
+               . $this->getUrl(
+                   'trademe/listing/remove/',
+                   array('product_id' => $this->getProduct()->getId())
+                 )
                . '\')';
 
     return $this->getButtonHtml($label, $onclick, '', 'tm_remove_button');
@@ -447,6 +449,49 @@ class MVentory_TradeMe_Block_Tab
     $attribute = $attributes[$code];
 
     return $this->__($attributes[$code]->getFrontendLabel());
+  }
+
+  public function getFixedEndAuctions () {
+    $auctions = Mage::getResourceModel('trademe/auction_collection')
+      ->addFieldToFilter('product_id', $this->getProduct()->getId())
+      ->addFieldToFilter(
+          'type',
+          MVentory_TradeMe_Model_Config::AUCTION_FIXED_END_DATE
+        );
+
+    $_auctions = array();
+
+    if (!count($auctions))
+      return $_auctions;
+
+    $helper = Mage::helper('core');
+
+    foreach ($auctions as $auction) {
+      $auctionId = $auction['account_id'];
+      $listingId = $auction['listing_id'];
+
+      $_auctions[] = array(
+        'account' => isset($this->_accounts[$auctionId])
+                       ? $this->_accounts[$auctionId]['name']
+                       : '',
+        'listing' => $listingId,
+        'listing_url' => $auction->getUrl($this->_website),
+        'listed' => $helper->formatDate(
+          $auction['listed_at'],
+          Mage_Core_Model_Locale::FORMAT_TYPE_SHORT,
+          true
+        ),
+        'remove_url' => $this->getUrl(
+          'trademe/listing/remove/',
+          array(
+            'id' => $listingId,
+            'product_id' => $this->getProduct()->getId()
+          )
+        )
+      );
+    }
+
+    return $_auctions;
   }
 
   protected function _calculateShippingRates () {

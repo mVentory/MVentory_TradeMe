@@ -24,6 +24,9 @@
  */
 class MVentory_TradeMe_Model_Auction extends Mage_Core_Model_Abstract
 {
+
+  protected $_product = null;
+
   /**
    * Initialise resources
    */
@@ -50,13 +53,22 @@ class MVentory_TradeMe_Model_Auction extends Mage_Core_Model_Abstract
     return $this->setOrigData();
   }
 
+  public function assignProduct ($product) {
+    $this->_product = $product;
+
+    return $this;
+  }
+
   /**
    * Return URL to auction
    *
    * @param Mage_Core_Model_Website $website Website
    * @return string Auction URL
    */
-  public function getUrl ($website) {
+  public function getUrl ($website = null) {
+    if (!$website)
+      $website = $this->_getWebsite();
+
     return
       ($id = $this->_data['listing_id'])
         ? 'http://www.'
@@ -67,5 +79,40 @@ class MVentory_TradeMe_Model_Auction extends Mage_Core_Model_Abstract
           . '.co.nz/Browse/Listing.aspx?id='
           . $id
         : '';
+  }
+
+  public function withdraw () {
+    //!!!TODO: implement withdrawal by listing ID only
+    if (!$this['product_id'])
+      return $this;
+
+    //Withdrawal for auctions with fixed end date ($1 auctions) are temporarily
+    //disabled
+    if ($this['type'] == MVentory_TradeMe_Model_Config::AUCTION_FIXED_END_DATE)
+      return $this;
+
+    $product = Mage::getModel('catalog/product')->load($this['product_id']);
+
+    if (!$product->getId())
+      throw new Mage_Core_Exception('Can\'t load product');
+
+    $this->assignProduct($product);
+
+    $connector = new MVentory_TradeMe_Model_Api();
+
+    $result = $connector
+      ->setWebsiteId($this->_getWebsite())
+      ->remove($this);
+
+    if ($result !== true)
+      throw new Mage_Core_Exception($result);
+
+    return $this;
+  }
+
+  protected function _getWebsite () {
+    return $this->_product
+             ? Mage::helper('mventory/product')->getWebsite($this->_product)
+             : Mage::app()->getWebsite();
   }
 }

@@ -116,51 +116,56 @@ class MVentory_TradeMe_ListingController
   }
 
   public function removeAction () {
-    $id = $this->_request->getParam('id');
-    $product = Mage::getModel('catalog/product')->load($id);
-    $result = 'Error';
+    $params = $this
+      ->getRequest()
+      ->getParams();
 
-    $helper = Mage::helper('mventory/product');
+    $auction = null;
+    $helper = Mage::helper('trademe');
 
-    if ($product->getId()) {
-      $auction = Mage::getModel('trademe/auction')->loadByProduct($product);
+    if (isset($params['id']) && $params['id']) {
+      $auction = Mage::getModel('trademe/auction')->load(
+        $params['id'],
+        'listing_id'
+      );
 
-      if (!$auction->getId()) {
-        Mage::getSingleton('adminhtml/session')
-          ->addError($helper->__('Can\'t load auction'));
-
-        $this->_redirect('adminhtml/catalog_product/edit/id/' . $id);
-
-        return;
-      }
-
-      $website = $helper->getWebsite($product);
-
-      $connector = new MVentory_TradeMe_Model_Api();
-      $result = $connector
-        ->setWebsiteId($website)
-        ->remove($auction);
+      if (!$auction->getId())
+        $auction = null;
     }
 
-    if ($result === true) {
-      $auction->delete();
+    if (!$auction && isset($params['product_id']) && $params['product_id']) {
+      $auction = Mage::getModel('trademe/auction')->loadByProduct(
+        $params['product_id']
+      );
 
-      $path = MVentory_TradeMe_Model_Config::SANDBOX;
+      if (!$auction->getId())
+        $auction = null;
+    }
 
-      $host = $helper->getConfig($path, $website) ? 'tmsandbox' : 'trademe';
-      $url = 'http://www.'
-             . $host
-             . '.co.nz/Browse/Listing.aspx?id='
-             . $auction['listing_id'];
-
-      $link = '<a href="' . $url . '">' . $url . '</a>';
-
+    if (!$auction) {
       Mage::getSingleton('adminhtml/session')
-        ->addSuccess($helper->__('Removed from') . ': ' . $link);
-    } else
-      Mage::getSingleton('adminhtml/session')->addError($helper->__($result));
+        ->addError($helper->__('Can\'t load auction'));
 
-    $this->_redirect('adminhtml/catalog_product/edit/id/' . $id);
+      return $this->_redirect(
+        'adminhtml/catalog_product/edit/id/' . $params['product_id']
+      );
+    }
+
+    $session = Mage::getSingleton('adminhtml/session');
+
+    try {
+      $auction
+        ->withdraw()
+        ->delete();
+
+      $session->addSuccess($helper->__('Removed from: %s', $auction->getUrl()));
+    } catch (Exception $e) {
+      $session->addError($helper->__($e->getMessage()));
+    }
+
+    return $this->_redirect(
+      'adminhtml/catalog_product/edit/id/' . $params['product_id']
+    );
   }
 
   public function checkAction () {

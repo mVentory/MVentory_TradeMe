@@ -34,7 +34,10 @@ class MVentory_TradeMe_Model_Setting_Source_7days
     $helper = Mage::helper('trademe');
 
     return array(
-      array('label' => $helper->__('1 day'), 'value' => 1),
+      //Temporarily disabled because TradeMe doesn't support such predefined
+      //duration
+      //array('label' => $helper->__('1 day'), 'value' => 1),
+
       array('label' => $helper->__('2 days'), 'value' => 2),
       array('label' => $helper->__('3 days'), 'value' => 3),
       array('label' => $helper->__('4 days'), 'value' => 4),

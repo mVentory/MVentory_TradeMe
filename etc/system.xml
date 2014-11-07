@@ -286,6 +286,12 @@
               <sort_order>4</sort_order>
             </list_full_price>
 
+            <!--
+              Temporarily disabled until we will have found proper withdrawal
+              logic
+            -->
+
+            <!--
             <allow_withdrawal translate="label comment tooltip">
               <label>Allow withdrawal</label>
               <comment>Allow withdrawal of $1 auctions</comment>
@@ -306,6 +312,7 @@
 
               <sort_order>5</sort_order>
             </allow_withdrawal>
+            -->
           </fields>
         </one_dollar>
 

@@ -108,6 +108,83 @@ class MVentory_TradeMe_Model_Resource_Auction
   }
 
   /**
+   * Filter out products which have normal auction
+   *
+   * @param  Mage_Eav_Model_Entity_Collection_Abstract $collection Products
+   * @return Mage_Eav_Model_Entity_Collection_Abstract Collection of products
+   */
+  public function filterNormalAuctions ($collection) {
+    $adp = $this->_getReadAdapter();
+    $table = $this->getMainTable();
+
+    $entityId = $adp->quoteIdentifier(array('e', 'entity_id'));
+    $productId = $adp->quoteIdentifier(array('auction', 'product_id'));
+
+    $collection
+      ->getSelect()
+      ->joinLeft(
+          //Table name
+          array('auction' => $this->getMainTable()),
+
+          //Conditions
+          $entityId . ' = ' . $productId,
+
+          //Columns
+          array(
+            'auction_listing_id' => 'listing_id',
+            'auction_account_id' => 'account_id',
+            'auction_type' => 'type',
+            'auction_listed_at' => 'listed_at'
+          )
+        )
+      ->where(
+          $adp->prepareSqlCondition(
+            $adp->quoteIdentifier(array('auction', 'type')),
+            array('neq' => MVentory_TradeMe_Model_Config::AUCTION_NORMAL)
+          )
+        )
+      ->group('auction.product_id');
+
+    return $collection;
+  }
+
+  /**
+   * Filter out products which have any auction
+   *
+   * @param  Mage_Eav_Model_Entity_Collection_Abstract $collection Products
+   * @return Mage_Eav_Model_Entity_Collection_Abstract Collection of products
+   */
+  public function filterAllAuctions ($collection) {
+    $adp = $this->_getReadAdapter();
+    $table = $this->getMainTable();
+
+    $entityId = $adp->quoteIdentifier(array('e', 'entity_id'));
+    $productId = $adp->quoteIdentifier(array('auction', 'product_id'));
+
+    $collection
+      ->getSelect()
+      ->joinLeft(
+          //Table name
+          array('auction' => $this->getMainTable()),
+
+          //Conditions
+          $entityId . ' = ' . $productId,
+
+          //Columns
+          array(
+            'auction_listing_id' => 'listing_id',
+            'auction_account_id' => 'account_id',
+            'auction_type' => 'type',
+            'auction_listed_at' => 'listed_at'
+          )
+        )
+      ->where($adp->prepareSqlCondition($productId, array('null' => true)))
+      ->group('auction.product_id');
+
+    return $collection;
+  }
+
+  /**
    * Perform actions before object save
    *
    * @param Varien_Object $object

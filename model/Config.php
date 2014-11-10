@@ -33,6 +33,7 @@ class MVentory_TradeMe_Model_Config
   const _1AUC_ENDTIME = 'trademe/one_dollar/end_time';
   const _1AUC_ENDDAYS = 'trademe/one_dollar/end_days';
   const _1AUC_DURATION = 'trademe/one_dollar/duration';
+  const _1AUC_FULL_PRICE = 'trademe/one_dollar/list_full_price';
 
   const TITLE_MAX_LENGTH = 50;
   const DESCRIPTION_MAX_LENGTH = 2048;
@@ -66,4 +67,9 @@ class MVentory_TradeMe_Model_Config
 
   const AUCTION_NORMAL = 0;
   const AUCTION_FIXED_END_DATE = 1;
+
+  //Values for List full price setting
+  const AUCTION_NORMAL_ALWAYS = 0;
+  const AUCTI0N_NORMAL_STOCK = 1;
+  const AUCTI0N_NORMAL_NEVER = 2;
 }

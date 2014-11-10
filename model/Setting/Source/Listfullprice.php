@@ -34,9 +34,18 @@ class MVentory_TradeMe_Model_Setting_Source_Listfullprice
     $helper = Mage::helper('trademe');
 
     return array(
-      array('label' => $helper->__('Always'), 'value' => 0),
-      array('label' => $helper->__('If stock allows'), 'value' => 1),
-      array('label' => $helper->__('Never'), 'value' => 2),
+      array(
+        'label' => $helper->__('Always'),
+        'value' => MVentory_TradeMe_Model_Config::AUCTION_NORMAL_ALWAYS
+      ),
+      array(
+        'label' => $helper->__('If stock allows'),
+        'value' => MVentory_TradeMe_Model_Config::AUCTI0N_NORMAL_STOCK
+      ),
+      array(
+        'label' => $helper->__('Never'),
+        'value' => MVentory_TradeMe_Model_Config::AUCTI0N_NORMAL_NEVER
+      )
     );
   }
 }

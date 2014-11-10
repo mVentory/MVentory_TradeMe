@@ -341,18 +341,6 @@ EOT;
 
     unset($accountId, $accountData);
 
-    //!!!TODO: replace with call to
-    //MVentory_TradeMe_Model_Resource_Auction::getListedProducts() method
-    $auctions = Mage::getResourceModel('trademe/auction_collection')
-      ->addFieldToFilter('type', MVentory_TradeMe_Model_Config::AUCTION_NORMAL);
-
-    $productIds = array();
-
-    foreach ($auctions as $auction)
-      $productIds[] = $auction['product_id'];
-
-    unset($auctions);
-
     $products = Mage::getModel('catalog/product')
       ->getCollection()
       ->addAttributeToFilter('type_id', 'simple')
@@ -366,11 +354,23 @@ EOT;
         )
       ->addStoreFilter($this->_store);
 
-    if ($productIds)
-      $products->addIdFilter($productIds, true);
-
     Mage::getSingleton('cataloginventory/stock')
       ->addInStockFilterToCollection($products);
+
+    $listNormAuc = (int) $this
+      ->_store
+      ->getConfig(MVentory_TradeMe_Model_Config::_1AUC_FULL_PRICE);
+
+    $aucResource = Mage::getResourceModel('trademe/auction');
+
+    //Filter out product which have normal auctions when List full price
+    //setting set to Always or If stocl allowed
+    if ($listNormAuc == MVentory_TradeMe_Model_Config::AUCTION_NORMAL_ALWAYS
+        || $listNormAuc == MVentory_TradeMe_Model_Config::AUCTI0N_NORMAL_STOCK)
+      $aucResource->filterNormalAuctions($products);
+    //Otherwise filter out all products with any auction
+    elseif ($listNormAuc == MVentory_TradeMe_Model_Config::AUCTI0N_NORMAL_NEVER)
+      $aucResource->filterAllAuctions($products);
 
     if (!$poolSize = count($products))
       return;
@@ -433,6 +433,16 @@ EOT;
     if (!count($accounts))
       return;
 
+    if ($listNormAuc == MVentory_TradeMe_Model_Config::AUCTI0N_NORMAL_STOCK) {
+      $auctions = $aucResource->getNumberPerProduct();
+
+      $storeManageStock = (int) $this
+        ->_store
+        ->getConfig(
+            Mage_CatalogInventory_Model_Stock_Item::XML_PATH_MANAGE_STOCK
+          );
+    }
+
     unset($accountId, $accountData, $syncData);
 
     $ids = array_keys($products->getItems());
@@ -442,8 +452,25 @@ EOT;
     foreach ($ids as $id) {
       $product = Mage::getModel('catalog/product')->load($id);
 
-      if (!$product->getId())
+      if (!$id = $product->getId())
         continue;
+
+      if ($listNormAuc == MVentory_TradeMe_Model_Config::AUCTI0N_NORMAL_STOCK
+          && isset($auctions[$id])) {
+
+        $stock = Mage::getModel('cataloginventory/stock_item')
+          ->loadByProduct($id);
+
+        if (!$stock->getId())
+          continue;
+
+        $manageStock = $stock->getUseConfigManageStock()
+                         ? $storeManageStock
+                         : (int) $stock['manage_stock'];
+
+        if ($manageStock && ($stock->getQty() <= $auctions[$id]))
+          continue;
+      }
 
       //??? Do we need it?
       //if ($accountId = $product->getTmAccountId())

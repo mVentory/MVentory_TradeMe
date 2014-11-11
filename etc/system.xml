@@ -173,8 +173,21 @@
               <show_in_website>0</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>105</sort_order>
+              <sort_order>106</sort_order>
             </mapping_store>
+
+            <name_variants_attr>
+              <label>Name variants attribute code</label>
+              <comment>Optional, e.g. prod_names</comment>
+              <tooltip>You can nominate an attribute with name variants to be randomly used for this product on TradeMe, one name per line. Create a text area attribute and copy its code into this text box. This feature is optional.</tooltip>
+              <frontend_type>text</frontend_type>
+
+              <show_in_default>1</show_in_default>
+              <show_in_website>0</show_in_website>
+              <show_in_store>0</show_in_store>
+
+              <sort_order>107</sort_order>
+            </name_variants_attr>
 
             <import translate="label">
               <label>Import configuration file</label>
@@ -186,7 +199,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>107</sort_order>
+              <sort_order>108</sort_order>
             </import>
 
             <export translate="label">
@@ -197,7 +210,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>108</sort_order>
+              <sort_order>109</sort_order>
             </export>
           </fields>
         </settings>

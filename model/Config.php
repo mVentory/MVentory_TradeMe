@@ -29,6 +29,7 @@ class MVentory_TradeMe_Model_Config
   const MAPPING_STORE = 'trademe/settings/mapping_store';
   const ENABLE_LISTING = 'trademe/settings/enable_listing';
   const LIST_AS_NEW = 'trademe/settings/list_as_new';
+  const _NAME_VARIANTS_ATTR = 'trademe/settings/name_variants_attr';
 
   const _1AUC_ENDTIME = 'trademe/one_dollar/end_time';
   const _1AUC_ENDDAYS = 'trademe/one_dollar/end_days';

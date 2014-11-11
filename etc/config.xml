@@ -121,6 +121,12 @@
             <class>MVentory_TradeMe_Model_Observer</class>
             <method>restoreNewAccountInConfig</method>
           </trademe-restore-new-account-in-config>
+
+          <check_name_variants_attr>
+            <type>singleton</type>
+            <class>MVentory_TradeMe_Model_Observer</class>
+            <method>checkNameVariantsAttr</method>
+          </check_name_variants_attr>
         </observers>
       </model_config_data_save_before>
 

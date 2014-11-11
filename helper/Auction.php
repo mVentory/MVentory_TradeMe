@@ -113,4 +113,39 @@ class MVentory_TradeMe_Helper_Auction extends MVentory_TradeMe_Helper_Data
         ->format(Varien_Date::DATETIME_PHP_FORMAT)
     );
   }
+
+  /**
+   * Return title of auction choosen randomly from the set of name variants and
+   * product's name
+   *
+   * @param Mage_Catalog_Model_Product $product Product
+   * @param Mage_Core_Model_Store $store Store
+   * @return string Auctin title
+   */
+  public function getTitle ($product, $store) {
+    $title = $product->getName();
+
+    $code = trim(
+      $store->getConfig(MVentory_TradeMe_Model_Config::_NAME_VARIANTS_ATTR)
+    );
+
+    if (!$code)
+      return $title;
+
+    if (!$_titles = trim($product[strtolower($code)]))
+      return $title;
+
+    $_titles = explode("\n", str_replace("\r\n", "\n", $_titles));
+
+    foreach ($_titles as $_title)
+      if ($_title = trim($_title))
+        $titles[] = $_title;
+
+    if (!isset($titles))
+      return $title;
+
+    $titles[] = $title;
+
+    return $titles[array_rand($titles)];
+  }
 }

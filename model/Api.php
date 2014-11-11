@@ -200,7 +200,7 @@ class MVentory_TradeMe_Model_Api {
   public function send ($product, $categoryId, $data, $overwrite = array()) {
     self::debug();
 
-    $helper = Mage::helper('trademe');
+    $helper = Mage::helper('trademe/auction');
 
     $this->getWebsiteId($product);
     $this->setAccountId($data);
@@ -273,12 +273,12 @@ class MVentory_TradeMe_Model_Api {
         html_entity_decode($description, ENT_COMPAT, 'UTF-8')
       );
 
+      $store = $this->_website->getDefaultStore();
       $photoId = null;
 
       $image = $product->getImage();
 
       if ($image && $image != 'no_selection') {
-        $store = $this->_website->getDefaultStore();
         $changeStore = $store->getId != Mage::app()->getStore()->getId();
 
         if ($changeStore) {
@@ -301,7 +301,7 @@ class MVentory_TradeMe_Model_Api {
         if ($changeStore)
           $emu->stopEnvironmentEmulation($origEnv);
 
-        unset($store, $changeStore, $emu, $origEnv);
+        unset($changeStore, $emu, $origEnv);
 
         if (!file_exists($image))
           return 'Image doesn\'t exists';
@@ -314,7 +314,8 @@ class MVentory_TradeMe_Model_Api {
       $client->setUri('https://api.' . $this->_host . '.co.nz/v1/Selling.xml');
       $client->setMethod(Zend_Http_Client::POST);
 
-      $title = $product->getName();
+      $title = $helper->getTitle($product, $store);
+      unset($store);
 
       if (strlen($title) > MVentory_TradeMe_Model_Config::TITLE_MAX_LENGTH)
         $title = htmlspecialchars(substr(
@@ -554,7 +555,7 @@ class MVentory_TradeMe_Model_Api {
   {
     self::debug();
 
-    $helper = Mage::helper('trademe');
+    $helper = Mage::helper('trademe/auction');
 
     $this->getWebsiteId($product);
 
@@ -614,7 +615,10 @@ class MVentory_TradeMe_Model_Api {
         $parameters['Category'] = $formData['category'];
 
       if (!isset($parameters['Title'])) {
-        $title = $product->getName();
+        $title = $helper->getTitle(
+          $product,
+          $this->_website->getDefaultStore()
+        );
 
         if (strlen($title) > MVentory_TradeMe_Model_Config::TITLE_MAX_LENGTH)
           //!!!TODO: use hellip instead 3 dots, see send() method

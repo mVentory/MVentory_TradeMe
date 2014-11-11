@@ -37,6 +37,9 @@ EOT;
   const __NO_SHIPPING_P = <<<'EOT'
 Warning: mVentory Trade Me accounts %s do not have a valid shipping configuration. Please import a configuration CSV file.
 EOT;
+  const __NO_ATTR = <<<'EOT'
+Attribute %s for name variants doesn't exist. Create it and try again or leave blank.
+EOT;
 
   public function sortChildren ($observer) {
     $content = Mage::app()
@@ -1016,6 +1019,44 @@ EOT;
         implode(', ', $noOptions)
       )
     );
+  }
+
+  /**
+   * Check if entered attribute code of attribute with name variants for
+   * auctions is valid
+   *
+   * @param Varien_Event_Observer $observer Event observer
+   * @return MVentory_TradeMe_Model_Observer
+   */
+  public function checkNameVariantsAttr ($observer) {
+    $config = $observer['object'];
+
+    if ($config['section'] != 'trademe')
+      return $this;
+
+    $path = explode('/', MVentory_TradeMe_Model_Config::_NAME_VARIANTS_ATTR);
+    $key = array('groups', $path[1], 'fields', $path[2], 'value');
+
+    if (!$code = trim($config->getData(implode('/', $key))))
+      return $this;
+
+    $id = Mage::getResourceModel('eav/entity_attribute')->getIdByCode(
+      Mage_Catalog_Model_Product::ENTITY,
+      $code
+    );
+
+    if ($id)
+      return $this;
+
+    $groups = $config['groups'];
+    $groups[$key[1]][$key[2]][$key[3]][$key[4]] = '';
+    $config['groups'] = $groups;
+
+    Mage::getSingleton('adminhtml/session')->addWarning(
+      Mage::helper('trademe')->__(self::__NO_ATTR, $code)
+    );
+
+    return $this;
   }
 
   /**

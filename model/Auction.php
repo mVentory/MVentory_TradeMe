@@ -25,6 +25,11 @@
 class MVentory_TradeMe_Model_Auction extends Mage_Core_Model_Abstract
 {
 
+  /**
+   * Model of assigned product
+   *
+   * @var Mage_Catalog_Model_Product
+   */
   protected $_product = null;
 
   /**
@@ -53,6 +58,12 @@ class MVentory_TradeMe_Model_Auction extends Mage_Core_Model_Abstract
     return $this->setOrigData();
   }
 
+  /**
+   * Assign product to auction
+   *
+   * @param  Mage_Catalog_Model_Product $product Product
+   * @return MVentory_TradeMe_Model_Auction
+   */
   public function assignProduct ($product) {
     $this->_product = $product;
 
@@ -81,6 +92,11 @@ class MVentory_TradeMe_Model_Auction extends Mage_Core_Model_Abstract
         : '';
   }
 
+  /**
+   * Withdraw auction
+   *
+   * @return MVentory_TradeMe_Model_Auction
+   */
   public function withdraw () {
     //!!!TODO: implement withdrawal by listing ID only
     if (!$this['product_id'])
@@ -110,6 +126,13 @@ class MVentory_TradeMe_Model_Auction extends Mage_Core_Model_Abstract
     return $this;
   }
 
+  /**
+   * Return current website.
+   * If MVentory API extension is installed it returns website of assigned
+   * product
+   *
+   * @return Mage_Core_Model_Website Website
+   */
   protected function _getWebsite () {
     return $this->_product
              ? Mage::helper('mventory/product')->getWebsite($this->_product)

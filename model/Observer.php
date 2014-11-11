@@ -161,6 +161,12 @@ EOT;
     Mage::register('trademe_config_accounts', $accounts);
   }
 
+  /**
+   * Main cron method
+   *
+   * @param Mage_Cron_Model_Schedule $job Cron job
+   * @return null
+   */
   public function sync ($job) {
     $helper = Mage::helper('trademe');
     $productHelper = Mage::helper('mventory/product');
@@ -186,6 +192,11 @@ EOT;
     $this->_listFixedEndAuctions($job);
   }
 
+  /**
+   * Synch current auctions
+   *
+   * @return null
+   */
   protected function _syncAllAuctions () {
     foreach ($this->_accounts as $accountId => &$accountData) {
       $auctions = Mage::getResourceModel('trademe/auction_collection')
@@ -297,6 +308,11 @@ EOT;
     }
   }
 
+  /**
+   * Submit new normal auctions
+   *
+   * @return null
+   */
   protected function _listNormalAuctions () {
     //Get time with Magento timezone offset
     $now = localtime(Mage::getModel('core/date')->timestamp(time()), true);
@@ -586,6 +602,11 @@ EOT;
     }
   }
 
+  /**
+   * Submit only $1 auctions
+   * @param  Mage_Cron_Model_Schedule $job Cron job
+   * @return null
+   */
   public function _listFixedEndAuctions ($job) {
     //Get website and its default store from current cron job
     list($website, $store) = $this->_getWebsiteAndStore($job);
@@ -997,6 +1018,12 @@ EOT;
     );
   }
 
+  /**
+   * Return cron job's website and website's default store
+   *
+   * @param Mage_Cron_Model_Schedule $job Cron job
+   * @return array Array of Website and its default store
+   */
   protected function _getWebsiteAndStore ($job) {
     $website = Mage::app()->getWebsite(
       (string) Mage::getConfig()

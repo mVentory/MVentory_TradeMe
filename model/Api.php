@@ -1179,6 +1179,15 @@ class MVentory_TradeMe_Model_Api {
     return false;
   }
 
+  /**
+   * Calculate final price for auction
+   *
+   * @param Mage_Catalog_Model_Product $product Product
+   * @param array $account Current account
+   * @param array $data Additional data
+   * @param array $overwrite Overwrite values
+   * @return float Price
+   */
   protected function _getPrice ($product, $account, $data, $overwrite) {
     if (isset($overwrite['price']))
       return $overwrite['price'];
@@ -1198,12 +1207,26 @@ class MVentory_TradeMe_Model_Api {
                  : $price;
   }
 
+  /**
+   * Check if Allow but now is allowed
+   *
+   * @param $data Data
+   * @param array $overwrite Overwrite values
+   * @return bool
+   */
   protected function _getAllowBuyNow ($data, $overwrite) {
     return isset($overwrite['allow_buy_now'])
              ? $overwrite['allow_buy_now']
              : (isset($data['allow_buy_now']) && $data['allow_buy_now']);
   }
 
+  /**
+   * Get auction duration
+   *
+   * @param array $account Current account
+   * @param array $overwrite Overwrite values
+   * @return int Duration
+   */
   protected function _getDuration ($account, $overwrite) {
     return isset($overwrite['duration'])
              ? $overwrite['duration']

@@ -65,6 +65,8 @@ class MVentory_TradeMe_Model_Config
   const CACHE_TYPE = 'trademe';
   const CACHE_TAG = 'TRADEME';
 
+  //Types of auctions
+  //!!!TODO: move to MVentory_TradeMe_Model_Auction class
   const AUCTION_NORMAL = 0;
   const AUCTION_FIXED_END_DATE = 1;
 

@@ -451,6 +451,11 @@ class MVentory_TradeMe_Block_Tab
     return $this->__($attributes[$code]->getFrontendLabel());
   }
 
+  /**
+   * Return prepared list of $1 auctions for the current product
+   *
+   * @return array Prepared list of auctions
+   */
   public function getFixedEndAuctions () {
     $auctions = Mage::getResourceModel('trademe/auction_collection')
       ->addFieldToFilter('product_id', $this->getProduct()->getId())

@@ -26,6 +26,9 @@
 class MVentory_TradeMe_Model_Resource_Auction
   extends Mage_Core_Model_Resource_Db_Abstract
 {
+  /**
+   * Resource initialisation
+   */
   protected function _construct() {
     $this->_init('trademe/auction', 'id');
   }
@@ -60,6 +63,13 @@ class MVentory_TradeMe_Model_Resource_Auction
     return $this;
   }
 
+  /**
+   * Get number of auctions for products excluding specified in $exclude
+   * parameter
+   *
+   * @param  array $exclude List if product IDs to exclude
+   * @return array List of number of auctions per peoduct
+   */
   public function getNumberPerProduct ($exclude = null) {
     $adp = $this->_getReadAdapter();
     $table = $this->getMainTable();
@@ -85,6 +95,15 @@ class MVentory_TradeMe_Model_Resource_Auction
     return $adp->fetchPairs($select);
   }
 
+  /**
+   * Get list of product listed in specified period of time and filtered by
+   * auction type
+   *
+   * @param  int $type Type of auction
+   * @param  string $fromData Filter by period of time (from date)
+   * @param  strint $toDate Filter by period of time (to date)
+   * @return array List of product IDs
+   */
   public function getListedProducts ($type, $fromData, $toDate) {
     $adp = $this->_getReadAdapter();
     $table = $this->getMainTable();

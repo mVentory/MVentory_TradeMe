@@ -286,24 +286,35 @@ class MVentory_TradeMe_Model_Api {
           $origEnv = $emu->startEnvironmentEmulation($store);
         }
 
-        ///!!!TODO: check if resized image exists before resizing it
-        $image = Mage::getModel('catalog/product_image')
-          ->setDestinationSubdir('image')
-          ->setKeepFrame(false)
-          ->setConstrainOnly(true)
-          ->setWidth($this->_imageSize['width'])
-          ->setHeight($this->_imageSize['height'])
-          ->setBaseFile($image)
-          ->resize()
-          ->saveFile()
-          ->getNewFile();
+        try {
+          ///!!!TODO: check if resized image exists before resizing it
+          $imageModel = Mage::getModel('catalog/product_image')
+            ->setDestinationSubdir('image')
+            ->setKeepFrame(false)
+            ->setConstrainOnly(true)
+            ->setWidth($this->_imageSize['width'])
+            ->setHeight($this->_imageSize['height']);
+
+          //Don't call this method in chain because it can throw an exception
+          $imageModel->setBaseFile($image);
+
+          $image = $imageModel
+            ->resize()
+            ->saveFile()
+            ->getNewFile();
+        } catch (Exception $e) {
+          $image = null;
+
+          self::debug('Error on image resizing (' . $e->getMessage() . ')');
+          Mage::logException($e);
+        }
 
         if ($changeStore)
           $emu->stopEnvironmentEmulation($origEnv);
 
-        unset($changeStore, $emu, $origEnv);
+        unset($changeStore, $emu, $origEnv, $imageModel);
 
-        if (!file_exists($image))
+        if (!($image && file_exists($image)))
           return 'Image doesn\'t exists';
 
         if (!is_int($photoId = $this->uploadImage($image)))

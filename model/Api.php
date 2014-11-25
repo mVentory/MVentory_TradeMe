@@ -276,49 +276,26 @@ class MVentory_TradeMe_Model_Api {
       $store = $this->_website->getDefaultStore();
       $photoId = null;
 
-      $image = $product->getImage();
+      try {
+        $image = Mage::helper('trademe/image')->getImage(
+          $product,
+          $this->_imageSize,
+          $store
+        );
+      } catch (Exception $e) {
+        $msg = 'Error occured while preparing image (%s)';
 
-      if ($image && $image != 'no_selection') {
-        $changeStore = $store->getId != Mage::app()->getStore()->getId();
+        Mage::logException($e);
+        self::debug(sprintf($msg, $e->getMessage()));
 
-        if ($changeStore) {
-          $emu = Mage::getModel('core/app_emulation');
-          $origEnv = $emu->startEnvironmentEmulation($store);
-        }
+        return $helper->__($msg, $e->getMessage());
+      }
 
-        try {
-          ///!!!TODO: check if resized image exists before resizing it
-          $imageModel = Mage::getModel('catalog/product_image')
-            ->setDestinationSubdir('image')
-            ->setKeepFrame(false)
-            ->setConstrainOnly(true)
-            ->setWidth($this->_imageSize['width'])
-            ->setHeight($this->_imageSize['height']);
+      if (!is_int($photoId = $this->uploadImage($image))) {
+        $msg = 'Error occured while uploading image (%s)';
 
-          //Don't call this method in chain because it can throw an exception
-          $imageModel->setBaseFile($image);
-
-          $image = $imageModel
-            ->resize()
-            ->saveFile()
-            ->getNewFile();
-        } catch (Exception $e) {
-          $image = null;
-
-          self::debug('Error on image resizing (' . $e->getMessage() . ')');
-          Mage::logException($e);
-        }
-
-        if ($changeStore)
-          $emu->stopEnvironmentEmulation($origEnv);
-
-        unset($changeStore, $emu, $origEnv, $imageModel);
-
-        if (!($image && file_exists($image)))
-          return 'Image doesn\'t exists';
-
-        if (!is_int($photoId = $this->uploadImage($image)))
-          return $photoId;
+        self::debug(sprintf($msg, $photoId));
+        return $helper->__($msg, $photoId);
       }
 
       $client = $accessToken->getHttpClient($this->getConfig());

@@ -911,4 +911,23 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
 
     return Mage::helper('mventory')->getConfig($path, $websiteId) == true;
   }
+
+  /**
+   * Change store and environment if store passed or restored original
+   * environment if environment object is passed
+   *
+   * @param Mage_Core_Model_Store|Varien_Object $storeOrEnv
+   *   Store or original environment
+   *
+   * @return Varien_Object|null
+   *   Original environment or nothing
+   */
+  public function changeStore ($storeOrEnv) {
+    $emu = Mage::getModel('core/app_emulation');
+
+    if ($storeOrEnv instanceof Mage_Core_Model_Store)
+      return $emu->startEnvironmentEmulation($storeOrEnv->getId());
+
+    $emu->stopEnvironmentEmulation($storeOrEnv);
+  }
 }

@@ -138,6 +138,17 @@ class MVentory_TradeMe_Model_Resource_Auction
 
     $entityId = $adp->quoteIdentifier(array('e', 'entity_id'));
     $productId = $adp->quoteIdentifier(array('auction', 'product_id'));
+    $auctionType = $adp->quoteIdentifier(array('auction', 'type'));
+
+    $conditions = array(
+      $entityId . ' = ' . $productId,
+      $adp->prepareSqlCondition(
+        $auctionType,
+        MVentory_TradeMe_Model_Config::AUCTION_NORMAL
+      )
+    );
+
+    $and = ') ' . Zend_Db_Select::SQL_AND . ' (';
 
     $collection
       ->getSelect()
@@ -146,7 +157,7 @@ class MVentory_TradeMe_Model_Resource_Auction
           array('auction' => $this->getMainTable()),
 
           //Conditions
-          $entityId . ' = ' . $productId,
+          '(' . implode($and, $conditions) . ')' ,
 
           //Columns
           array(
@@ -156,13 +167,8 @@ class MVentory_TradeMe_Model_Resource_Auction
             'auction_listed_at' => 'listed_at'
           )
         )
-      ->where(
-          $adp->prepareSqlCondition(
-            $adp->quoteIdentifier(array('auction', 'type')),
-            array('neq' => MVentory_TradeMe_Model_Config::AUCTION_NORMAL)
-          )
-        )
-      ->group('auction.product_id');
+      ->where($adp->prepareSqlCondition($auctionType, array('null' => true)))
+      ->group('e.entity_id');
 
     return $collection;
   }

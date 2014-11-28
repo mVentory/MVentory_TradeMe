@@ -444,9 +444,6 @@ EOT;
 
       $accountData['cache_id'] = $cacheId;
       $accountData['sync_data'] = $syncData;
-
-      $accountData['allowed_shipping_types']
-        = array_keys($accountData['shipping_types']);
     }
 
     if (!count($accounts))
@@ -520,23 +517,15 @@ EOT;
       foreach ($accountIds as $accountId) {
         $accountData = $accounts[$accountId];
 
-        if (!in_array($shippingType, $accountData['allowed_shipping_types']))
+        if (isset($accountData['shipping_types'][$shippingType]))
+          $perShipping = $accountData['shipping_types'][$shippingType];
+        else if (isset($accountData['shipping_types']['*']))
+          $perShipping = $accountData['shipping_types']['*'];
+        else
           continue;
 
-        $shippingTypes = $accountData['shipping_types'];
-
-        switch (true) {
-          case isset($shippingTypes[$shippingType]['minimal_price']):
-            $minimalPrice = $shippingTypes[$shippingType]['minimal_price'];
-            break;
-          case isset($shippingTypes['*']['minimal_price']):
-            $minimalPrice = $shippingTypes['*']['minimal_price'];
-            break;
-          default:
-            $minimalPrice = -1;
-        }
-
-        if ($minimalPrice && ($product->getPrice() < $minimalPrice))
+        if (($minimalPrice = $this->_helper->getMinimalPrice($perShipping))
+            && ($product->getPrice() < $minimalPrice))
           continue;
 
         $api = new MVentory_TradeMe_Model_Api();
@@ -584,7 +573,7 @@ EOT;
           if (!--$accounts[$accountId]['free_slots']) {
             $accountData['sync_data']['duration'] = $this
               ->_helper
-              ->getDuration($shippingTypes[$shippingType]);
+              ->getDuration($perShipping);
 
             Mage::app()->saveCache(
               serialize($accountData['sync_data']),

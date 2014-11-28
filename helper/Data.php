@@ -292,22 +292,19 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
    * @return array
    */
   public function prepareAccounts ($accounts, $product) {
-    $shippingType = Mage::helper('mventory/product')->getShippingType(
-      $product,
-      true
+    $shippingTypes = array(
+      Mage::helper('mventory/product')->getShippingType($product, true),
+      '*'
     );
 
     foreach ($accounts as &$account) {
-      $hasShippingType = isset($account['shipping_types'][$shippingType]);
+      foreach ($shippingTypes as $shippingType)
+        if (isset($account['shipping_types'][$shippingType])) {
+          $account = $account + $account['shipping_types'][$shippingType];
+          $account['shipping_type'] = $shippingType;
 
-      if ($hasShippingType || isset($account['shipping_types']['*'])) {
-        $account['shipping_type'] = $shippingType;
-
-
-        $account = $hasShippingType
-                     ? $account + $account['shipping_types'][$shippingType]
-                       : $account + $account['shipping_types']['*'];
-      }
+          break;
+        }
 
       unset($account['shipping_types']);
     }
@@ -519,6 +516,20 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
       return self::LISTING_DURATION_MAX;
 
     return $duration;
+  }
+
+  /**
+   * Return minimal price level for TradeMe listing
+   *
+   * @param array $data
+   *   TradeMe account data per shipping
+   *
+   * @return float
+   *   Minimal price level from the supplied account data
+   *   or zero if it doesn't exists in the data
+   */
+  public function getMinimalPrice ($data) {
+    return isset($data['minimal_price']) ? (float) $data['minimal_price'] : 0;
   }
 
   /**

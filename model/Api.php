@@ -412,6 +412,7 @@ class MVentory_TradeMe_Model_Api {
         }
       }
 
+      $xml .=  '<SKU>' . htmlspecialchars($product->getSku()) . '</SKU>';
       $xml .= '</ListingRequest>';
 
       $client->setRawData($xml, 'application/xml');
@@ -734,6 +735,9 @@ class MVentory_TradeMe_Model_Api {
       //  SafeTrader = 8
       //  Other = 16
       $item['PaymentMethods'] = array(1,2,4);
+
+      if (!isset($parameters['SKU']))
+        $parameters['SKU'] = htmlspecialchars($product->getSku());
 
       $item = array_merge($item,$parameters);
       $client->setRawData(Zend_Json::encode($item), 'application/json');

@@ -67,10 +67,16 @@ class MVentory_TradeMe_Model_Resource_Auction
    * Get number of auctions for products excluding specified in $exclude
    * parameter
    *
-   * @param  array $exclude List if product IDs to exclude
-   * @return array List of number of auctions per peoduct
+   * @param  array $exclude
+   *   List if product IDs to exclude from select
+   *
+   * @param int|null $type
+   *   Type of auction to filter results. Return results for all auction type
+   *   if omitted or null value passed
+   *
+   * @return array List of number of auctions per product
    */
-  public function getNumberPerProduct ($exclude = null) {
+  public function getNumberPerProduct ($exclude = null, $type = null) {
     $adp = $this->_getReadAdapter();
     $table = $this->getMainTable();
     $productId = $adp->quoteIdentifier(array($table, 'product_id'));
@@ -91,6 +97,12 @@ class MVentory_TradeMe_Model_Resource_Auction
         $select->where('product_id NOT IN (?)', $exclude);
       elseif (count($exclude) == 1)
         $select->where('product_id != ?', reset($exclude));
+
+    if ($type !== null)
+      $select->where($adp->prepareSqlCondition(
+        $adp->quoteIdentifier(array($table, 'type')),
+        $type
+      ));
 
     return $adp->fetchPairs($select);
   }

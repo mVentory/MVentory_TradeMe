@@ -675,12 +675,28 @@ EOT;
 
     unset($products, $filterIds);
 
+    $auctions = Mage::getResourceSingleton('trademe/auction')
+      ->getNumberPerProduct(
+          null,
+          MVentory_TradeMe_Model_Config::AUCTION_FIXED_END_DATE
+        );
+
     shuffle($ids);
 
     foreach ($ids as $id) {
       $product = Mage::getModel('catalog/product')->load($id);
 
-      if (!$product->getId())
+      if (!$productId = $product->getId())
+        continue;
+
+      //Check if current number of product's $1 auctions is smaller than allowed
+      //maximum number in the product
+      $allowed = $this->_isAllowedNumberOfAuctions(
+        isset($auctions[$productId]) ? (int) $auctions[$productId] : 0,
+        $product->getData('tm_fixedend_limit')
+      );
+
+      if (!$allowed)
         continue;
 
       $matchResult = Mage::getModel('trademe/matching')
@@ -1063,6 +1079,33 @@ EOT;
     );
 
     return array($website, $website->getDefaultStore());
+  }
+
+  /**
+   * Check if current number auction for product is smaller than max number
+   * per product. Checks for global max number if product doesn't have its own
+   * value.
+   *
+   * @param int $number
+   *   Current number of auctions
+   *
+   * @param string|null $max
+   *   Maximum number of auctions per products. Null value or empty string value
+   *   are treated as unlimited number
+   *
+   * @return boolean
+   *   Result fo check
+   */
+  protected function _isAllowedNumberOfAuctions ($number, $max) {
+    if ($max === null ||  ($max = trim($max)) === '')
+      $max = $this
+        ->_store
+        ->getConfig(MVentory_TradeMe_Model_Config::_1AUC_LIMIT);
+
+    if ($max === null ||  ($max = trim($max)) === '')
+      return true;
+
+    return (int) $number < (int) $max;
   }
 
   /**

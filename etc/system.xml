@@ -326,6 +326,20 @@
               <sort_order>5</sort_order>
             </allow_withdrawal>
             -->
+
+            <limit translate="label comment tooltip">
+              <label>$1 auctions limit</label>
+              <comment>Max number of concurrent $1 auctions</comment>
+              <tooltip>A limit of $1 auctions per product that can be active at the same time.</tooltip>
+              <frontend_type>text</frontend_type>
+              <frontend_class>validate-digits</frontend_class>
+
+              <show_in_default>1</show_in_default>
+              <show_in_website>1</show_in_website>
+              <show_in_store>0</show_in_store>
+
+              <sort_order>107</sort_order>
+            </limit>
           </fields>
         </one_dollar>
 

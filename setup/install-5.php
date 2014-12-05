@@ -121,6 +121,19 @@ $attrs = array(
     'is_html_allowed_on_front' => true,
 
     'option' => array('values' => array('New', 'Near New', 'Used'))
+  ),
+
+  'tm_fixedend_limit' => array(
+    //Fields from Mage_Eav_Model_Entity_Setup
+    'type' => 'int',
+    'label' => '$1 auctions limit',
+    'frontend_class' => 'validate-digits',
+    'required' => false,
+    'user_defined' => true,
+    'global' => Mage_Catalog_Model_Resource_Eav_Attribute::SCOPE_STORE,
+
+    //Fields from Mage_Catalog_Model_Resource_Setup
+    'is_configurable' => false
   )
 );
 

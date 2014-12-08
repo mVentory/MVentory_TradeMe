@@ -301,7 +301,7 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
       foreach ($shippingTypes as $shippingType)
         if (isset($account['shipping_types'][$shippingType])) {
           $account = $account + $account['shipping_types'][$shippingType];
-          $account['shipping_type'] = $shippingType;
+          $account['shipping_type'] = (string) $shippingType;
 
           break;
         }
@@ -557,10 +557,21 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
     foreach ($accounts as $id => $account)
       $accountMap[strtolower($account['name'])] = $id;
 
-    $shippingTypeMap['*'] = '*';
+    /**
+     * Map of shipping type labels to shipping type IDs
+     * There's 2 special values:
+     *   - * - means any shipping type in product
+     *   - <empty> - means no shipping type is set in product
+     *
+     * @var array
+     */
+    $shippingTypeMap = array(
+      '*' => '*',
+      '' => ''
+    );
 
     foreach ($shippingTypes as $id => $label)
-      $shippingTypeMap[strtolower($label)] = $id;
+      $shippingTypeMap[strtolower(trim($label))] = $id;
 
     $groupId = $data->getGroupId();
     $field = $data->getField();

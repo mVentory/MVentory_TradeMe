@@ -76,10 +76,6 @@ class MVentory_TradeMe_Block_Tab
       $product
     );
 
-    foreach ($this->_accounts as $id => $account)
-      if ($id && !isset($account['shipping_type']))
-        unset($this->_accounts[$id]);
-
     if (!$this->_accountId)
       $this->_accountId = false;
 

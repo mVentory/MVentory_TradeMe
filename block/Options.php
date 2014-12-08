@@ -197,7 +197,11 @@ class MVentory_TradeMe_Block_Options
       = Mage::getModel('mventory/system_config_source_allowedshippingtypes')
           ->toArray();
 
+    //There's 2 special values:
+    //  - * - means any shipping type in product
+    //  - <empty> - means no shipping type is set in product
     $types['*'] = '*';
+    $types[''] = '';
 
     return $types;
   }

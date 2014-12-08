@@ -3,7 +3,8 @@ helper/                app/code/community/MVentory/TradeMe/Helper/
 model/                 app/code/community/MVentory/TradeMe/Model/
 controller/            app/code/community/MVentory/TradeMe/controllers
 etc/                   app/code/community/MVentory/TradeMe/etc/
-setup/                 app/code/community/MVentory/TradeMe/sql/trademe_setup
+setup/sql/*            app/code/community/MVentory/TradeMe/sql/trademe_setup
+setup/tables           app/code/community/MVentory/TradeMe/sql/trademe_setup/tables
 
 module.xml             app/etc/modules/MVentory_TradeMe.xml
 

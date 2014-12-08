@@ -307,7 +307,7 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
 
   /**
    * Prepare account for the supplied product.
-   * Leave TradeMe options for product's shipping type only
+   * Leave TradeMe options for product's shipping type and weight only
    *
    * @param array $account
    *   TradeMe account data
@@ -316,19 +316,24 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
    *   Product model
    *
    * @return array
-   *   Prepared account data only for the product's shipping type
+   *   Prepared account data only for the product's shipping type and weight
    */
   public function prepareAccount ($account, $product) {
     $type = Mage::helper('mventory/product')->getShippingType($product, true);
+    $weight = $product->getWeight();
 
-    foreach ($account['shipping_types'] as $id => $data) {
-      if (!($id == '*' || $id == $type))
-        continue;
+    foreach ($account['shipping_types'] as $settings) {
+      $_type = $settings['shipping_type'];
+      $_weight = $settings['weight'];
 
-      $account += $data;
-      $account['shipping_type'] = $id;
+      $cond = ($_type == '*' || $_type == $type)
+              && ($_weight === '' || (float) $weight <= (float) $_weight);
 
-      break;
+      if ($cond) {
+        $account += $settings;
+
+        break;
+      }
     }
 
     unset($account['shipping_types']);
@@ -634,7 +639,7 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
     //Check and skip headers
     $headers = $io->streamReadCsv();
 
-    if ($headers === false || count($headers) < 5) {
+    if ($headers === false || count($headers) < 14) {
       $io->streamClose();
 
       Mage::throwException(
@@ -733,7 +738,7 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
   protected function _getImportRow ($row, $rowNumber = 0, &$params) {
 
     //Validate row
-    if (count($row) < 10) {
+    if (count($row) < 14) {
       $msg = 'Invalid TradeMe options format in row %s';
       $params['errors'][] = $this->__($msg, $rowNumber);
 
@@ -766,36 +771,46 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
 
     $shippingType = $params['type'][$shippingType];
 
-    //Validate minimal price
-    $minimalPrice = $this->_parseDecimalValue($row[2]);
+    //Validate maximum weight
+    $weight = $this->_parseWeight($row[2]);
 
-    if ($minimalPrice === false) {
-      $msg = 'Invalid Minimal price value ("%s") in row %s.';
+    if ($weight === false) {
+      $msg = 'Invalid Maximum weight value ("%s") in row %s.';
       $params['errors'][] = $this->__($msg, $row[2], $rowNumber);
 
       return false;
     }
 
-    $freeShippingCost = $this->_parseDecimalValue($row[3]);
+    //Validate minimal price
+    $minimalPrice = $this->_parseDecimalValue($row[3]);
 
-    if ($freeShippingCost === false) {
-      $msg = 'Invalid Free shipping cost value ("%s") in row %s.';
+    if ($minimalPrice === false) {
+      $msg = 'Invalid Minimal price value ("%s") in row %s.';
       $params['errors'][] = $this->__($msg, $row[3], $rowNumber);
 
       return false;
     }
 
-    $addFees = $this->_parseAddfeesValue($row[6]);
+    $freeShippingCost = $this->_parseDecimalValue($row[4]);
+
+    if ($freeShippingCost === false) {
+      $msg = 'Invalid Free shipping cost value ("%s") in row %s.';
+      $params['errors'][] = $this->__($msg, $row[4], $rowNumber);
+
+      return false;
+    }
+
+    $addFees = $this->_parseAddfeesValue($row[7]);
 
     if ($addFees === false) {
       $msg = 'Invalid Add fees value ("%s") in row %s.';
-      $params['errors'][] = $this->__($msg, $row[6], $rowNumber);
+      $params['errors'][] = $this->__($msg, $row[7], $rowNumber);
 
       return false;
     }
 
     //Validate listing duration value
-    $listingDuaration = (int) $row[10];
+    $listingDuaration = (int) $row[11];
 
     //!!!TODO: use getDuration() method
     if (!$listingDuaration || $listingDuaration > self::LISTING_DURATION_MAX)
@@ -804,7 +819,7 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
       $listingDuaration = self::LISTING_DURATION_MIN;
 
     //Protect from duplicate
-    $hash = sprintf('%s-%s', $account, $shippingType);
+    $hash = sprintf('%s-%s-%s', $account, $shippingType, $weight);
 
     if (isset($params['hash'][$hash])) {
       $msg = 'Duplicate row %s.';
@@ -819,17 +834,18 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
     return array(
       'account' => $account,
       'shipping_type' => $shippingType,
+      'weight' => $weight,
       'minimal_price' => $minimalPrice,
       'free_shipping_cost' => $freeShippingCost,
-      'allow_buy_now' => (bool) $row[4],
-      'avoid_withdrawal' => (bool) $row[5],
+      'allow_buy_now' => (bool) $row[5],
+      'avoid_withdrawal' => (bool) $row[6],
       'add_fees' => $addFees,
-      'allow_pickup' => (bool) $row[7],
-      'category_image' => (bool) $row[8],
-      'buyer' => (int) $row[9],
+      'allow_pickup' => (bool) $row[8],
+      'category_image' => (bool) $row[9],
+      'buyer' => (int) $row[10],
       'duration' => $listingDuaration,
-      'shipping_options' => $this->_parseShippingOptionsValue($row[11]),
-      'footer' => $row[12]
+      'shipping_options' => $this->_parseShippingOptionsValue($row[12]),
+      'footer' => $row[13]
     );
   }
 
@@ -850,6 +866,23 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
       return false;
 
     return $value;
+  }
+
+  /**
+   * Parse weight option from TradeMe config file
+   *
+   * @param string $value
+   *   Raw value of the weight option
+   *
+   * @return string|float|false
+   *   Returns false value if passed raw values is not numeric string,
+   *   otherwise return float number or empty string for empty weight option
+   */
+  protected function _parseWeight ($value) {
+    if ($value === '')
+      return $value;
+
+    return is_numeric($value) ? (float) $value : false;
   }
 
   protected function  _parseAddfeesValue ($value) {
@@ -942,11 +975,9 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
 
     foreach ($data as $options) {
       $accountId = $options['account'];
-      $shippingTypeId = $options['shipping_type'];
+      unset($options['account']);
 
-      unset($options['account'], $options['shipping_type']);
-
-      $accounts[$accountId][$shippingTypeId] = $options;
+      $accounts[$accountId][] = $options;
     }
 
     return $accounts;
@@ -956,11 +987,18 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
     $result = array();
 
     foreach ($accounts as $id => $data) {
-      if (isset($data['*']))
-        continue;
+      foreach ($data as $settings) {
+        if ($settings['shipping_type'] == '*')
+          continue 2;
 
-      if ($missingTypes = array_diff_key($shippingTypes, $data))
-        $result[$id] = $missingTypes;
+        if ($settings['shipping_type'] == '')
+          continue;
+
+        $types[$settings['shipping_type']] = true;
+      }
+
+      if (isset($types) && ($missing = array_diff_key($shippingTypes, $types)))
+        $result[$id] = $missing;
     }
 
     return $result;

@@ -29,6 +29,7 @@ class MVentory_TradeMe_Block_Options
   const TYPE_INT = 1;
   const TYPE_BOOL = 2;
   const TYPE_PRICE = 3;
+  const TYPE_FLOAT = 4;
 
   protected $_helper = null;
   protected $_options = null;
@@ -58,6 +59,10 @@ class MVentory_TradeMe_Block_Options
       'shipping_type' => array(
         'label' => 'Shipping type',
         'type' => self::TYPE_TEXT
+      ),
+      'weight' => array(
+        'label' => 'Maximum weight',
+        'type' => self::TYPE_FLOAT
       ),
       'minimal_price' => array(
         'label' => 'Minimal price',
@@ -135,10 +140,12 @@ class MVentory_TradeMe_Block_Options
         foreach ($shippingTypes as $id => $options) {
           $options['allow_buy_now'] = (int) $options['allow_buy_now'];
 
-          $row = $options + array(
+          $row = array(
             'account_name' => $account['name'],
-            'shipping_type' => $_shippingTypes[$id]
+            'shipping_type' => $_shippingTypes[$options['shipping_type']]
           );
+
+          $row += $options;
 
           foreach ($row as $optionId => $optionValue) {
             if (!isset($this->_options[$optionId]))
@@ -156,6 +163,9 @@ class MVentory_TradeMe_Block_Options
               case self::TYPE_INT:
               case self::TYPE_BOOL:
                 $optionValue = (int) $optionValue;
+                break;
+              case self::TYPE_FLOAT:
+                $optionValue = (float) $optionValue;
                 break;
               case self::TYPE_PRICE:
                 $optionValue = number_format((float) $optionValue, 2);

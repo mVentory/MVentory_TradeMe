@@ -252,12 +252,11 @@ EOT;
           $price = $product->getPrice();
           $qty = 1;
 
-          $shipping = $this
-            ->_productHelper
-            ->getShippingType($product, true);
+          $perShipping = $this
+            ->_helper
+            ->prepareAccount($accountData, $product);
 
-          if (!(isset($accountData['shipping_types'][$shipping]['buyer'])
-                || isset($accountData['shipping_types']['*']['buyer']))) {
+          if (!isset($perShipping['shipping_type'])) {
             MVentory_TradeMe_Model_Api::debug(
               'Error: shipping type '
               . $this->_productHelper->getShippingType($product)
@@ -268,9 +267,9 @@ EOT;
             continue;
           }
 
-          $buyer = isset($accountData['shipping_types'][$shipping]['buyer'])
-                     ? $accountData['shipping_types'][$shipping]['buyer']
-                     : $accountData['shipping_types']['*']['buyer'];
+          $buyer = $this
+            ->_helper
+            ->getBuyer($perShipping);
 
           //API function for creating order requires curren store to be set
           Mage::app()->setCurrentStore($this->_store);
@@ -510,18 +509,13 @@ EOT;
 
       shuffle($accountIds);
 
-      $shippingType = $this
-        ->_productHelper
-        ->getShippingType($product, true);
-
       foreach ($accountIds as $accountId) {
         $accountData = $accounts[$accountId];
+        $perShipping = $this
+          ->_helper
+          ->prepareAccount($accountData, $product);
 
-        if (isset($accountData['shipping_types'][$shippingType]))
-          $perShipping = $accountData['shipping_types'][$shippingType];
-        else if (isset($accountData['shipping_types']['*']))
-          $perShipping = $accountData['shipping_types']['*'];
-        else
+        if (!isset($perShipping['shipping_type']))
           continue;
 
         if (($minimalPrice = $this->_helper->getMinimalPrice($perShipping))
@@ -713,18 +707,18 @@ EOT;
 
       foreach ($accountIds as $accountId) {
         $accountData = $accounts[$accountId];
-        $shippingTypes = $accountData['shipping_types'];
+        $perShipping = $this
+          ->_helper
+          ->prepareAccount($accountData, $product);
 
-        if (isset($shippingTypes[$shippingType]))
-          $_data = $shippingTypes[$shippingType];
-        else if (isset($shippingTypes['*']))
-          $_data = $shippingTypes['*'];
-        else
+        if (!isset($perShipping['shipping_type']))
           continue;
 
-        $minimalPrice = $_data['minimal_price'];
-
-        if ($minimalPrice && ($product->getPrice() < $minimalPrice))
+        /**
+         * @todo Should we check minimal price limit for $1 auctions?
+         */
+        if (($minimalPrice = $this->_helper->getMinimalPrice($perShipping))
+            && ($product->getPrice() < $minimalPrice))
           continue;
 
         $api = new MVentory_TradeMe_Model_Api();

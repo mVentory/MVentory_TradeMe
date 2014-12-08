@@ -283,33 +283,57 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
   }
 
   /**
-   * Prepare accounts for the specified product.
+   * Prepare accounts for the supplied product.
    * Leave TradeMe options for product's shipping type only
    *
-   * @param array $accounts TradeMe accounts
-   * @param Mage_Catalog_Model_Product $product Product
+   * @see MVentory_TradeMe_Helper_Data::prepareAccount()
+   *
+   * @param array $accounts
+   *   TradeMe accounts data
+   *
+   * @param Mage_Catalog_Model_Product $product
+   *   Product model
    *
    * @return array
+   *   Prepared accounts data only for the product's shipping type
    */
   public function prepareAccounts ($accounts, $product) {
-    $shippingTypes = array(
-      Mage::helper('mventory/product')->getShippingType($product, true),
-      '*'
-    );
-
-    foreach ($accounts as &$account) {
-      foreach ($shippingTypes as $shippingType)
-        if (isset($account['shipping_types'][$shippingType])) {
-          $account = $account + $account['shipping_types'][$shippingType];
-          $account['shipping_type'] = (string) $shippingType;
-
-          break;
-        }
-
-      unset($account['shipping_types']);
-    }
+    foreach ($accounts as &$account)
+      if (isset($account['shipping_types']))
+        $account = $this->prepareAccount($account, $product);
 
     return $accounts;
+  }
+
+  /**
+   * Prepare account for the supplied product.
+   * Leave TradeMe options for product's shipping type only
+   *
+   * @param array $account
+   *   TradeMe account data
+   *
+   * @param Mage_Catalog_Model_Product $product
+   *   Product model
+   *
+   * @return array
+   *   Prepared account data only for the product's shipping type
+   */
+  public function prepareAccount ($account, $product) {
+    $type = Mage::helper('mventory/product')->getShippingType($product, true);
+
+    foreach ($account['shipping_types'] as $id => $data) {
+      if (!($id == '*' || $id == $type))
+        continue;
+
+      $account += $data;
+      $account['shipping_type'] = $id;
+
+      break;
+    }
+
+    unset($account['shipping_types']);
+
+    return $account;
   }
 
   /**
@@ -530,6 +554,20 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
    */
   public function getMinimalPrice ($data) {
     return isset($data['minimal_price']) ? (float) $data['minimal_price'] : 0;
+  }
+
+  /**
+   * Return buyer ID (pre-configured customer for TradeMe sells) from supplied
+   * TradeMe account data
+   *
+   * @param array $account
+   *   TradeMe account data
+   *
+   * @return int|null
+   *   ID of buyer or null if it can be retrieved from the supplied account data
+   */
+  public function getBuyer ($data) {
+    return isset($data['buyer']) ? (int) $data['buyer'] : null;
   }
 
   /**

@@ -945,7 +945,7 @@ class MVentory_TradeMe_Model_Api {
 
     $_attrs = Mage::app()
       ->getLayout()
-      ->createBlock('mventory/product_view_attributes')
+      ->createBlock('trademe/attributes')
       ->getAdditionalData(
           array('product_barcode_', 'mv_created_date'),
           false

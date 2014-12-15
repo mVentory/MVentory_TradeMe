@@ -65,7 +65,9 @@ class MVentory_TradeMe_Model_Resource_Setup
   public function addAttributes ($attrs) {
     $entityTypeId = $this->getEntityTypeId('catalog_product');
     $setId = $this->getDefaultAttributeSetId($entityTypeId);
-    $groupId = $this->getDefaultAttributeGroupId($entityTypeId, $setId);
+
+    $this->addAttributeGroup($entityTypeId, $setId, 'TM');
+    $groupId = $this->getAttributeGroupId($entityTypeId, $setId, 'TM');
 
     foreach ($attrs as $name => $attr)
       $this

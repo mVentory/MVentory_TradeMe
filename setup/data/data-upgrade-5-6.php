@@ -41,4 +41,9 @@ foreach ($setIds as $setId) {
     $this->addAttributeToGroup($entityTypeId, $setId, $groupId, $attr);
 }
 
+$this->updateAttributes(array(
+  'tm_condition' => array('user_defined' => false),
+  'tm_fixedend_limit' => array('user_defined' => false)
+));
+
 $this->endSetup();

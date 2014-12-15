@@ -112,7 +112,6 @@ $attrs = array(
     'label' => 'Condition',
     'source' => 'eav/entity_attribute_source_table',
     'required' => false,
-    'user_defined' => true,
     'global' => Mage_Catalog_Model_Resource_Eav_Attribute::SCOPE_GLOBAL,
 
     //Fields from Mage_Catalog_Model_Resource_Setup
@@ -129,7 +128,6 @@ $attrs = array(
     'label' => '$1 auctions limit',
     'frontend_class' => 'validate-digits',
     'required' => false,
-    'user_defined' => true,
     'global' => Mage_Catalog_Model_Resource_Eav_Attribute::SCOPE_STORE,
 
     //Fields from Mage_Catalog_Model_Resource_Setup

@@ -73,14 +73,14 @@ class MVentory_TradeMe_Block_Tab
 
     $this->_accounts = $trademe->prepareAccounts(
       $trademe->getAccounts($this->_website),
-      $product
+      $product,
+      $this->_website->getDefaultStore()
     );
 
     if (!$this->_accountId)
       $this->_accountId = false;
 
     if (count($this->_accounts)) {
-      //if ($this->_helper->getShippingType($product) != 'tab_ShipParcel')
         foreach ($this->_accounts as $id => $data)
           unset($this->_accounts[$id]['free_shipping_cost']);
 

@@ -122,7 +122,7 @@ class MVentory_TradeMe_Block_Options
     $collection = new Varien_Data_Collection();
 
     $accounts = Mage::helper('trademe')->getAccounts(
-      $this->getWebsiteId(),
+      $this->getWebsite(),
       false
     );
 
@@ -139,6 +139,9 @@ class MVentory_TradeMe_Block_Options
 
         foreach ($shippingTypes as $id => $options) {
           $options['allow_buy_now'] = (int) $options['allow_buy_now'];
+
+          if (!isset($_shippingTypes[$options['shipping_type']]))
+            continue;
 
           $row = array(
             'account_name' => $account['name'],
@@ -203,9 +206,9 @@ class MVentory_TradeMe_Block_Options
    * @return array
    */
   protected function _getShippingTypes () {
-    $types
-      = Mage::getModel('mventory/system_config_source_allowedshippingtypes')
-          ->toArray();
+    $types = $this
+      ->_helper
+      ->getShippingTypes($this->getWebsite()->getDefaultStore());
 
     //There's 2 special values:
     //  - * - means any shipping type in product

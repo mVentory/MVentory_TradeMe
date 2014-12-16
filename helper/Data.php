@@ -294,13 +294,16 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
    * @param Mage_Catalog_Model_Product $product
    *   Product model
    *
+   * @param Mage_Core_Model_Store $store
+   *   Store model or null for current store
+   *
    * @return array
    *   Prepared accounts data only for the product's shipping type
    */
-  public function prepareAccounts ($accounts, $product) {
+  public function prepareAccounts ($accounts, $product, $store = null) {
     foreach ($accounts as &$account)
       if (isset($account['shipping_types']))
-        $account = $this->prepareAccount($account, $product);
+        $account = $this->prepareAccount($account, $product, $store);
 
     return $accounts;
   }
@@ -315,11 +318,14 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
    * @param Mage_Catalog_Model_Product $product
    *   Product model
    *
+   * @param Mage_Core_Model_Store $store
+   *   Store model or null for current store
+   *
    * @return array
    *   Prepared account data only for the product's shipping type and weight
    */
-  public function prepareAccount ($account, $product) {
-    $type = Mage::helper('mventory/product')->getShippingType($product, true);
+  public function prepareAccount ($account, $product, $store = null) {
+    $type = $this->getShippingType($product, true, $store);
     $weight = $product->getWeight();
 
     foreach ($account['shipping_types'] as $settings) {
@@ -582,15 +588,13 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
    * @throws Mage_Core_Exception
    */
   public function importOptions ($data) {
-    $shippingTypes =
-      Mage::getModel('mventory/system_config_source_allowedshippingtypes')
-        ->toArray();
+    $scopeId = $data->getScopeId();
+    $website = Mage::app()->getWebsite($scopeId);
+
+    $shippingTypes =$this->getShippingTypes($website->getDefaultStore());
 
     if (!$shippingTypes)
       Mage::throwException($this->__('There\'re no available shipping types'));
-
-    $scopeId = $data->getScopeId();
-    $website = Mage::app()->getWebsite($scopeId);
 
     $accounts = $this->getAccounts($website, false);
 
@@ -1027,5 +1031,95 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
       return $emu->startEnvironmentEmulation($storeOrEnv->getId());
 
     $emu->stopEnvironmentEmulation($storeOrEnv);
+  }
+
+  /**
+   * Return code of shipping type attribute for the supplied store
+   *
+   * @param Mage_Core_Model_Store $store
+   *   Store model or null for current store
+   * @return string
+   *   Code of shipping type attribute that is set in settings
+   */
+  public function getShippingAttr ($store = null) {
+    if (!$store instanceof Mage_Core_Model_Store)
+      $store = Mage::app()->getStore($store);
+
+    return strtolower(trim(
+      $store->getConfig(MVentory_TradeMe_Model_Config::_SHIPPING_ATTR)
+    ));
+  }
+
+  /**
+   * Return values of shipping type attribute for the supplied store
+   *
+   * @param Mage_Core_Model_Store $store
+   *   Store model or null for current store
+   *
+   * @return array
+   *   List of shipping types or empty array if shipping type attribute can't
+   *   be loaded
+   */
+  public function getShippingTypes ($store = null) {
+    if (!$store instanceof Mage_Core_Model_Store)
+      $store = Mage::app()->getStore($store);
+
+    $code = $this->getShippingAttr($store);
+
+    if (!$code)
+      return array();
+
+    $attribute = Mage::getResourceModel('catalog/eav_attribute')->loadByCode(
+      Mage_Catalog_Model_Product::ENTITY,
+      $code
+    );
+
+    if (!$attribute->getId())
+      return array();
+
+    $options = $attribute
+      ->setStoreId($store->getId())
+      ->getSource()
+      ->getAllOptions(false);
+
+    foreach ($options as $option)
+      $types[$option['value']] = $option['label'];
+
+    return $types;
+  }
+
+  /**
+   * Return value of shipping type attribute from the supplied product
+   *
+   * @param Mage_Catalog_Model_Product $product
+   *   Product model
+   *
+   * @param boolean $rawValue
+   *   Return raw value if false otherwise return option label
+   *
+   * @param Mage_Core_Model_Store $store
+   *   Store model or null for current store
+   *
+   * @return int|string|null
+   *   Raw value of the attribute or option label
+   */
+  public function getShippingType ($product, $rawValue = false, $store = null) {
+    if (!$store instanceof Mage_Core_Model_Store)
+      $store = Mage::app()->getStore($store);
+
+    if (!$code = $this->getShippingAttr($store))
+      return null;
+
+    if ($rawValue)
+      return $product->getData($code);
+
+    $attributes = $product->getAttributes();
+
+    return isset($attributes[$code])
+             ? $attributes[$code]
+                 ->setStoreId($store->getId())
+                 ->getFrontend()
+                 ->getValue($product)
+             : null;
   }
 }

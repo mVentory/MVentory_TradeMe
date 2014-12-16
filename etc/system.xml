@@ -189,6 +189,20 @@
               <sort_order>107</sort_order>
             </name_variants_attr>
 
+            <shipping_attr>
+              <label>Shipping type attribute</label>
+              <comment>Attribute code for a custom shipping type</comment>
+              <tooltip>Create or use an existing attribute to specify shipping options per product. You can use any values, e.g. Courier, Envelope, Parcel. The values will be used to determine shipping options for TradeMe. Leave blank if there is only one or no shipping options.</tooltip>
+              <frontend_type>text</frontend_type>
+              <frontend_class>validate-code validate-length maximum-length-30</frontend_class>
+
+              <show_in_default>1</show_in_default>
+              <show_in_website>1</show_in_website>
+              <show_in_store>0</show_in_store>
+
+              <sort_order>108</sort_order>
+            </shipping_attr>
+
             <import translate="label">
               <label>Import configuration file</label>
               <tooltip>Export the configuration file, edit settings and import it back. See documentation for a detailed explanation of the format.</tooltip>
@@ -199,7 +213,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>108</sort_order>
+              <sort_order>109</sort_order>
             </import>
 
             <export translate="label">
@@ -210,7 +224,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>109</sort_order>
+              <sort_order>110</sort_order>
             </export>
           </fields>
         </settings>

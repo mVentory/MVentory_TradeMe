@@ -254,12 +254,12 @@ EOT;
 
           $perShipping = $this
             ->_helper
-            ->prepareAccount($accountData, $product);
+            ->prepareAccount($accountData, $product, $this->_store);
 
           if (!isset($perShipping['shipping_type'])) {
             MVentory_TradeMe_Model_Api::debug(
               'Error: shipping type '
-              . $this->_productHelper->getShippingType($product)
+              . $this->_helper->getShippingType($product, false, $this->_store)
               . ' doesn\t exists in ' . $accountData['name']
               . ' account. Product SKU: ' . $sku
             );
@@ -513,7 +513,7 @@ EOT;
         $accountData = $accounts[$accountId];
         $perShipping = $this
           ->_helper
-          ->prepareAccount($accountData, $product);
+          ->prepareAccount($accountData, $product, $this->_store);
 
         if (!isset($perShipping['shipping_type']))
           continue;
@@ -703,13 +703,15 @@ EOT;
 
       shuffle($accountIds);
 
-      $shippingType = $productHelper->getShippingType($product, true);
+      $shippingType = $this
+        ->_helper
+        ->getShippingType($product, true, $this->_store);
 
       foreach ($accountIds as $accountId) {
         $accountData = $accounts[$accountId];
         $perShipping = $this
           ->_helper
-          ->prepareAccount($accountData, $product);
+          ->prepareAccount($accountData, $product, $this->_store);
 
         if (!isset($perShipping['shipping_type']))
           continue;
@@ -931,8 +933,10 @@ EOT;
     if ($matchResult)
       $data['matched_category'] = $matchResult;
 
+    $shippingAttr = $trademe->getShippingAttr($website->getDefaultStore());
+
     //Add shipping rate if product's shipping type is 'tab_ShipTransport'
-    if (isset($product['mv_shipping_']) && $account) {
+    if (isset($product[$shippingAttr]) && $account) {
       $do = false;
 
       //!!!TODO: this needs to be optimised and cached
@@ -942,12 +946,12 @@ EOT;
       //Iterate over all attributes...
       foreach ($attrs as $attribute)
         //... to find attribute with shipping type info, then...
-        if ($attribute['attribute_code'] == 'mv_shipping_')
+        if ($attribute['attribute_code'] == $shippingAttr)
           //... iterate over all its options...
           foreach ($attribute['options'] as $option)
             //... to find option with same value as in product and with
             //label equals 'tab_ShipTransport'
-            if ($option['value'] == $product['mv_shipping_']
+            if ($option['value'] == $product[$shippingAttr]
                 && $do = ($option['label'] == 'tab_ShipTransport'))
               break 2;
 

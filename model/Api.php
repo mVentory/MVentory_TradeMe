@@ -205,8 +205,8 @@ class MVentory_TradeMe_Model_Api {
     $this->getWebsiteId($product);
     $this->setAccountId($data);
 
-    $account = $helper->prepareAccounts(array($this->_accountData), $product);
-    $account = $account[0];
+    $store = $this->_website->getDefaultStore();
+    $account = $helper->prepareAccount($this->_accountData, $product, $store);
 
     if (!isset($account['shipping_type']))
       return 'No settings for product\'s shipping type';
@@ -229,11 +229,6 @@ class MVentory_TradeMe_Model_Api {
       if (!$categoryId)
         return 'Product doesn\'t have matched TradeMe category';
 
-      //$productShippingType = $this->_helper->getShippingType($product);
-
-      //$shippingType = isset($_data['shipping_type'])
-      //                  ? $_data['shipping_type']
-      //                    : MVentory_TradeMe_Model_Config::SHIPPING_UNDECIDED;
       $shippingType = MVentory_TradeMe_Model_Config::SHIPPING_UNDECIDED;
 
       Mage::unregister('product');
@@ -243,21 +238,11 @@ class MVentory_TradeMe_Model_Api {
 
       $description = '';
 
-      if ($descriptionTmpl) {
-        //if ($productShippingType == 'tab_ShipFree'
-        //    || ($productShippingType == 'tab_ShipParcel'
-        //        && $shippingType == MVentory_TradeMe_Model_Config::SHIPPING_FREE
-        //        && isset($account['free_shipping_cost'])
-        //        && $account['free_shipping_cost'] > 0))
-        //  $_data['free_shipping_text'] = isset($account['free_shipping_text'])
-        //                                   ? $account['free_shipping_text']
-        //                                     : '';
-
+      if ($descriptionTmpl)
         $description = $this->processDescription(
           $descriptionTmpl,
           $product->getData()
         );
-      }
 
       if (strlen($description)
             > MVentory_TradeMe_Model_Config::DESCRIPTION_MAX_LENGTH)
@@ -273,7 +258,6 @@ class MVentory_TradeMe_Model_Api {
         html_entity_decode($description, ENT_COMPAT, 'UTF-8')
       );
 
-      $store = $this->_website->getDefaultStore();
       $photoId = null;
 
       try {
@@ -303,7 +287,6 @@ class MVentory_TradeMe_Model_Api {
       $client->setMethod(Zend_Http_Client::POST);
 
       $title = $helper->getTitle($product, $store);
-      unset($store);
 
       if (strlen($title) > MVentory_TradeMe_Model_Config::TITLE_MAX_LENGTH)
         $title = htmlspecialchars(substr(
@@ -553,8 +536,8 @@ class MVentory_TradeMe_Model_Api {
 
     $this->setAccountId($auction['account_id']);
 
-    $account = $helper->prepareAccounts(array($this->_accountData), $product);
-    $account = $account[0];
+    $store = $this->_website->getDefaultStore();
+    $account = $helper->prepareAccount($this->_accountData, $product, $store);
 
     if (!isset($account['shipping_type']))
       return 'No settings for product\'s shipping type';
@@ -591,23 +574,14 @@ class MVentory_TradeMe_Model_Api {
           if ($value == -1 && isset($account[$key]))
             $formData[$key] = $account[$key];
 
-      //$shippingType = isset($formData['shipping_type'])
-      //                  ? $formData['shipping_type']
-      //                    : MVentory_TradeMe_Model_Config::SHIPPING_UNDECIDED;
-
       $shippingType = MVentory_TradeMe_Model_Config::SHIPPING_UNDECIDED;
-
-      //$productShippingType = $this->_helper->getShippingType($product);
 
       if (!isset($parameters['Category']) && isset($formData['category'])
           && $formData['category'])
         $parameters['Category'] = $formData['category'];
 
       if (!isset($parameters['Title'])) {
-        $title = $helper->getTitle(
-          $product,
-          $this->_website->getDefaultStore()
-        );
+        $title = $helper->getTitle($product, $store);
 
         if (strlen($title) > MVentory_TradeMe_Model_Config::TITLE_MAX_LENGTH)
           //!!!TODO: use hellip instead 3 dots, see send() method
@@ -616,15 +590,6 @@ class MVentory_TradeMe_Model_Api {
             0,
             MVentory_TradeMe_Model_Config::TITLE_MAX_LENGTH - 3
           ) . '...';
-        //elseif ($productShippingType == 'tab_ShipParcel'
-        //        && $shippingType == MVentory_TradeMe_Model_Config::SHIPPING_FREE
-        //        && isset($account['free_shipping_cost'])
-        //        && $account['free_shipping_cost'] > 0) {
-        //  $freeShippingTitle = $title . ', free shipping';
-
-        //  if (strlen($freeShippingTitle) <= MVentory_TradeMe_Model_Config::TITLE_MAX_LENGTH)
-        //    $title = $freeShippingTitle;
-        //}
 
         $parameters['Title'] = $title;
       }

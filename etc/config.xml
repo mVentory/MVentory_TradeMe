@@ -206,6 +206,7 @@
     <trademe>
       <settings>
         <enable_listing>1</enable_listing>
+        <shipping_attr>mv_shipping_</shipping_attr>
       </settings>
 
       <one_dollar>

@@ -39,7 +39,7 @@ class MVentory_TradeMe_OptionsController
     $content = $this
                  ->getLayout()
                  ->createBlock('trademe/options')
-                 ->setWebsiteId($website->getId())
+                 ->setWebsite($website)
                  ->getCsvFile();
 
     $this->_prepareDownloadResponse(

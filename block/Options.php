@@ -195,9 +195,16 @@ class MVentory_TradeMe_Block_Options
   protected function _fillShippingTypes ($shippingTypes) {
     $emptyOptions = array_fill_keys(array_keys($this->_options), '');
 
-    unset($emptyOptions['account_name'], $emptyOptions['shipping_type']);
+    unset($emptyOptions['account_name']);
 
-    return array_fill_keys(array_keys($shippingTypes), $emptyOptions);
+    $_shippingTypes = array();
+
+    foreach ($shippingTypes as $value => $label) {
+      $emptyOptions['shipping_type'] = $value;
+      $_shippingTypes[] = $emptyOptions;
+    }
+
+    return $_shippingTypes;
   }
 
   /**

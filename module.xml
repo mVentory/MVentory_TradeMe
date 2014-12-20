@@ -24,6 +24,9 @@
     <MVentory_TradeMe>
       <active>true</active>
       <codePool>community</codePool>
+      <depends>
+        <MVentory_API />
+      </depends>
     </MVentory_TradeMe>
   </modules>
 </config>

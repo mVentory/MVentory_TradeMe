@@ -20,10 +20,10 @@
 -->
 
 <config>
-    <modules>
-        <MVentory_TradeMe>
-            <active>true</active>
-            <codePool>community</codePool>
-        </MVentory_TradeMe>
-    </modules>
+  <modules>
+    <MVentory_TradeMe>
+      <active>true</active>
+      <codePool>community</codePool>
+    </MVentory_TradeMe>
+  </modules>
 </config>

@@ -23,11 +23,11 @@
  * @author Anatoly A. Kazantsev <anatoly@mventory.com>
  */
 
-class MVentory_TradeMe_Block_Setting_Help
+class MVentory_TradeMe_Block_Setting_Accounthelp
   extends Mage_Adminhtml_Block_Abstract
   implements Varien_Data_Form_Element_Renderer_Interface
 {
-  protected $_template = 'trademe/config/help.phtml';
+  protected $_template = 'trademe/config/account-help.phtml';
 
   /**
    * Render fieldset html

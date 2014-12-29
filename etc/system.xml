@@ -52,6 +52,18 @@
         </hint>
         <settings translate="label">
           <label>Settings</label>
+          <footer>
+            <![CDATA[
+            <ul class="messages">
+              <li class="notice-msg">
+                <ul>
+                  <li>Trade Me has additional settings at website configuration scope.</li>
+                </ul>
+              </li
+            </ul>
+            ]]>
+          </footer>
+          <frontend_model>trademe/setting_fieldset</frontend_model>
 
           <show_in_default>1</show_in_default>
           <show_in_website>1</show_in_website>

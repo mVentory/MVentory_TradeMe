@@ -369,6 +369,16 @@
           </fields>
         </one_dollar>
 
+        <help>
+          <frontend_model>trademe/setting_help</frontend_model>
+
+          <show_in_default>1</show_in_default>
+          <show_in_website>0</show_in_website>
+          <show_in_store>0</show_in_store>
+
+          <sort_order>3</sort_order>
+        </help>
+
         <help_account>
           <frontend_model>trademe/setting_accounthelp</frontend_model>
 
@@ -376,7 +386,7 @@
           <show_in_website>1</show_in_website>
           <show_in_store>0</show_in_store>
 
-          <sort_order>3</sort_order>
+          <sort_order>4</sort_order>
         </help_account>
       </groups>
     </trademe>

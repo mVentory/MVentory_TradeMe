@@ -19,7 +19,27 @@
 ?>
 
 <div class="entry-edit-head collapseable">
-  <strong>TradeMe Config</strong>
+  <strong>TradeMe Integration</strong>
 </div>
 
-<div class="box"></div>
+<div class="box">
+<p>This extension connects your Magento directly to TradeMe via TradeMe API to create listings from Magento products and keep the inventory in sync.</p> 
+
+<h3>1. Configure settings at the Global scope.</h3>
+<p>Go through every setting, read the additional information behind [?] icon and fill in everything that makes sense. Some settings are optional.</p>
+<h3>2. Configure settings at the Website scope.</h3>
+<p>Swith to the website level using the dropdown at the top left corner of the page and complete the configuration there.</p>
+<p>Different websites within the same Magento installation can be configured differently.</p>
+<h3>3. Configure TradeMe categories mapping per attribute set.</h3>
+<p>Instead of selecting TradeMe categories for every product you can create rules for mapping your product types to TradeMe categories. E.g. a mug can go to a dozen different categories on TradeMe. You can configure a rule based on the mug's type, size, purpose, condition, etc.</p>
+<p>Open an attribute set, scroll down to TradeMe category mapping section and follow the instructions on the screen.</p>
+<h3>4. Manual listing</h3>
+<p>Open a product details page in the admin and click on TradeMe tab. Check the default settings, select a TradeMe category and press [Submit] button.</p>
+<p>The settings will be remembered for the next time this product is relisted.</p>
+<h3>5. Automated listing on a schedule.</h3>
+<p>The best way of using this extension is to configure everything, start the cron and let it list the products on a schedule giving you constant presence on TradeMe.</p>
+<h3>Troubleshooting</h3>
+<p>Make sure Magento logging is enabled and check trademe.log for detailed information on all extension activities.</p>
+<h3>Help and Support</h3>
+<p>Contact mVentory on <a href="mailto:support@mventory.com">support@mventory.com</a> for assistance.</p>
+</div>

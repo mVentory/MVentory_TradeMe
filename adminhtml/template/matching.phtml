@@ -32,9 +32,17 @@ $_rules = $this->_getRules();
     </tr>
   </table>
 </div>
-<div class="box clear">
-  For automated product submission to Trade Me, each product type must be mapped to a Trade Me category. Select a Trade Me category and click Save rule to create a default mapping rule for this attribute set. Add any other desired rules by selecting a set of attribute values and a matching Trade Me category. See <a target="_blank" href="https://github.com/mVentory/MVentory_TradeMe/">project page</a> for documentation. Try our <a id="mventory-promo" target="_blank" href="http://mventory.com/why-mventory/">Android app</a> for Magento admins.
-</div>
+<ul class="messages" id="mventory-matching-messages">
+  <li class="notice-msg">
+    <ul>
+      <li>
+        <span>A product type must be mapped to one or more Trade Me categories. This section holds mapping rules for all products from this attribute set.</span>
+      </li>
+      <li>1. Select a Trade Me category on the right and click <i>Save rule</i> to create a default mapping rule for this attribute set. It will be used if no other rules are applicable.</li>
+	  <li>2. Add more rules by selecting a set of attribute values on the left and a matching Trade Me category on the right.</li>	  
+    </ul>
+  </li>
+</ul>
 
 
 <div id="trademe-rules">
@@ -115,7 +123,7 @@ $_rules = $this->_getRules();
           </select>
         </div>
 
-        <div class="trademe-rule-arrow">&#8681;</div>
+        <div class="mventory-rule-new-arrow">ANY OF<br/>&#8681;</div>
 
         <div>
           <select class="trademe-rule-new-attr-value" multiple="multiple"></select>

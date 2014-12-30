@@ -31,7 +31,7 @@ class MVentory_TradeMe_Model_Api {
 
   //List of TradeMe categories to ignore. Categories are selected by its number
   private $_ignoreCategories = array(
-    '0001-' => true, //Trade Me Motors
+//    '0001-' => true, //Trade Me Motors
     '0350-' => true, //Trade Me Property
     '5000-' => true, //Trade Me Jobs
     '9374-' => true, //Travel, events & activities

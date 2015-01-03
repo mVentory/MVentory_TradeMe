@@ -34,7 +34,6 @@
       <frontend_type>text</frontend_type>
 
       <show_in_default>1</show_in_default>
-
       <show_in_website>1</show_in_website>
       <show_in_store>0</show_in_store>
 
@@ -75,8 +74,9 @@
             <comment>Save config after changing Consumer keys before pressing Authorise button.</comment>
             <name translate="label">
               <label>Name</label>
+			  <comment>A free text name to help you identify the account.</comment>
               <frontend_type>text</frontend_type>
-
+              <tooltip>Used for your reference only.</tooltip>
               <show_in_default>0</show_in_default>
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
@@ -86,7 +86,8 @@
 
             <key translate="label tooltip">
               <label>Consumer Key</label>
-              <tooltip>See documentation for how to obtain the Consumer key and secret from Trade Me.</tooltip>
+			  <comment><![CDATA[Copy from <a href="http://www.trademe.co.nz/MyTradeMe/Api/DeveloperOptions.aspx" target="_blank" title="Get the key now">My Trade Me</a>]]></comment>
+              <tooltip>Register a new TradeMe application of type "client" and copy the keys here. Application name and description can be anything you like.</tooltip>
               <frontend_type>text</frontend_type>
 
               <show_in_default>0</show_in_default>
@@ -110,7 +111,7 @@
             <max_listings translate="label comment tooltip">
               <label>Max Number of Listings</label>
               <comment>Enter 0 to disable automatic submissions.</comment>
-              <tooltip>A limit for automatic product listing submissions. Automatic submissions are only performed if the number of currently listed products (including manually-listed products) is below this limit.</tooltip>
+              <tooltip>A limit for automatic product listing submissions. Automatic submissions are only performed if the number of currently listed products (including manually-listed products) is below this limit. $1 auctons are excluded.</tooltip>
               <frontend_type>text</frontend_type>
 
               <show_in_default>0</show_in_default>
@@ -124,8 +125,9 @@
           <fields>
             <sandbox translate="label comment">
               <label>Sandbox</label>
-              <comment>Select No to use Trade Me. Select Yes to use Trade Me Sandbox (for testing and development).</comment>
-              <frontend_type>select</frontend_type>
+              <comment><![CDATA[Use <a href="http://www.tmsandbox.co.nz/" target="_blank" title="Go to TM Sandbox">Trade Me Sandbox</a> for testing and development only]]></comment>
+              <tooltip>Trade Me Sandbox is a mirror of their production website for API testing. You can list and buy without incurring any fees.</tooltip>
+			  <frontend_type>select</frontend_type>
               <source_model>adminhtml/system_config_source_yesno</source_model>
 
               <show_in_default>0</show_in_default>
@@ -137,8 +139,8 @@
 
             <cron translate="label comment tooltip">
               <label>Magento cron interval (in minutes)</label>
-              <tooltip>Cron.php must be running as a cron job for this feature to work. See Magento documentation for more details on Cron.php.</tooltip>
-              <comment>Enter 0 to disable cron.</comment>
+              <tooltip>Magento cron must be running for this feature to work.<br/>You can make listings manually with the cron disabled, but the site will not be able to check TradeMe for sales or auction expiration.</tooltip>
+              <comment><![CDATA[Interval to poll TradeMe for updates or 0 to disable polling. Enable <a href="https://www.google.co.nz/search?q=magento+cron.php" target="_blank" title="How to configure and troubleshoot Magento cron">Cron.php</a>.]]></comment>
               <frontend_type>text</frontend_type>
               <backend_model>trademe/setting_backend_cron</backend_model>
 
@@ -151,7 +153,7 @@
 
             <enable_listing translate="label comment tooltip">
               <label>Default value for 'Allow to list' flag</label>
-              <comment>Default value for all new products.</comment>
+              <comment>Yes to list new products by default.</comment>
               <tooltip>Automatic (cron) submission will only work for products with 'Allow to List' flag set to Yes. Set this option to Yes if you want all products to be automatically listed by default.</tooltip>
               <frontend_type>select</frontend_type>
               <source_model>adminhtml/system_config_source_yesno</source_model>
@@ -166,6 +168,7 @@
             <list_as_new translate="label comment">
               <label>List as 'New'</label>
               <comment>Select product conditions that should be listed on Trade Me as New. Hold Ctrl to select multiple items.</comment>
+			  <tooltip>Use attribute tm_condition to specify condition per product and map your values to TradeMe values here. Products are always listed as new attribute tm_condition is not used.</tooltip>
               <frontend_type>multiselect</frontend_type>
               <source_model>trademe/setting_source_conditions</source_model>
 
@@ -178,6 +181,7 @@
 
             <mapping_store translate="label">
               <label>Fake store for mapping values of TradeMe attributes</label>
+			  <comment>Leave blank unless instructed otherwise.</comment>
               <frontend_type>select</frontend_type>
               <source_model>trademe/setting_source_store</source_model>
 
@@ -191,7 +195,7 @@
             <name_variants_attr>
               <label>Name variants attribute code</label>
               <comment>Optional, e.g. prod_names</comment>
-              <tooltip>You can nominate an attribute with name variants to be randomly used for this product on TradeMe, one name per line. Create a text area attribute and copy its code into this text box. This feature is optional.</tooltip>
+              <tooltip>You can nominate an attribute with name variants to be randomly used for products on TradeMe, one name per line. Create a text area attribute and copy its code into this text box. This feature is optional.</tooltip>
               <frontend_type>text</frontend_type>
 
               <show_in_default>1</show_in_default>
@@ -202,9 +206,9 @@
             </name_variants_attr>
 
             <shipping_attr>
-              <label>Shipping type attribute</label>
-              <comment>Attribute code for a custom shipping type</comment>
-              <tooltip>Create or use an existing attribute to specify shipping options per product. You can use any values, e.g. Courier, Envelope, Parcel. The values will be used to determine shipping options for TradeMe. Leave blank if there is only one or no shipping options.</tooltip>
+              <label>Shipping method attribute</label>
+              <comment>Attribute code for a custom shipping methods</comment>
+              <tooltip>Use existing or create a new attribute with shipping options per product. You can use any arbitrary values, e.g. Courier, Envelope, Parcel. The values will be used to determine shipping options for TradeMe. Leave blank if there is only one or no shipping options.</tooltip>
               <frontend_type>text</frontend_type>
               <frontend_class>validate-code validate-length maximum-length-30</frontend_class>
 
@@ -217,7 +221,16 @@
 
             <import translate="label">
               <label>Import configuration file</label>
-              <tooltip>Export the configuration file, edit settings and import it back. See documentation for a detailed explanation of the format.</tooltip>
+			  <comment>A valid config file is required for the extension to work</comment>
+              <tooltip>
+            <![CDATA[
+              <ul>
+                <li>1. Export the configuration file</li>
+				<li>2. Read help section on CSV file fields</li>
+				<li>3. Edit the file with your settings and values</li>
+				<li>4. Press "Browse" to upload the edited file</li>
+              </ul>
+            ]]></tooltip>
               <frontend_type>file</frontend_type>
               <backend_model>trademe/setting_backend_options</backend_model>
 
@@ -293,6 +306,7 @@
             <duration translate="label comment">
               <label>Auction duration</label>
               <comment>Auction duration</comment>
+			  <tooltip>Longer auctions acquire more views and more watchers</tooltip>
               <frontend_type>select</frontend_type>
               <source_model>trademe/setting_source_7days</source_model>
 
@@ -307,7 +321,7 @@
               <label>List full price</label>
               <comment>Full price auctions for $1 products</comment>
               <tooltip>
-                <![CDATA[
+                <![CDATA[Controls if full price auctions should be listed concurrently with $1 auctions.
                   <ul class="trademe-setting-list">
                     <li>Always - maintain at least one full price auction</li>
                     <li>If stock allows - if there are more items than $1 auctions</li>

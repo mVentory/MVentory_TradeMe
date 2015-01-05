@@ -13,7 +13,7 @@
  * See http://mventory.com/legal/licensing/ for other licensing options.
  *
  * @package MVentory/TradeMe
- * @copyright Copyright (c) 2014 mVentory Ltd. (http://mventory.com)
+ * @copyright Copyright (c) 2014-2015 mVentory Ltd. (http://mventory.com)
  * @license http://creativecommons.org/licenses/by-nc-nd/4.0/
  * @author Anatoly A. Kazantsev <anatoly@mventory.com>
  */
@@ -49,7 +49,7 @@
 
           <sort_order>0</sort_order>
         </hint>
-        <settings translate="label">
+        <settings translate="label footer">
           <label>Settings</label>
           <footer>
             <![CDATA[
@@ -72,11 +72,11 @@
 
           <account_template translate="comment" foo="bar">
             <comment>Save config after changing Consumer keys before pressing Authorise button.</comment>
-            <name translate="label">
+            <name translate="label comment tooltip">
               <label>Name</label>
 			        <comment>A free text name to help you identify the account.</comment>
-              <frontend_type>text</frontend_type>
               <tooltip>Used for your reference only.</tooltip>
+              <frontend_type>text</frontend_type>
 
               <show_in_default>0</show_in_default>
               <show_in_website>1</show_in_website>
@@ -85,7 +85,7 @@
               <sort_order>1</sort_order>
             </name>
 
-            <key translate="label tooltip">
+            <key translate="label comment tooltip">
               <label>Consumer Key</label>
               <comment><![CDATA[Copy from <a href="http://www.trademe.co.nz/MyTradeMe/Api/DeveloperOptions.aspx" target="_blank" title="Get the key now">My Trade Me</a>]]></comment>
               <tooltip>Register a new TradeMe application of type "client" and copy the keys here. Application name and description can be anything you like.</tooltip>
@@ -124,7 +124,7 @@
           </account_template>
 
           <fields>
-            <sandbox translate="label comment">
+            <sandbox translate="label comment tooltip">
               <label>Sandbox</label>
               <comment><![CDATA[Use <a href="http://www.tmsandbox.co.nz/" target="_blank" title="Go to TM Sandbox">Trade Me Sandbox</a> for testing and development only]]></comment>
               <tooltip>Trade Me Sandbox is a mirror of their production website for API testing. You can list and buy without incurring any fees.</tooltip>
@@ -140,7 +140,7 @@
 
             <cron translate="label comment tooltip">
               <label>Magento cron interval (in minutes)</label>
-              <tooltip>Magento cron must be running for this feature to work.<br/>You can make listings manually with the cron disabled, but the site will not be able to check TradeMe for sales or auction expiration.</tooltip>
+              <tooltip><![CDATA[Magento cron must be running for this feature to work.<br/>You can make listings manually with the cron disabled, but the site will not be able to check TradeMe for sales or auction expiration.]]></tooltip>
               <comment><![CDATA[Interval to poll TradeMe for updates or 0 to disable polling. Enable <a href="https://www.google.co.nz/search?q=magento+cron.php" target="_blank" title="How to configure and troubleshoot Magento cron">Cron.php</a>.]]></comment>
               <frontend_type>text</frontend_type>
               <backend_model>trademe/setting_backend_cron</backend_model>
@@ -166,7 +166,7 @@
               <sort_order>104</sort_order>
             </enable_listing>
 
-            <list_as_new translate="label comment">
+            <list_as_new translate="label comment tooltip">
               <label>List as 'New'</label>
               <comment>Select product conditions that should be listed on Trade Me as New. Hold Ctrl to select multiple items.</comment>
               <tooltip>Use attribute tm_condition to specify condition per product and map your values to TradeMe values here. Products are always listed as new attribute tm_condition is not used.</tooltip>
@@ -180,7 +180,7 @@
               <sort_order>105</sort_order>
             </list_as_new>
 
-            <mapping_store translate="label">
+            <mapping_store translate="label comment">
               <label>Fake store for mapping values of TradeMe attributes</label>
               <comment>Leave blank unless instructed otherwise.</comment>
               <frontend_type>select</frontend_type>
@@ -193,7 +193,7 @@
               <sort_order>106</sort_order>
             </mapping_store>
 
-            <name_variants_attr>
+            <name_variants_attr translate="label comment tooltip">
               <label>Name variants attribute code</label>
               <comment>Optional, e.g. prod_names</comment>
               <tooltip>You can nominate an attribute with name variants to be randomly used for products on TradeMe, one name per line. Create a text area attribute and copy its code into this text box. This feature is optional.</tooltip>
@@ -206,7 +206,7 @@
               <sort_order>107</sort_order>
             </name_variants_attr>
 
-            <shipping_attr>
+            <shipping_attr translate="label comment tooltip">
               <label>Shipping method attribute</label>
               <comment>Attribute code for a custom shipping methods</comment>
               <tooltip>Use existing or create a new attribute with shipping options per product. You can use any arbitrary values, e.g. Courier, Envelope, Parcel. The values will be used to determine shipping options for TradeMe. Leave blank if there is only one or no shipping options.</tooltip>
@@ -220,17 +220,17 @@
               <sort_order>108</sort_order>
             </shipping_attr>
 
-            <import translate="label">
+            <import translate="label comment tooltip">
               <label>Import configuration file</label>
               <comment>A valid config file is required for the extension to work</comment>
               <tooltip>
                 <![CDATA[
-                <ul>
-                  <li>1. Export the configuration file</li>
-                  <li>2. Read help section on CSV file fields</li>
-                  <li>3. Edit the file with your settings and values</li>
-                  <li>4. Press "Browse" to upload the edited file</li>
-                </ul>
+                <ol class="trademe-setting-list">
+                  <li>Export the configuration file</li>
+                  <li>Read help section on CSV file fields</li>
+                  <li>Edit the file with your settings and values</li>
+                  <li>Press "Browse" to upload the edited file</li>
+                </ol>
                 ]]>
               </tooltip>
               <frontend_type>file</frontend_type>
@@ -305,7 +305,7 @@
               <sort_order>2</sort_order>
             </end_time>
 
-            <duration translate="label comment">
+            <duration translate="label comment tooltip">
               <label>Auction duration</label>
               <comment>Auction duration</comment>
               <tooltip>Longer auctions acquire more views and more watchers</tooltip>

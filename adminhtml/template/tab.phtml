@@ -12,7 +12,7 @@
  * See http://mventory.com/legal/licensing/ for other licensing options.
  *
  * @package MVentory/TradeMe
- * @copyright Copyright (c) 2014 mVentory Ltd. (http://mventory.com)
+ * @copyright Copyright (c) 2014-2015 mVentory Ltd. (http://mventory.com)
  * @license http://creativecommons.org/licenses/by-nc-nd/4.0/
  * @author Anatoly A. Kazantsev <anatoly@mventory.com>
  */
@@ -222,7 +222,17 @@ $__remove = $this->__('Remove');
     <tbody>
       <tr id="trademe-message-no-selected" class="even">
         <td class="empty-text a-center last" colspan="<?php echo $_cols + 3; ?>">
-          <?php echo $this->__('Select a TradeMe category from the list below or create category matching rules on '); ?>&nbsp;<a href="<?php echo Mage::helper("adminhtml")->getUrl("adminhtml/catalog_product_set/edit/id/".$_product->getAttributeSetId()); ?>" title="<?php echo $this->__('Click and scroll down to Trade Me Categories section'); ?>"><?php echo $this->__('attribute set page'); ?></a>.
+          <?php
+
+          echo $this->__(
+            'Select a TradeMe category from the list below or create category matching rules on <a href="%s" title="Click and scroll down to Trade Me Categories section">attribute set page</a>.',
+            Mage::helper('adminhtml')->getUrl(
+              'adminhtml/catalog_product_set/edit',
+              array('id' => $_product->getAttributeSetId())
+            )
+          );
+
+          ?>
         </td>
       </tr>
       <?php foreach ($_preselectedCategories as $id): ?>

@@ -12,7 +12,7 @@
  * See http://mventory.com/legal/licensing/ for other licensing options.
  *
  * @package MVentory/TradeMe
- * @copyright Copyright (c) 2014 mVentory Ltd. (http://mventory.com)
+ * @copyright Copyright (c) 2014-2015 mVentory Ltd. (http://mventory.com)
  * @license http://creativecommons.org/licenses/by-nc-nd/4.0/
  * @author Anatoly A. Kazantsev <anatoly@mventory.com>
  */
@@ -301,9 +301,19 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
    *   Prepared accounts data only for the product's shipping type
    */
   public function prepareAccounts ($accounts, $product, $store = null) {
-    foreach ($accounts as &$account)
-      if (isset($account['shipping_types']))
-        $account = $this->prepareAccount($account, $product, $store);
+    foreach ($accounts as $id => $account) {
+      if (!isset($account['shipping_types']))
+        continue;
+
+      $account = $this->prepareAccount($account, $product, $store);
+
+      if (!$account) {
+        unset($accounts[$id]);
+        continue;
+      }
+
+      $accounts[$id] = $account;
+    }
 
     return $accounts;
   }
@@ -321,8 +331,9 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
    * @param Mage_Core_Model_Store $store
    *   Store model or null for current store
    *
-   * @return array
+   * @return array|boolean
    *   Prepared account data only for the product's shipping type and weight
+   *   or false if account doesn't match product's parameters
    */
   public function prepareAccount ($account, $product, $store = null) {
     $type = $this->getShippingType($product, true, $store);
@@ -336,15 +347,13 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
               && ($_weight === '' || (float) $weight <= (float) $_weight);
 
       if ($cond) {
-        $account += $settings;
+        unset($account['shipping_types']);
 
-        break;
+        return $account + $settings;
       }
     }
 
-    unset($account['shipping_types']);
-
-    return $account;
+    return false;
   }
 
   /**

@@ -12,7 +12,7 @@
  * See http://mventory.com/legal/licensing/ for other licensing options.
  *
  * @package MVentory/TradeMe
- * @copyright Copyright (c) 2014 mVentory Ltd. (http://mventory.com)
+ * @copyright Copyright (c) 2014-2015 mVentory Ltd. (http://mventory.com)
  * @license http://creativecommons.org/licenses/by-nc-nd/4.0/
  */
 
@@ -208,7 +208,7 @@ class MVentory_TradeMe_Model_Api {
     $store = $this->_website->getDefaultStore();
     $account = $helper->prepareAccount($this->_accountData, $product, $store);
 
-    if (!isset($account['shipping_type']))
+    if (!$account)
       return 'No settings for product\'s shipping type';
 
     if (!$isUpdateOptions = is_array($data))
@@ -539,7 +539,7 @@ class MVentory_TradeMe_Model_Api {
     $store = $this->_website->getDefaultStore();
     $account = $helper->prepareAccount($this->_accountData, $product, $store);
 
-    if (!isset($account['shipping_type']))
+    if (!$account)
       return 'No settings for product\'s shipping type';
 
     $listingId = $auction['listing_id'];

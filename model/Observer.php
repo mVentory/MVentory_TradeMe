@@ -12,7 +12,7 @@
  * See http://mventory.com/legal/licensing/ for other licensing options.
  *
  * @package MVentory/TradeMe
- * @copyright Copyright (c) 2014 mVentory Ltd. (http://mventory.com)
+ * @copyright Copyright (c) 2014-2015 mVentory Ltd. (http://mventory.com)
  * @license http://creativecommons.org/licenses/by-nc-nd/4.0/
  * @author Anatoly A. Kazantsev <anatoly@mventory.com>
  */
@@ -256,7 +256,7 @@ EOT;
             ->_helper
             ->prepareAccount($accountData, $product, $this->_store);
 
-          if (!isset($perShipping['shipping_type'])) {
+          if (!$perShipping) {
             MVentory_TradeMe_Model_Api::debug(
               'Error: shipping type '
               . $this->_helper->getShippingType($product, false, $this->_store)
@@ -515,7 +515,7 @@ EOT;
           ->_helper
           ->prepareAccount($accountData, $product, $this->_store);
 
-        if (!isset($perShipping['shipping_type']))
+        if (!$perShipping)
           continue;
 
         if (($minimalPrice = $this->_helper->getMinimalPrice($perShipping))
@@ -713,7 +713,7 @@ EOT;
           ->_helper
           ->prepareAccount($accountData, $product, $this->_store);
 
-        if (!isset($perShipping['shipping_type']))
+        if (!$perShipping)
           continue;
 
         /**

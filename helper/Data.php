@@ -537,7 +537,9 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
 
   public function getMappingStore () {
     return Mage::app()->getStore(
-      (int) parent::getConfig(MVentory_TradeMe_Model_Config::MAPPING_STORE)
+      (int) Mage::helper('mventory')->getConfig(
+        MVentory_TradeMe_Model_Config::MAPPING_STORE
+      )
     );
   }
 

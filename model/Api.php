@@ -362,7 +362,12 @@ class MVentory_TradeMe_Model_Api {
 <PaymentMethod>BankDeposit</PaymentMethod>
 </PaymentMethods>';
 
-      $attributes = $this->getCategoryAttrs($categoryId);
+      /**
+       * @todo Temporarily disabled. Matching code is buggy in some corner cases
+       * and should be fixed and refactored.
+       */
+      //$attributes = $this->getCategoryAttrs($categoryId);
+      $attributes = false;
 
       if ($attributes) {
         $attributes = $helper->fillAttributes(

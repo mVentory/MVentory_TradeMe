@@ -41,6 +41,8 @@ foreach ($data as $configId => &$value) {
 
   foreach ($shippingTypes as $id => $settings) {
     $settings['shipping_type'] = $id;
+    $settings['weight'] = '';
+
     $_shippingTypes[] = $settings;
   }
 

@@ -26,14 +26,30 @@ class MVentory_TradeMe_Model_Attribute_Source_Boolean
   extends MVentory_TradeMe_Model_Attribute_Source_WithDefault
 {
   /**
+   * "Yes" value, same as in Mage_Eav_Model_Entity_Attribute_Source_Boolean
+   * Redeclared to make the extensions compatible with Magento < 1.8
+   *
+   * @see Mage_Eav_Model_Entity_Attribute_Source_Boolean::VALUE_YES
+   */
+  const VALUE_YES = 1;
+
+  /**
+   * "No" value, same as in Mage_Eav_Model_Entity_Attribute_Source_Boolean
+   * Redeclared to make the extensions compatible with Magento < 1.8
+   *
+   * @see Mage_Eav_Model_Entity_Attribute_Source_Boolean::VALUE_NO
+   */
+  const VALUE_NO = 0;
+
+  /**
    * Generate array of options
    *
    * @return array
    */
   protected function _getOptions () {
     return array(
-      Mage_Eav_Model_Entity_Attribute_Source_Boolean::VALUE_YES => 'Yes',
-      Mage_Eav_Model_Entity_Attribute_Source_Boolean::VALUE_NO => 'No',
+      self::VALUE_YES => 'Yes',
+      self::VALUE_NO => 'No',
     );
   }
 }

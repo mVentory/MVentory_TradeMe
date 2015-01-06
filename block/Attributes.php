@@ -26,40 +26,20 @@ class MVentory_TradeMe_Block_Attributes
  extends Mage_Catalog_Block_Product_View_Attributes {
 
   /**
-   * Outputs options of attributes with select or multiselect input type as
-   * links to filters in category layered navaigation
-   *
-   * $excludeAttr is optional array of attribute codes to
-   * exclude them from additional data array
+   * Prepares data for list of attributes and values for auction description
    *
    * @param array $excludeAttr
-   * @param bool $html Enable or disable links to category filters
+   *   Optional array of attribute codes to exclude them from additional
+   *   data array
+   *
    * @return array
+   *   Prepared list of attributes and values which is used in the template
    */
-  public function getAdditionalData (array $exclude = array(), $html = true) {
-    $helper = Mage::helper('mventory/product');
-
+  public function getAdditionalData (array $exclude = array()) {
     $data = array();
 
     $product = $this->getProduct();
-
-    if ($html)
-      if (!$product->getData('mv_created_date'))
-        $product->setData('mv_created_date', $product->getData('created_at'));
-
-    $category = $helper->getCategory($product);
     $attributes = $product->getAttributes();
-
-    if ($category) {
-      $urlInstance = $category
-        ->getUrlModel()
-        ->getUrlInstance();
-
-      //Remember query parameters to re-store them at the end
-      $queryParams = $urlInstance->getQueryParams();
-    }
-
-    $title = $helper->__('View more of this type');
 
     foreach ($attributes as $attribute) {
       $code = $attribute->getAttributeCode();
@@ -101,30 +81,6 @@ class MVentory_TradeMe_Block_Attributes
       if (!count($values))
         continue;
 
-      if ($category
-          && $attribute->getIsHtmlAllowedOnFront()
-          && $isSelect
-          && $html) {
-
-        //Make a copy of original query parameters
-        $params = $queryParams;
-
-        foreach ($values as $i => &$value) {
-          $params[$code] = $i;
-
-          $urlInstance
-            ->unsetData('query_params')
-            ->setQueryParams($params);
-
-          $value = '<a href="' . $category->unsetData('url')->getUrl() . '" '
-                    . 'title="' . $title . '">'
-                    . $value
-                    . '</a>';
-        }
-
-        unset($value);
-      }
-
       if ($input == 'price') {
         foreach ($values as $i => &$value)
           $value = Mage::app()->getStore()->convertPrice($value, true);
@@ -139,35 +95,12 @@ class MVentory_TradeMe_Block_Attributes
       );
     }
 
-    //Re-store original query parameters and reset cached generated URL
-    //to produce correct URL from original query params on the next call of
-    //getUrl() method from category model
-    if ($category) {
-      $urlInstance
-        ->unsetData('query_params')
-        ->setQueryParams($queryParams);
-
-      $category->unsetData('url');
-    }
-
     //Round value of weight attribute or unset if it's 0
     if (isset($data['weight'])) {
       if ($data['weight']['value'] == 0)
         unset($data['weight']);
       else if (is_numeric($data['weight']['value']))
         $data['weight']['value'] = round($data['weight']['value'], 2);
-    }
-
-    if ($html) {
-      if (isset($data['sku'])) {
-        $url = $this->getUrl('', array('sku' => $data['sku']['value']));
-
-        $qrUrl = 'https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl='
-                 . urlencode(substr($url, 0, -1));
-
-        $data['sku']['value']
-          = '<a href="' . $qrUrl . '">' . $data['sku']['value'] . '</a>';
-      }
     }
 
     return $data;

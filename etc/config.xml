@@ -221,6 +221,9 @@
 
         <!-- 1 = NZ bank deposit, 2 = Credit card, 4 = Cash -->
         <payment_methods>1,2,4</payment_methods>
+
+        <!-- 0 = Managed and in stock -->
+        <stock_status>0</stock_status>
       </settings>
 
       <one_dollar>

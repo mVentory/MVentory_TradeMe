@@ -47,9 +47,14 @@ class MVentory_TradeMe_Model_Attribute_Source_Boolean
    * @return array
    */
   protected function _getOptions () {
-    return array(
-      self::VALUE_YES => 'Yes',
-      self::VALUE_NO => 'No',
-    );
+    if (defined('Mage_Eav_Model_Entity_Attribute_Source_Boolean::VALUE_YES')) {
+      $yes = Mage_Eav_Model_Entity_Attribute_Source_Boolean::VALUE_YES;
+      $no = Mage_Eav_Model_Entity_Attribute_Source_Boolean::VALUE_NO;
+    } else {
+      $yes = self::VALUE_YES;
+      $no = self::VALUE_NO;
+    }
+
+    return array($yes => 'Yes', $no => 'No');
   }
 }

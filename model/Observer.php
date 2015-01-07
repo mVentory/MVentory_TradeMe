@@ -375,6 +375,27 @@ EOT;
     Mage::getSingleton('cataloginventory/stock')
       ->addInStockFilterToCollection($products);
 
+    $globalManageStock = $this
+      ->_store
+      ->getConfig(
+          Mage_CatalogInventory_Model_Stock_Item::XML_PATH_MANAGE_STOCK
+        );
+
+    $condition = array(
+      '{{table}}.use_config_manage_stock = 0 AND {{table}}.manage_stock=1'
+    );
+
+    if ($globalManageStock)
+      $condition[] = '{{table}}.use_config_manage_stock = 1';
+
+    $products->joinField(
+      'inventory_manage_stock',
+      'cataloginventory/stock_item',
+      'manage_stock',
+      'product_id=entity_id',
+      '(' . join(') OR (', $condition) . ')'
+    );
+
     $listNormAuc = (int) $this
       ->_store
       ->getConfig(MVentory_TradeMe_Model_Config::_1AUC_FULL_PRICE);
@@ -663,6 +684,21 @@ EOT;
 
     Mage::getSingleton('cataloginventory/stock')
       ->addInStockFilterToCollection($products);
+
+    $condition = array(
+      '{{table}}.use_config_manage_stock = 0 AND {{table}}.manage_stock=1'
+    );
+
+    if ($storeManageStock)
+      $condition[] = '{{table}}.use_config_manage_stock = 1';
+
+    $products->joinField(
+      'inventory_manage_stock',
+      'cataloginventory/stock_item',
+      'manage_stock',
+      'product_id=entity_id',
+      '(' . join(') OR (', $condition) . ')'
+    );
 
     if (!$ids = $products->getAllIds())
       return;

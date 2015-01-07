@@ -248,6 +248,20 @@
               <sort_order>110</sort_order>
             </shipping_attr>
 
+            <stock_status translate="label comment tooltip">
+              <label>Stock type</label>
+              <comment>List only products with selected stock type</comment>
+              <tooltip>Select all stock level types that should be listed on TradeMe. See Inventory tab in product details for more info.</tooltip>
+              <frontend_type>select</frontend_type>
+              <source_model>trademe/setting_source_stockstatus</source_model>
+
+              <show_in_default>1</show_in_default>
+              <show_in_website>1</show_in_website>
+              <show_in_store>0</show_in_store>
+
+              <sort_order>109</sort_order>
+            </stock_status>
+
             <import translate="label comment tooltip">
               <label>Import configuration file</label>
               <comment>A valid config file is required for the extension to work</comment>

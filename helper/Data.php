@@ -797,7 +797,7 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
     }
 
     //Validate minimal price
-    $minimalPrice = $this->_parseDecimalValue($row[3]);
+    $minimalPrice = $this->_parsePrice($row[3]);
 
     if ($minimalPrice === false) {
       $msg = 'Invalid Minimal price value ("%s") in row %s.';
@@ -898,6 +898,27 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
       return $value;
 
     return is_numeric($value) ? (float) $value : false;
+  }
+
+  /**
+   * Parse price option from TradeMe config file
+   *
+   * @param string $value
+   *   Raw value of the price option
+   *
+   * @return string|float|false
+   *   Returns false value if passed raw values is not numeric string
+   *   or value is negative, otherwise return float number or empty string
+   *   for empty price option
+   */
+  protected function _parsePrice ($value) {
+    if ($value === '')
+      return $value;
+
+    if (!is_numeric($value))
+      return false;
+
+    return (($value = (float) sprintf('%.2F', $value)) >= 0) ? $value : false;
   }
 
   protected function  _parseAddfeesValue ($value) {

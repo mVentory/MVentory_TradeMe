@@ -62,11 +62,13 @@ class MVentory_TradeMe_Block_Options
       ),
       'weight' => array(
         'label' => 'Maximum weight',
-        'type' => self::TYPE_FLOAT
+        'type' => self::TYPE_FLOAT,
+        'empty' => true
       ),
       'minimal_price' => array(
         'label' => 'Minimal price',
-        'type' => self::TYPE_PRICE
+        'type' => self::TYPE_PRICE,
+        'empty' => true
       ),
       'free_shipping_cost' => array(
         'label' => 'Free shipping cost',
@@ -155,6 +157,9 @@ class MVentory_TradeMe_Block_Options
               continue;
 
             $option = $this->_options[$optionId];
+
+            if (isset($option['empty']) && $optionValue === '')
+              continue;
 
             if (isset($option['prepare']))
               $optionValue = call_user_func(

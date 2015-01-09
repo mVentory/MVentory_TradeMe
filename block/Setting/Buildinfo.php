@@ -12,15 +12,15 @@
  * See http://mventory.com/legal/licensing/ for other licensing options.
  *
  * @package MVentory/TradeMe
- * @copyright Copyright (c) 2014 mVentory Ltd. (http://mventory.com)
+ * @copyright Copyright (c) 2015 mVentory Ltd. (http://mventory.com)
  * @license http://creativecommons.org/licenses/by-nc-nd/4.0/
  */
 
 /**
- * Block for system config CSV file field descriptions
+ * Block for displaying build version in system config
  *
  * @package MVentory/TradeMe
- * @author Anatoly A. Kazantsev <anatoly@mventory.com>
+ * @author Andrew Gilman <andrew@mventory.com>
  */
 
 class MVentory_TradeMe_Block_Setting_Buildinfo
@@ -35,7 +35,7 @@ class MVentory_TradeMe_Block_Setting_Buildinfo
    * @param Varien_Data_Form_Element_Abstract $element
    * @return string
    */
-  public function render(Varien_Data_Form_Element_Abstract $element) {
+  public function render (Varien_Data_Form_Element_Abstract $element) {
     return $this->toHtml();
   }
 }

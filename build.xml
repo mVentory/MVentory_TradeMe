@@ -1,6 +1,5 @@
 <_>
-   <form_key>4jtOVx9LkDT6dpcv</form_key>
-   <_create/>
+   <form_key>GFpeZtJtCQpqLa0T</form_key>
    <name>MVentory_TradeMe</name>
    <channel>community</channel>
    <version_ids>
@@ -47,10 +46,19 @@ Help and support
 Please, contact us on info@mventory.com if you need help installing and configuring it</description>
    <license>CC BY-NC-ND 4.0</license>
    <license_uri>http://creativecommons.org/licenses/by-nc-nd/4.0/</license_uri>
-   <version>1.1.1</version>
-   <stability>stable</stability>
+   <version>1.1.2</version>
+   <stability>devel</stability>
    <notes>* Fix calculation of listing price to include various price rules
-* Small fixes in interface</notes>
+* Small fixes in interface
+* Add support for $1 auctions
+* Download product image by its frontend URL if it doesn&apos;t exist on server before listing product (allows to list products on Magento instances where product images are served from some CDN service)
+* Add support for title variants for auction
+* Add Maximum weight column into TradeMe config file to allow different settings per product&apos;s weight
+* Send product SKU on listing/updating TradeMe auction
+* Move all extension&apos;s attributes into separate attribute group (TM tab)
+* Allow to select attribute for shipping types
+* Small bug fixes and improvements
+</notes>
    <authors>
       <name>
          <name>Anatoly A. Kazantsev</name>
@@ -68,28 +76,23 @@ Please, contact us on info@mventory.com if you need help installing and configur
       <package>
          <name>
             <name/>
-            <name>MVentory_JQuery</name>
             <name>MVentory_API</name>
          </name>
          <channel>
             <channel/>
             <channel>community</channel>
-            <channel>community</channel>
          </channel>
          <min>
-            <min/>
             <min/>
             <min/>
          </min>
          <max>
             <max/>
             <max/>
-            <max/>
          </max>
          <files>
-            <files>                                                                                    </files>
-            <files>                                                                                    </files>
-            <files>                                                                                    </files>
+            <files>                                                                                                          </files>
+            <files>                                                                                                          </files>
          </files>
       </package>
       <extension>
@@ -156,8 +159,4 @@ Please, contact us on info@mventory.com if you need help installing and configur
          <ignore/>
       </ignore>
    </contents>
-   <page>1</page>
-   <limit>200</limit>
-   <folder/>
-   <package/>
 </_>

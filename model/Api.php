@@ -409,21 +409,23 @@ class MVentory_TradeMe_Model_Api {
       $xml = simplexml_load_string($response->getBody());
 
       if ($xml) {
-        if ((string)$xml->Success == 'true') {
+        $isSuccess = (string) $xml->Success == 'true';
+        $response = $isSuccess
+                    ? (int) $xml->ListingId
+                    : (string) $xml->Description;
+
+        MVentory_TradeMe_Model_Log::debug(array('response' => $response));
+
+        if ($isSuccess) {
 
           if ($isUpdateOptions)
             $helper->setFields($product, $data);
 
-          $return = (int)$xml->ListingId;
-        } elseif ((string)$xml->ErrorDescription) {
+          $return = $response;
+        } elseif ((string)$xml->ErrorDescription)
           $return = (string)$xml->ErrorDescription;
-
-          MVentory_TradeMe_Model_Log::debug('Error on send (' . $return . ')');
-        } elseif ((string)$xml->Description) {
-          $return = (string)$xml->Description;
-
-          MVentory_TradeMe_Model_Log::debug('Error on send (' . $return . ')');
-        }
+        elseif ($response)
+          $return = $response;
       }
     }
 
@@ -464,15 +466,17 @@ class MVentory_TradeMe_Model_Api {
       $xml = simplexml_load_string($response->getBody());
 
       if ($xml) {
-        if ((string)$xml->Success == 'true') {
-          return true;
-        } elseif ((string)$xml->Description) {
-          $error = (string)$xml->Description;
+        $isSuccess = (string) $xml->Success == 'true';
+        $response = $isSuccess
+                    ? (int) $xml->ListingId
+                    : (string) $xml->Description;
 
-          MVentory_TradeMe_Model_Log::debug(
-            'Error on removing listing ' . $listingId . ' (' . $error . ')'
-          );
-        }
+        MVentory_TradeMe_Model_Log::debug(array('response' => $response));
+
+        if ($isSuccess)
+          return true;
+        else if ($response)
+          $error = $response;
       }
     }
 
@@ -737,11 +741,9 @@ class MVentory_TradeMe_Model_Api {
           $return .' product id ' . $product->getId() . ' listing id '
             . $listingId
         );
-
-        MVentory_TradeMe_Model_Log::debug(
-          'Error on updating listing ' . $listingId . ' (' . $return . ')'
-        );
       }
+
+      MVentory_TradeMe_Model_Log::debug(array('response' => $return));
   	}
   	else {
   	  $this->_helper->sendEmail(
@@ -823,6 +825,8 @@ class MVentory_TradeMe_Model_Api {
 
     $response = Zend_Json::decode($response->getBody());
 
+    MVentory_TradeMe_Model_Log::debug(array('response' => $response));
+
     if (!$response['Success']) {
       Mage::log(
         'TradeMe: error on relisting '
@@ -863,6 +867,8 @@ class MVentory_TradeMe_Model_Api {
     $response = $client->request();
 
     $result = Zend_Json::decode($response->getBody());
+
+    MVentory_TradeMe_Model_Log::debug(array('response' => $result));
 
     if ($response->getStatus() != 200)
       return $result['ErrorDescription'];

@@ -318,6 +318,12 @@ EOT;
       //Remember IDs of all existing accounts for further using
       $allAccountsIDs[$accountId] = true;
 
+      MVentory_TradeMe_Model_Log::debug(array(
+        'account' => $accountData['name'],
+        'max number of listings' => $accountData['max_listings'],
+        'number of listings' => $accountData['listings']
+      ));
+
       if (($accountData['max_listings'] - $accountData['listings']) < 1)
         unset($accounts[$accountId]);
     }
@@ -379,7 +385,10 @@ EOT;
     elseif ($listNormAuc == MVentory_TradeMe_Model_Config::AUCTI0N_NORMAL_NEVER)
       $aucResource->filterAllAuctions($products);
 
-    if (!$poolSize = count($products))
+    $poolSize = count($products);
+    MVentory_TradeMe_Model_Log::debug(array('pool size' => $poolSize));
+
+    if (!$poolSize)
       return;
 
     unset($productIds);
@@ -412,6 +421,10 @@ EOT;
                    + $syncData['free_slots'];
 
       $_freeSlots = (int) floor($freeSlots);
+      MVentory_TradeMe_Model_Log::debug(array(
+        'account' => $accountData['name'],
+        'free slots' => $_freeSlots
+      ));
 
       $syncData['free_slots'] = $freeSlots - $_freeSlots;
 
@@ -459,6 +472,8 @@ EOT;
       if (!$id = $product->getId())
         continue;
 
+      $log = array('product' => $product);
+
       if ($listNormAuc == MVentory_TradeMe_Model_Config::AUCTI0N_NORMAL_STOCK
           && isset($auctions[$id])) {
 
@@ -471,6 +486,13 @@ EOT;
         $manageStock = $stock->getUseConfigManageStock()
                          ? $storeManageStock
                          : (int) $stock['manage_stock'];
+
+        MVentory_TradeMe_Model_Log::debug(array(
+          'product' => $product,
+          'number of auctions' => $auctions[$id],
+          'manage stock' => $manageStock,
+          'qty' => $stock->getQty()
+        ));
 
         if ($manageStock && ($stock->getQty() <= $auctions[$id]))
           continue;
@@ -485,6 +507,11 @@ EOT;
 
       $matchResult = Mage::getModel('trademe/matching')
         ->matchCategory($product);
+
+      MVentory_TradeMe_Model_Log::debug(array(
+        'product' => $product,
+        'matching result' => $matchResult
+      ));
 
       if (!(isset($matchResult['id']) && $matchResult['id'] > 0))
         continue;
@@ -504,11 +531,24 @@ EOT;
           ->_helper
           ->prepareAccount($accountData, $product, $this->_store);
 
+        MVentory_TradeMe_Model_Log::debug(array(
+          'product' => $product,
+          'account' => $accountData['name'],
+          'account data per shipping' => $perShipping
+        ));
+
         if (!$perShipping)
           continue;
 
-        if (($minimalPrice = $this->_helper->getMinimalPrice($perShipping))
-            && ($product->getPrice() < $minimalPrice))
+        $minimalPrice = $this->_helper->getMinimalPrice($perShipping);
+
+        MVentory_TradeMe_Model_Log::debug(array(
+          'product' => $product,
+          'product price' => $product->getPrice(),
+          'minimal price' => $minimalPrice
+        ));
+
+        if ($minimalPrice && ($product->getPrice() < $minimalPrice))
           continue;
 
         $api = new MVentory_TradeMe_Model_Api();
@@ -668,7 +708,10 @@ EOT;
       '(' . join(') OR (', $condition) . ')'
     );
 
-    if (!$ids = $products->getAllIds())
+    $ids = $products->getAllIds();
+    MVentory_TradeMe_Model_Log::debug(array('pool' => count($ids)));
+
+    if (!$ids)
       return;
 
     unset($products, $filterIds);
@@ -694,11 +737,25 @@ EOT;
         $product->getData('tm_fixedend_limit')
       );
 
+      MVentory_TradeMe_Model_Log::debug(array(
+        'product' => $product,
+        'number of auctions' => isset($auctions[$productId])
+                                  ? (int) $auctions[$productId]
+                                  : 0,
+        'product limit' => $product->getData('tm_fixedend_limit'),
+        'allowed' => $allowed
+      ));
+
       if (!$allowed)
         continue;
 
       $matchResult = Mage::getModel('trademe/matching')
         ->matchCategory($product);
+
+      MVentory_TradeMe_Model_Log::debug(array(
+        'product' => $product,
+        'matching result' => $matchResult
+      ));
 
       if (!(isset($matchResult['id']) && $matchResult['id'] > 0))
         continue;
@@ -717,14 +774,27 @@ EOT;
           ->_helper
           ->prepareAccount($accountData, $product, $this->_store);
 
+        MVentory_TradeMe_Model_Log::debug(array(
+          'product' => $product,
+          'account' => $accountData['name'],
+          'account data per shipping' => $perShipping
+        ));
+
         if (!$perShipping)
           continue;
+
+        $minimalPrice = $this->_helper->getMinimalPrice($perShipping);
+
+        MVentory_TradeMe_Model_Log::debug(array(
+          'product' => $product,
+          'product price' => $product->getPrice(),
+          'minimal price' => $minimalPrice
+        ));
 
         /**
          * @todo Should we check minimal price limit for $1 auctions?
          */
-        if (($minimalPrice = $this->_helper->getMinimalPrice($perShipping))
-            && ($product->getPrice() < $minimalPrice))
+        if ($minimalPrice && ($product->getPrice() < $minimalPrice))
           continue;
 
         $api = new MVentory_TradeMe_Model_Api();

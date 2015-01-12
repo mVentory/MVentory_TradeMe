@@ -24,8 +24,6 @@
  */
 class MVentory_TradeMe_Model_Api {
 
-  const LOG_FILE = 'trademe.log';
-
   const CACHE_CATEGORIES = 'TRADEME_CATEGORIES';
   const CACHE_CATEGORY_ATTRS = 'TRADEME_CATEGORY_ATTRS';
 
@@ -198,7 +196,7 @@ class MVentory_TradeMe_Model_Api {
   }
 
   public function send ($product, $categoryId, $data, $overwrite = array()) {
-    self::debug();
+    MVentory_TradeMe_Model_Log::debug();
 
     $helper = Mage::helper('trademe/auction');
 
@@ -221,7 +219,9 @@ class MVentory_TradeMe_Model_Api {
           $_data[$key] = $account[$key];
     }
 
-    self::debug(array('Final TradeMe options: ' => $_data));
+    MVentory_TradeMe_Model_Log::debug(
+      array('final TradeMe options' => $_data)
+    );
 
     $return = 'Error';
 
@@ -270,7 +270,7 @@ class MVentory_TradeMe_Model_Api {
         $msg = 'Error occured while preparing image (%s)';
 
         Mage::logException($e);
-        self::debug(sprintf($msg, $e->getMessage()));
+        MVentory_TradeMe_Model_Log::debug(sprintf($msg, $e->getMessage()));
 
         return $helper->__($msg, $e->getMessage());
       }
@@ -278,7 +278,7 @@ class MVentory_TradeMe_Model_Api {
       if (!is_int($photoId = $this->uploadImage($image))) {
         $msg = 'Error occured while uploading image (%s)';
 
-        self::debug(sprintf($msg, $photoId));
+        MVentory_TradeMe_Model_Log::debug(sprintf($msg, $photoId));
         return $helper->__($msg, $photoId);
       }
 
@@ -418,11 +418,11 @@ class MVentory_TradeMe_Model_Api {
         } elseif ((string)$xml->ErrorDescription) {
           $return = (string)$xml->ErrorDescription;
 
-          self::debug('Error on send (' . $return . ')');
+          MVentory_TradeMe_Model_Log::debug('Error on send (' . $return . ')');
         } elseif ((string)$xml->Description) {
           $return = (string)$xml->Description;
 
-          self::debug('Error on send (' . $return . ')');
+          MVentory_TradeMe_Model_Log::debug('Error on send (' . $return . ')');
         }
       }
     }
@@ -437,7 +437,7 @@ class MVentory_TradeMe_Model_Api {
    * @return bool|string
    */
   public function remove ($auction) {
-    self::debug();
+    MVentory_TradeMe_Model_Log::debug();
 
     if (!$this->_website)
       return;
@@ -469,9 +469,9 @@ class MVentory_TradeMe_Model_Api {
         } elseif ((string)$xml->Description) {
           $error = (string)$xml->Description;
 
-          self::debug('Error on removing listing '
-                      . $listingId
-                      . ' (' . $error . ')');
+          MVentory_TradeMe_Model_Log::debug(
+            'Error on removing listing ' . $listingId . ' (' . $error . ')'
+          );
         }
       }
     }
@@ -486,7 +486,7 @@ class MVentory_TradeMe_Model_Api {
    * @return null|int Status of auction
    */
   public function check ($auction) {
-    self::debug();
+    MVentory_TradeMe_Model_Log::debug();
 
     if (!$this->_website)
       return;
@@ -502,11 +502,9 @@ class MVentory_TradeMe_Model_Api {
     $item = $this->_parseListingDetails($json);
 
     if (is_string($item)) {
-      self::debug('Error on retrieving listing details '
-                  . $listingId
-                  . ' ('
-                  . $item
-                  . ')');
+      MVentory_TradeMe_Model_Log::debug(
+        'Error on retrieving listing details ' . $listingId . ' (' . $item . ')'
+      );
 
       return;
     }
@@ -530,7 +528,7 @@ class MVentory_TradeMe_Model_Api {
                           $parameters = null,
                           $_formData = null)
   {
-    self::debug();
+    MVentory_TradeMe_Model_Log::debug();
 
     $helper = Mage::helper('trademe/auction');
 
@@ -558,7 +556,9 @@ class MVentory_TradeMe_Model_Api {
       $json = $this->_loadListingDetailsAuth($listingId);
 
       if (!$json){
-        self::debug('Unable to retrieve data for listing ' . $listingId);
+        MVentory_TradeMe_Model_Log::debug(
+          'Unable to retrieve data for listing ' . $listingId
+        );
 
         $this->_helper->sendEmail(
           'Unable to retrieve data for TradeMe listing ',
@@ -738,7 +738,7 @@ class MVentory_TradeMe_Model_Api {
             . $listingId
         );
 
-        self::debug(
+        MVentory_TradeMe_Model_Log::debug(
           'Error on updating listing ' . $listingId . ' (' . $return . ')'
         );
       }
@@ -750,7 +750,7 @@ class MVentory_TradeMe_Model_Api {
           . $listingId
       );
 
-  	  self::debug(
+  	  MVentory_TradeMe_Model_Log::debug(
         'Unable to auth when trying to update listing details ' . $listingId
   	   );
   	}
@@ -839,7 +839,7 @@ class MVentory_TradeMe_Model_Api {
   }
 
   public function uploadImage ($image) {
-    self::debug();
+    MVentory_TradeMe_Model_Log::debug();
 
     if (!$accessToken = $this->auth())
       return;
@@ -873,7 +873,7 @@ class MVentory_TradeMe_Model_Api {
              . '). Error description: '
              . $result['Description'];
 
-      self::debug($msg);
+      MVentory_TradeMe_Model_Log::debug($msg);
 
       $this->_helper->sendEmail('Unable to upload image to TradeMe', $msg);
 
@@ -1258,37 +1258,5 @@ class MVentory_TradeMe_Model_Api {
       return $this->_attrTypes[$id];
 
     return 'Unknown';
-  }
-
-  public static function debug ($msg = null) {
-    $backtrace = debug_backtrace();
-
-    $callee = $backtrace[1];
-
-    $name = (isset($callee['line']) ? '[' . $callee['line'] . '] ' : '')
-            . $callee['class']
-            . $callee['type']
-            . $callee['function'];
-
-    if ($msg === null)
-      foreach ($callee['args'] as $arg) {
-        if ($arg instanceof Varien_Object)
-          $args[] = get_class($arg) . '('
-
-                    . 'id: ' . $arg->getId() . ', '
-                    . 'sku: ' . $arg->getData('sku')
-
-                    . ')';
-        else
-          $args[] = print_r($arg, true);
-
-        $msg = '(' . implode(', ', $args) . ')';
-      }
-    else if (is_array($msg))
-      $msg = '(): ' . print_r($msg, true);
-    else
-      $msg = '(): ' . $msg;
-
-    Mage::log($name . $msg, null, self::LOG_FILE);
   }
 }

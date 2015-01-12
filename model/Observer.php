@@ -253,7 +253,7 @@ EOT;
             ->prepareAccount($accountData, $product, $this->_store);
 
           if (!$perShipping) {
-            MVentory_TradeMe_Model_Api::debug(
+            MVentory_TradeMe_Model_Log::debug(
               'Error: shipping type '
               . $this->_helper->getShippingType($product, false, $this->_store)
               . ' doesn\'t exists in ' . $accountData['name']

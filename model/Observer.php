@@ -256,7 +256,7 @@ EOT;
             MVentory_TradeMe_Model_Api::debug(
               'Error: shipping type '
               . $this->_helper->getShippingType($product, false, $this->_store)
-              . ' doesn\t exists in ' . $accountData['name']
+              . ' doesn\'t exists in ' . $accountData['name']
               . ' account. Product SKU: ' . $product->getSku()
             );
 

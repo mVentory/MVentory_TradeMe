@@ -248,10 +248,6 @@ EOT;
             $auction['product_id']
           );
 
-          $sku = $product->getSku();
-          $price = $product->getPrice();
-          $qty = 1;
-
           $perShipping = $this
             ->_helper
             ->prepareAccount($accountData, $product, $this->_store);
@@ -261,41 +257,13 @@ EOT;
               'Error: shipping type '
               . $this->_helper->getShippingType($product, false, $this->_store)
               . ' doesn\t exists in ' . $accountData['name']
-              . ' account. Product SKU: ' . $sku
+              . ' account. Product SKU: ' . $product->getSku()
             );
 
             continue;
           }
 
-          $buyer = $this
-            ->_helper
-            ->getBuyer($perShipping);
-
-          //API function for creating order requires curren store to be set
-          Mage::app()->setCurrentStore($this->_store);
-
-          //Remember current website to use in API functions. The value is
-          //used in getCurrentWebsite() helper function
-          Mage::unregister('mventory_website');
-          Mage::register('mventory_website', $this->_website, true);
-
-          //Set global flag to prevent removing product from TradeMe during
-          //order creating. No need to remove it because it was bought
-          //on TradeMe. The flag is used in removeListing() method
-          Mage::register('trademe_disable_withdrawal', true, true);
-
-          //Set global flag to enable dummy shipping method in MVentory API
-          //extension
-          Mage::register('mventory_allow_dummyshipping', true, true);
-
-          //Set customer ID for API access checks in MVentory API extension
-          Mage::register('mventory_api_customer', $buyer, true);
-
-          //Make order for the product
-          Mage::getModel('mventory/cart_api')
-            ->createOrderForProduct($sku, $price, $qty, $buyer);
-
-          Mage::unregister('mventory_website');
+          $this->_createOrder($product, $perShipping);
         }
 
         $auction->delete();
@@ -1140,6 +1108,55 @@ EOT;
       return true;
 
     return (int) $number < (int) $max;
+  }
+
+  /**
+   * Prepare data and create order for the specified product and account
+   * data
+   *
+   * @param Mage_Catalog_Model_Product $product
+   *   Product model
+   *
+   * @param array $account
+   *   Account data
+   */
+  protected function _createOrder ($product, $account) {
+    $buyer = $this
+      ->_helper
+      ->getBuyer($account, $this->_store);
+
+    if (!$buyer)
+      return;
+
+    //API function for creating order requires curren store to be set
+    Mage::app()->setCurrentStore($this->_store);
+
+    //Remember current website to use in API functions. The value is
+    //used in getCurrentWebsite() helper function
+    Mage::unregister('mventory_website');
+    Mage::register('mventory_website', $this->_website, true);
+
+    //Set global flag to prevent removing product from TradeMe during
+    //order creating. No need to remove it because it was bought
+    //on TradeMe. The flag is used in removeListing() method
+    Mage::register('trademe_disable_withdrawal', true, true);
+
+    //Set global flag to enable dummy shipping method in MVentory API
+    //extension
+    Mage::register('mventory_allow_dummyshipping', true, true);
+
+    //Set customer ID for API access checks in MVentory API extension
+    Mage::register('mventory_api_customer', $buyer, true);
+
+    //Make order for the product
+    Mage::getModel('mventory/cart_api')->createOrderForProduct(
+      $product->getSku(),
+      $product->getPrice(),
+      1, //QTY
+      $buyer->getId()
+    );
+
+    Mage::unregister('mventory_website');
   }
 
   /**

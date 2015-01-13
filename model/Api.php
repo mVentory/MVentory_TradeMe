@@ -298,7 +298,13 @@ class MVentory_TradeMe_Model_Api {
       else
         $title = htmlspecialchars($title);
 
-      $price = $this->_getPrice ($product, $account, $_data, $overwrite);
+      $price = $this->_getPrice(
+        $product,
+        $account,
+        $_data,
+        $overwrite,
+        $store->getBaseCurrency()
+      );
 
       $buyNow = '';
 
@@ -615,36 +621,14 @@ class MVentory_TradeMe_Model_Api {
           $parameters['ShippingOptions'][]['Type'] = $shippingType;
 
       //set price
-      if (!isset($parameters['StartPrice'])) {
-        $price = $helper->getProductPrice($product, $this->_website);
-
-        //if ($shippingType != MVentory_TradeMe_Model_Config::SHIPPING_FREE) {
-
-          //Add shipping rate using Volume/Weight based shipping method
-          $price += $helper->getShippingRate(
-            $product,
-            $account['name'],
-            $this->_website
-          );
-        //} else {
-
-        //  //Add free shippih cost if product's shipping type is 'tab_ShipParcel'
-        //  if ($productShippingType == 'tab_ShipParcel'
-        //      && isset($account['free_shipping_cost'])
-        //      && $account['free_shipping_cost'] > 0) {
-        //    $price += (float) $account['free_shipping_cost'];
-        //  }
-        //}
-
-        //Apply fees to price of the product if it's allowed
-        $price = $this->_getAddFees($product, $formData)
-                   ? $helper->addFees($price)
-                     : $price;
-
-        $parameters['StartPrice'] = $price;
-
-        unset($price);
-      }
+      if (!isset($parameters['StartPrice']))
+        $parameters['StartPrice'] = $this->_getPrice(
+          $product,
+          $account,
+          $formData,
+          array(),
+          $store->getBaseCurrency()
+        );
 
       if(!isset($parameters['ReservePrice']))
         $parameters['ReservePrice'] = $parameters['StartPrice'];
@@ -1151,13 +1135,30 @@ class MVentory_TradeMe_Model_Api {
   /**
    * Calculate final price for auction
    *
-   * @param Mage_Catalog_Model_Product $product Product
-   * @param array $account Current account
-   * @param array $data Additional data
-   * @param array $overwrite Overwrite values
-   * @return float Price
+   * @param Mage_Catalog_Model_Product $product
+   *   Product model
+   *
+   * @param array $account
+   *   Current account
+   *
+   * @param array $data
+   *   Additional data
+   *
+   * @param array $overwrite
+   *   Overwrite values
+   *
+   * @param Mage_Directory_Model_Currency $currency
+   *   Base currency of current store
+   *
+   * @return float
+   *   Final price for TradeMe auction
    */
-  protected function _getPrice ($product, $account, $data, $overwrite) {
+  protected function _getPrice ($product,
+                                $account,
+                                $data,
+                                $overwrite,
+                                $currency) {
+
     if (isset($overwrite['price']))
       return $overwrite['price'];
 
@@ -1170,6 +1171,12 @@ class MVentory_TradeMe_Model_Api {
       $account['name'],
       $this->_website
     );
+
+    if ($currency->getCode != MVentory_TradeMe_Model_Config::CURRENCY)
+      $price = $currency->convert(
+        $price,
+        MVentory_TradeMe_Model_Config::CURRENCY
+      );
 
     return $this->_getAddFees($product, $data)
                ? $helper->addFees($price)

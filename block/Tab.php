@@ -29,7 +29,10 @@ class MVentory_TradeMe_Block_Tab
   const URL = 'http://www.trademe.co.nz';
 
   private $_helper = null;
+
   protected $_website = null;
+  protected $_store = null;
+
   private $_preselectedCategories = null;
 
   //TradeMe options from the session
@@ -40,6 +43,7 @@ class MVentory_TradeMe_Block_Tab
   private $_accounts = null;
   private $_accountId = null;
 
+  protected $_currency = null;
   private $_hasSpecialPrice;
   private $_productPrice;
 
@@ -55,9 +59,21 @@ class MVentory_TradeMe_Block_Tab
 
     $this->_helper = Mage::helper('mventory/product');
     $this->_website = $this->_helper->getWebsite($product);
+    $this->_store = $this->_website->getDefaultStore();
 
+    $this->_currency = $this->_store->getBaseCurrency();
     $this->_productPrice = $trademe->getProductPrice($product, $this->_website);
     $this->_hasSpecialPrice = $this->_productPrice < $product->getPrice();
+
+    $code = $this->_currency;
+
+    if ($this->_currency->getCode() != MVentory_TradeMe_Model_Config::CURRENCY)
+      $this->_productPrice = $this
+        ->_currency
+        ->convert(
+            $this->_productPrice,
+            MVentory_TradeMe_Model_Config::CURRENCY
+          );
 
     $productId = $product->getId();
 
@@ -501,12 +517,23 @@ class MVentory_TradeMe_Block_Tab
     $product = $this->getProduct();
 
     foreach ($this->_accounts as &$account)
-      if (isset($account['shipping_type']))
+      if (isset($account['shipping_type'])) {
         $account['shipping_rate'] = (float) $helper->getShippingRate(
           $product,
           $account['name'],
           $this->_website
         );
+
+        $code = $this->_currency;
+
+        if ($code->getCode() != MVentory_TradeMe_Model_Config::CURRENCY)
+          $account['shipping_rate'] = $this
+            ->_currency
+            ->convert(
+                $account['shipping_rate'],
+                MVentory_TradeMe_Model_Config::CURRENCY
+              );
+      }
   }
 
   protected function _calculateFees () {

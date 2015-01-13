@@ -77,4 +77,7 @@ class MVentory_TradeMe_Model_Config
   const AUCTION_NORMAL_ALWAYS = 0;
   const AUCTI0N_NORMAL_STOCK = 1;
   const AUCTI0N_NORMAL_NEVER = 2;
+
+  //TradeMe currency
+  const CURRENCY = 'NZD';
 }

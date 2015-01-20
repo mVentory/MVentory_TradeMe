@@ -243,19 +243,13 @@ EOT;
 
         if (!$result || $result == 3) {
 
-          //We don't include $1 auctions in the total quota
-          //for the number of listings.
-          if ($auction['type']
-                == MVentory_TradeMe_Model_Config::AUCTION_FIXED_END_DATE)
-            --$accountData['listings'];
+          //Increase number of active auctions to include auctions
+          //which weren't counted by massCheck() method for some reason
+          if ($auction['type'] == MVentory_TradeMe_Model_Config::AUCTION_NORMAL)
+            ++$accountData['listings'];
 
           continue;
         }
-
-        //We don't include $1 auctions in the total quota
-        //for the number of listings.
-        if ($auction['type'] == MVentory_TradeMe_Model_Config::AUCTION_NORMAL)
-          --$accountData['listings'];
 
         if ($result == 2) {
           $product = Mage::getModel('catalog/product')->load(

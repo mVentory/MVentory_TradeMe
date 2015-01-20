@@ -213,8 +213,17 @@ EOT;
 
       $accountData['listings'] = $connector->massCheck($auctions);
 
+      MVentory_TradeMe_Model_Log::debug(array(
+        'account' => $accountData['name'],
+        'number of active auctions' => $accountData['listings']
+      ));
+
       foreach ($auctions as $auction) try {
         if ($auction['is_selling']) {
+          MVentory_TradeMe_Model_Log::debug(array(
+            'auction' => $auction,
+            'status' => 'active'
+          ));
 
           //We don't include $1 auctions in the total quota
           //for the number of listings.
@@ -226,6 +235,11 @@ EOT;
         }
 
         $result = $connector->check($auction);
+
+        MVentory_TradeMe_Model_Log::debug(array(
+          'auction' => $auction,
+          'status' => $result
+        ));
 
         if (!$result || $result == 3) {
 
@@ -273,8 +287,14 @@ EOT;
         Mage::logException($e);
       }
 
-      if ($accountData['listings'] < 0)
+      if ($accountData['listings'] < 0) {
+        MVentory_TradeMe_Model_Log::debug(array(
+          'final number of auctions' => $accountData['listings'],
+          'expected number is greater or equal' => 0
+        ));
+
         $accountData['listings'] = 0;
+      }
     }
   }
 
@@ -1191,9 +1211,13 @@ EOT;
    *   Account data
    */
   protected function _createOrder ($product, $account) {
+    MVentory_TradeMe_Model_Log::debug();
+
     $buyer = $this
       ->_helper
       ->getBuyer($account, $this->_store);
+
+    MVentory_TradeMe_Model_Log::debug(array('buyer' => $buyer));
 
     if (!$buyer)
       return;
@@ -1219,12 +1243,16 @@ EOT;
     Mage::register('mventory_api_customer', $buyer, true);
 
     //Make order for the product
-    Mage::getModel('mventory/cart_api')->createOrderForProduct(
+    $result = Mage::getModel('mventory/cart_api')->createOrderForProduct(
       $product->getSku(),
       $product->getPrice(),
       1, //QTY
       $buyer->getId()
     );
+
+    MVentory_TradeMe_Model_Log::debug(array(
+      'result' => isset($result['order_id']) ? $result['order_id'] : 'no order'
+    ));
 
     Mage::unregister('mventory_website');
   }

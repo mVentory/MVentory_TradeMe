@@ -1165,4 +1165,51 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
                  ->getValue($product)
              : null;
   }
+
+  /**
+   * Convert supplied price from one currency to another
+   *
+   * @param float $amount
+   *   Price to convert
+   *
+   * @param string|null|Mage_Directory_Model_Currency $from
+   *   Currency to convert from. Store's default currency is used if null
+   *   is specified
+   *
+   * @param string|null|Mage_Directory_Model_Currency $to
+   *   Currency to convert to. Store's default currency is used if null
+   *   is specified
+   *
+   * @param Mage_Core_Model_Store $store
+   *   Store model
+   *
+   * @return float
+   *   Converted price or returns the supplied price if some currency doesn't
+   *   exist or can't convert it (e.g no currency rate)
+   */
+  public function currencyConvert ($amount, $from, $to, $store) {
+    if ($from === null)
+      $from = $store->getBaseCurrency();
+    else if (is_string($from)) {
+      $from = Mage::getModel('directory/currency')->load($from);
+
+      if (!$from->getId())
+        return $amount;
+    }
+
+    if ($to === null)
+      $to = $store->getBaseCurrency();
+    else if (is_string($to)) {
+      $to = Mage::getModel('directory/currency')->load($to);
+
+      if (!$to->getId())
+        return $amount;
+    }
+
+    try {
+      return $from->convert($amount, $to);
+    } catch (Exception $e) {
+      return $amount;
+    }
+  }
 }

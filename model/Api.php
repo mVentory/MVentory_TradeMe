@@ -1173,9 +1173,11 @@ class MVentory_TradeMe_Model_Api {
     );
 
     if ($currency->getCode != MVentory_TradeMe_Model_Config::CURRENCY)
-      $price = $currency->convert(
+      $price = $helper->currencyConvert(
         $price,
-        MVentory_TradeMe_Model_Config::CURRENCY
+        $currency,
+        MVentory_TradeMe_Model_Config::CURRENCY,
+        $this->_website->getDefaultStore()
       );
 
     return $this->_getAddFees($product, $data)

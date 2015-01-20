@@ -65,15 +65,13 @@ class MVentory_TradeMe_Block_Tab
     $this->_productPrice = $trademe->getProductPrice($product, $this->_website);
     $this->_hasSpecialPrice = $this->_productPrice < $product->getPrice();
 
-    $code = $this->_currency;
-
     if ($this->_currency->getCode() != MVentory_TradeMe_Model_Config::CURRENCY)
-      $this->_productPrice = $this
-        ->_currency
-        ->convert(
-            $this->_productPrice,
-            MVentory_TradeMe_Model_Config::CURRENCY
-          );
+      $this->_productPrice = $trademe->currencyConvert(
+        $this->_productPrice,
+        $this->_currency,
+        MVentory_TradeMe_Model_Config::CURRENCY,
+        $this->_store
+      );
 
     $productId = $product->getId();
 
@@ -527,12 +525,12 @@ class MVentory_TradeMe_Block_Tab
         $code = $this->_currency;
 
         if ($code->getCode() != MVentory_TradeMe_Model_Config::CURRENCY)
-          $account['shipping_rate'] = $this
-            ->_currency
-            ->convert(
-                $account['shipping_rate'],
-                MVentory_TradeMe_Model_Config::CURRENCY
-              );
+          $account['shipping_rate'] = $helper->currencyConvert(
+            $account['shipping_rate'],
+            $this->_currency,
+            MVentory_TradeMe_Model_Config::CURRENCY,
+            $this->_store
+          );
       }
   }
 

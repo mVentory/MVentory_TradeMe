@@ -1236,17 +1236,27 @@ EOT;
     //Set customer ID for API access checks in MVentory API extension
     Mage::register('mventory_api_customer', $buyer, true);
 
-    //Make order for the product
-    $result = Mage::getModel('mventory/cart_api')->createOrderForProduct(
-      $product->getSku(),
-      $product->getPrice(),
-      1, //QTY
-      $buyer->getId()
-    );
+    try {
+      //Make order for the product
+      $result = Mage::getModel('mventory/cart_api')->createOrderForProduct(
+        $product->getSku(),
+        $product->getPrice(),
+        1, //QTY
+        $buyer->getId()
+      );
 
-    MVentory_TradeMe_Model_Log::debug(array(
-      'result' => isset($result['order_id']) ? $result['order_id'] : 'no order'
-    ));
+      MVentory_TradeMe_Model_Log::debug(array(
+        'result' => isset($result['order_id'])
+                      ? $result['order_id']
+                      : 'no order'
+      ));
+    } catch (Mage_Api_Exception $e) {
+      MVentory_TradeMe_Model_Log::debug(array(
+        'error on order creating' => $e->getCustomMessage()
+      ));
+
+      throw $e;
+    }
 
     Mage::unregister('mventory_website');
   }

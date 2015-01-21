@@ -78,6 +78,10 @@ class MVentory_TradeMe_Model_Config
   const AUCTION_NORMAL_STOCK = 1;
   const AUCTION_NORMAL_NEVER = 2;
 
+  //Start and end hours for normal auctions
+  const AUC_TIME_START = 7;
+  const AUC_TIME_END = 23;
+
   //TradeMe currency
   const CURRENCY = 'NZD';
 }

@@ -25,9 +25,6 @@
  */
 class MVentory_TradeMe_Model_Observer {
 
-  const SYNC_START_HOUR = 7;
-  const SYNC_END_HOUR = 23;
-
   const TAG_FREE_SLOTS = 'tag_trademe_free_slots';
   const TAG_EMAILS = 'tag_trademe_emails';
 
@@ -302,8 +299,9 @@ EOT;
     $now = localtime(Mage::getModel('core/date')->timestamp(time()), true);
 
     //Check if we are in allowed hours
-    $allowSubmit = $now['tm_hour'] >= self::SYNC_START_HOUR
-                   && $now['tm_hour'] < self::SYNC_END_HOUR;
+    $allowSubmit
+      = $now['tm_hour'] >= MVentory_TradeMe_Model_Config::AUC_TIME_START
+        && $now['tm_hour'] < MVentory_TradeMe_Model_Config::AUC_TIME_END;
 
     if ($allowSubmit) {
       $cronInterval = (int) $this
@@ -313,11 +311,11 @@ EOT;
             $this->_website
           );
 
+      $interval = MVentory_TradeMe_Model_Config::AUC_TIME_END
+                    - MVentory_TradeMe_Model_Config::AUC_TIME_START;
+
       //Calculate number of runnings of the sync script during 1 day
-      $runsNumber = $cronInterval
-                      ? (self::SYNC_END_HOUR - self::SYNC_START_HOUR) * 60
-                          / $cronInterval - 1
-                        : 0;
+      $runsNumber = $cronInterval ? $interval * 60 / $cronInterval - 1 : 0;
     }
 
     if (!($allowSubmit && $runsNumber))

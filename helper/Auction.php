@@ -25,70 +25,19 @@
  */
 class MVentory_TradeMe_Helper_Auction extends MVentory_TradeMe_Helper_Data
 {
-  public function getEndTimePeriod ($store) {
-    $endTime = $store->getConfig(MVentory_TradeMe_Model_Config::_1AUC_ENDTIME);
-
-    if (!$endTime)
-      return;
-
-    $endTime = DateTime::createFromFormat(
-      'H:i',
-      $endTime,
-      new DateTimeZone(MVentory_TradeMe_Model_Config::TIMEZONE)
-    );
-
-    $int = new DateInterval('PT30M');
-    $start = clone $endTime;
-
-    return array($start->sub($int), $endTime->add($int));
-  }
-
-  public function isAuctionDay ($store) {
-    $endDays = $store->getConfig(MVentory_TradeMe_Model_Config::_1AUC_ENDDAYS);
-
-    if ($endDays === '')
-      return false;
-
-    $duration = $store->getConfig(
-      MVentory_TradeMe_Model_Config::_1AUC_DURATION
-    );
-
-    if ($duration === '')
-      return false;
-
-    $endDays = explode(',', $endDays);
-    $duration = (int) $duration;
-
-    $now = new DateTime(
-      'now',
-      new DateTimeZone(MVentory_TradeMe_Model_Config::TIMEZONE)
-    );
-
-    $dow = (int) $now->format('w');
-
-    foreach ($endDays as $endDay) {
-      if (($day = $endDay - $duration) < 0)
-        $day = 7 + $day;
-
-      if ($dow == $day)
-        return true;
-    }
-
-    return false;
-  }
-
   public function isInAllowedPeriod ($store) {
-    if (!$period = $this->getEndTimePeriod($store))
+    $tz = new DateTimeZone(MVentory_TradeMe_Model_Config::TIMEZONE);
+
+    if (!$period = $this->_getEndTimePeriod($tz, $store))
       return false;
 
     list($start, $end) = $period;
 
-    $now = new DateTime(
-      'now',
-      new DateTimeZone(MVentory_TradeMe_Model_Config::TIMEZONE)
-    );
+    $now = new DateTime('now', $tz);
 
-    return ($start <= $now) && ($now < $end) && $this->isAuctionDay($store);
+    return ($start <= $now)
+           && ($now < $end)
+           && $this->_isAuctionDay($now, $store);
   }
 
   /**
@@ -194,5 +143,75 @@ class MVentory_TradeMe_Helper_Auction extends MVentory_TradeMe_Helper_Data
       ->walk('delete');
 
     return $this;
+  }
+
+  /**
+   * Return period of time when listing of $1 auction is allowed using value
+   * of Auction end time setting for the supplied store (it adds +/-30 mins
+   * to that value)
+   *
+   * @param DateTimeZone $tz
+   *   Timezone
+   *
+   * @param Mage_Core_Model_Store $store
+   *   Store model. Used to get value of Auction end time setting
+   *
+   * @return array|null
+   *   Period of time when listing of $1 auction is allowed
+   */
+  protected function _getEndTimePeriod ($tz, $store) {
+    $endTime = $store->getConfig(MVentory_TradeMe_Model_Config::_1AUC_ENDTIME);
+
+    if (!$endTime)
+      return;
+
+    $endTime = DateTime::createFromFormat('H:i', $endTime, $tz);
+
+    $int = new DateInterval('PT30M');
+    $start = clone $endTime;
+
+    return array($start->sub($int), $endTime->add($int));
+  }
+
+  /**
+   * Check if current day of week (retrived from the supplied time value)
+   * is in the list of allowed days for listing $1 auction
+   *
+   * @param DateTime $time
+   *   Time value
+   *
+   * @param Mage_Core_Model_Store $store
+   *   Store model. Used to get various store specific settings for $1 auction
+   *
+   * @return boolean
+   *   Result fo check
+   */
+  protected function _isAuctionDay ($time, $store) {
+    $endDays = $store->getConfig(MVentory_TradeMe_Model_Config::_1AUC_ENDDAYS);
+
+    if ($endDays === '')
+      return false;
+
+    $duration = $store->getConfig(
+      MVentory_TradeMe_Model_Config::_1AUC_DURATION
+    );
+
+    if ($duration === '')
+      return false;
+
+    $endDays = explode(',', $endDays);
+    $duration = (int) $duration;
+
+    $dow = (int) $time->format('w');
+
+    foreach ($endDays as $endDay) {
+      if (($day = $endDay - $duration) < 0)
+        $day = 7 + $day;
+
+      if ($dow == $day)
+        return true;
+    }
+
+    return false;
   }
 }

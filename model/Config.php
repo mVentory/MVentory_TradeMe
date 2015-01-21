@@ -84,4 +84,7 @@ class MVentory_TradeMe_Model_Config
 
   //TradeMe currency
   const CURRENCY = 'NZD';
+
+  //TradeMe time zone
+  const TIMEZONE = 'Pacific/Auckland';
 }

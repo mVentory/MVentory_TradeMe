@@ -168,7 +168,7 @@ EOT;
    * @return null
    */
   public function sync ($job) {
-    $helper = Mage::helper('trademe');
+    $helper = Mage::helper('trademe/auction');
     $productHelper = Mage::helper('mventory/product');
 
     //Get website and its default store from current cron job
@@ -295,30 +295,26 @@ EOT;
    * @return null
    */
   protected function _listNormalAuctions () {
-    //Get time with Magento timezone offset
-    $now = localtime(Mage::getModel('core/date')->timestamp(time()), true);
+    if (!$this->_helper->isInAllowedHours())
+      return;
 
-    //Check if we are in allowed hours
-    $allowSubmit
-      = $now['tm_hour'] >= MVentory_TradeMe_Model_Config::AUC_TIME_START
-        && $now['tm_hour'] < MVentory_TradeMe_Model_Config::AUC_TIME_END;
+    $cronInterval = (int) $this
+      ->_productHelper
+      ->getConfig(
+          MVentory_TradeMe_Model_Config::CRON_INTERVAL,
+          $this->_website
+        );
 
-    if ($allowSubmit) {
-      $cronInterval = (int) $this
-        ->_productHelper
-        ->getConfig(
-            MVentory_TradeMe_Model_Config::CRON_INTERVAL,
-            $this->_website
-          );
+    if ($cronInterval < 1)
+      return;
 
-      $interval = MVentory_TradeMe_Model_Config::AUC_TIME_END
-                    - MVentory_TradeMe_Model_Config::AUC_TIME_START;
+    $interval = MVentory_TradeMe_Model_Config::AUC_TIME_END
+                  - MVentory_TradeMe_Model_Config::AUC_TIME_START;
 
-      //Calculate number of runnings of the sync script during 1 day
-      $runsNumber = $cronInterval ? $interval * 60 / $cronInterval - 1 : 0;
-    }
+    //Calculate number of runnings of the sync script during 1 day
+    $runsNumber = $interval * 60 / $cronInterval - 1;
 
-    if (!($allowSubmit && $runsNumber))
+    if ($runsNumber < 1)
       return;
 
     //Assign to local variable to preserve original data because the array

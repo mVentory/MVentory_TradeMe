@@ -34,9 +34,7 @@ class MVentory_TradeMe_Helper_Auction extends MVentory_TradeMe_Helper_Data
     $endTime = DateTime::createFromFormat(
       'H:i',
       $endTime,
-      new DateTimeZone(
-        $store->getConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_TIMEZONE)
-      )
+      new DateTimeZone(MVentory_TradeMe_Model_Config::TIMEZONE)
     );
 
     $int = new DateInterval('PT30M');
@@ -63,9 +61,7 @@ class MVentory_TradeMe_Helper_Auction extends MVentory_TradeMe_Helper_Data
 
     $now = new DateTime(
       'now',
-      new DateTimeZone(
-        $store->getConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_TIMEZONE)
-      )
+      new DateTimeZone(MVentory_TradeMe_Model_Config::TIMEZONE)
     );
 
     $dow = (int) $now->format('w');
@@ -89,19 +85,41 @@ class MVentory_TradeMe_Helper_Auction extends MVentory_TradeMe_Helper_Data
 
     $now = new DateTime(
       'now',
-      new DateTimeZone(
-        $store->getConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_TIMEZONE)
-      )
+      new DateTimeZone(MVentory_TradeMe_Model_Config::TIMEZONE)
     );
 
     return ($start <= $now) && ($now < $end) && $this->isAuctionDay($store);
   }
 
+  /**
+   * Check if current NZ time is in allowed hours for normal auctions
+   *
+   * @return boolean
+   *   Result of check
+   */
+  public function isInAllowedHours () {
+    $tz = new DateTimeZone(MVentory_TradeMe_Model_Config::TIMEZONE);
+
+    $start = DateTime::createFromFormat(
+      'H',
+      MVentory_TradeMe_Model_Config::AUC_TIME_START,
+      $tz
+    );
+
+    $end = DateTime::createFromFormat(
+      'H',
+      MVentory_TradeMe_Model_Config::AUC_TIME_END,
+      $tz
+    );
+
+    $now = new DateTime('now', $tz);
+
+    return $start <= $now && $now < $end;
+  }
+
   public function getProductsListedToday ($store, $type) {
     $defTz = new DateTimeZone(date_default_timezone_get());
-    $tz = new DateTimeZone(
-      $store->getConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_TIMEZONE)
-    );
+    $tz = new DateTimeZone(MVentory_TradeMe_Model_Config::TIMEZONE);
 
     return Mage::getResourceSingleton('trademe/auction')->getListedProducts(
       $type,

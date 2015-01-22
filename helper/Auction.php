@@ -94,7 +94,7 @@ class MVentory_TradeMe_Helper_Auction extends MVentory_TradeMe_Helper_Data
       )
     );
 
-    return ($start < $now) && ($now < $end) && $this->isAuctionDay($store);
+    return ($start <= $now) && ($now < $end) && $this->isAuctionDay($store);
   }
 
   public function getProductsListedToday ($store, $type) {

@@ -393,10 +393,10 @@ EOT;
     //Filter out product which have normal auctions when List full price
     //setting set to Always or If stocl allowed
     if ($listNormAuc == MVentory_TradeMe_Model_Config::AUCTION_NORMAL_ALWAYS
-        || $listNormAuc == MVentory_TradeMe_Model_Config::AUCTI0N_NORMAL_STOCK)
+        || $listNormAuc == MVentory_TradeMe_Model_Config::AUCTION_NORMAL_STOCK)
       $aucResource->filterNormalAuctions($products);
     //Otherwise filter out all products with any auction
-    elseif ($listNormAuc == MVentory_TradeMe_Model_Config::AUCTI0N_NORMAL_NEVER)
+    elseif ($listNormAuc == MVentory_TradeMe_Model_Config::AUCTION_NORMAL_NEVER)
       $aucResource->filterAllAuctions($products);
 
     $poolSize = count($products);
@@ -464,7 +464,7 @@ EOT;
     if (!count($accounts))
       return;
 
-    if ($listNormAuc == MVentory_TradeMe_Model_Config::AUCTI0N_NORMAL_STOCK) {
+    if ($listNormAuc == MVentory_TradeMe_Model_Config::AUCTION_NORMAL_STOCK) {
       $auctions = $aucResource->getNumberPerProduct();
 
       $storeManageStock = (int) $this
@@ -488,7 +488,7 @@ EOT;
 
       $log = array('product' => $product);
 
-      if ($listNormAuc == MVentory_TradeMe_Model_Config::AUCTI0N_NORMAL_STOCK
+      if ($listNormAuc == MVentory_TradeMe_Model_Config::AUCTION_NORMAL_STOCK
           && isset($auctions[$id])) {
 
         $stock = Mage::getModel('cataloginventory/stock_item')

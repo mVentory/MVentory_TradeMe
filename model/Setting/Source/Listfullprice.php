@@ -40,11 +40,11 @@ class MVentory_TradeMe_Model_Setting_Source_Listfullprice
       ),
       array(
         'label' => $helper->__('If stock allows'),
-        'value' => MVentory_TradeMe_Model_Config::AUCTI0N_NORMAL_STOCK
+        'value' => MVentory_TradeMe_Model_Config::AUCTION_NORMAL_STOCK
       ),
       array(
         'label' => $helper->__('Never'),
-        'value' => MVentory_TradeMe_Model_Config::AUCTI0N_NORMAL_NEVER
+        'value' => MVentory_TradeMe_Model_Config::AUCTION_NORMAL_NEVER
       )
     );
   }

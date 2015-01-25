@@ -12,7 +12,7 @@
  * See http://mventory.com/legal/licensing/ for other licensing options.
  *
  * @package MVentory/TradeMe
- * @copyright Copyright (c) 2014 mVentory Ltd. (http://mventory.com)
+ * @copyright Copyright (c) 2014-2015 mVentory Ltd. (http://mventory.com)
  * @license http://creativecommons.org/licenses/by-nc-nd/4.0/
  */
 
@@ -304,5 +304,50 @@ class MVentory_TradeMe_ListingController
       ->addSuccess($helper->__('Listing has been updated '));
 
     $this->_redirect('adminhtml/catalog_product/edit/id/' . $params['id']);
+  }
+
+  /**
+   * Unlink all sandbox auctions for specified accounts
+   *
+   * @return MVentory_TradeMe_ListingController
+   *   Instance of this class
+   */
+  public function unlinkAction () {
+    $helper = Mage::helper('trademe/auction');
+    $session = Mage::getSingleton('adminhtml/session');
+
+    $request = $this->getRequest();
+    $params = $request->getParams();
+
+    if (!($lastUrl = $session->getData('last_url', true)))
+      $lastUrl = $this->getUrl('adminhtml');
+
+    if (!isset($params['accounts'])) {
+      $session->addError($helper->__('No accounts parameter'));
+      return $this->_redirectUrl($lastUrl);
+    }
+
+    $accounts = $params['accounts'];
+    $accounts = ($accounts && $accounts != 'all')
+                  ? explode(',', $accounts)
+                  : array();
+
+    foreach ($accounts as &$account)
+      $account = lowercase(trim($account));
+
+    try {
+      $helper->unlinkAll($accounts);
+
+      $session->addSuccess($helper->__(
+        'All sandbox auctions were successfully unlinked'
+      ));
+    } catch (Exception $e) {
+      $session->addError($helper->__(
+        'Error happened while unlinking all sandbox auctions: %s',
+        $e->getMessage()
+      ));
+    }
+
+    return $this->_redirectUrl($lastUrl);
   }
 }

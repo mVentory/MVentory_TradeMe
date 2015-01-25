@@ -12,7 +12,7 @@
  * See http://mventory.com/legal/licensing/ for other licensing options.
  *
  * @package MVentory/TradeMe
- * @copyright Copyright (c) 2014 mVentory Ltd. (http://mventory.com)
+ * @copyright Copyright (c) 2014-2015 mVentory Ltd. (http://mventory.com)
  * @license http://creativecommons.org/licenses/by-nc-nd/4.0/
  * @author Anatoly A. Kazantsev <anatoly@mventory.com>
  */
@@ -147,5 +147,34 @@ class MVentory_TradeMe_Helper_Auction extends MVentory_TradeMe_Helper_Data
     $titles[] = $title;
 
     return $titles[array_rand($titles)];
+  }
+
+  /**
+   * Unlink all sandbox auctions for specified accounts
+   *
+   * @param array $accounts
+   *   List of account which aucitons will be unlinked. If empty or omitted
+   *   then unlink auctions for all accounts
+   *
+   * @return MVentory_TradeMe_Helper_Auction
+   *   Instance of this class
+   */
+  public function unlinkAll ($accounts = null) {
+    $allowed = array();
+
+    foreach (Mage::app()->getWebsites(false, true) as $code => $website)
+      if ($website->getConfig(MVentory_TradeMe_Model_Config::SANDBOX))
+        $allowed += array_keys($this->getAccounts($website, false));
+
+    if (!$allowed)
+      return $this;
+
+    $accounts = $accounts ? array_intersect($accounts, $allowed) : $allowed;
+
+    Mage::getResourceModel('trademe/auction_collection')
+      ->addFieldToFilter('account_id', array('in' => $accounts))
+      ->walk('delete');
+
+    return $this;
   }
 }

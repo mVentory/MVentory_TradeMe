@@ -138,6 +138,19 @@
               <sort_order>102</sort_order>
             </sandbox>
 
+            <unlink_all_auctions translate="label comment tooltip">
+              <label>Unlink all sandbox auctions</label>
+              <comment>Globally unlink all sandbox auctions. Auctions will not be withdrawn.</comment>
+              <tooltip>During testing it can be useful to unlink all active auctions from their corresponding products. This button will perform this action for ALL configured sandbox accounts in ALL stores.</tooltip>
+              <frontend_model>trademe/setting_unlink</frontend_model>
+
+              <show_in_default>0</show_in_default>
+              <show_in_website>1</show_in_website>
+              <show_in_store>0</show_in_store>
+
+              <sort_order>103</sort_order>
+            </unlink_all_auctions>
+
             <cron translate="label comment tooltip">
               <label>Magento cron interval (in minutes)</label>
               <tooltip><![CDATA[Magento cron must be running for this feature to work.<br/>You can make listings manually with the cron disabled, but the site will not be able to check TradeMe for sales or auction expiration.]]></tooltip>
@@ -149,7 +162,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>103</sort_order>
+              <sort_order>104</sort_order>
             </cron>
 
             <enable_listing translate="label comment tooltip">
@@ -163,7 +176,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>104</sort_order>
+              <sort_order>105</sort_order>
             </enable_listing>
 
             <list_as_new translate="label comment tooltip">
@@ -177,7 +190,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>105</sort_order>
+              <sort_order>106</sort_order>
             </list_as_new>
 
             <mapping_store translate="label comment">
@@ -190,7 +203,7 @@
               <show_in_website>0</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>106</sort_order>
+              <sort_order>107</sort_order>
             </mapping_store>
 
             <name_variants_attr translate="label comment tooltip">
@@ -203,7 +216,7 @@
               <show_in_website>0</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>107</sort_order>
+              <sort_order>108</sort_order>
             </name_variants_attr>
 
             <shipping_attr translate="label comment tooltip">
@@ -217,7 +230,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>108</sort_order>
+              <sort_order>109</sort_order>
             </shipping_attr>
 
             <import translate="label comment tooltip">
@@ -240,7 +253,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>109</sort_order>
+              <sort_order>110</sort_order>
             </import>
 
             <export translate="label">
@@ -251,7 +264,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>110</sort_order>
+              <sort_order>111</sort_order>
             </export>
           </fields>
         </settings>

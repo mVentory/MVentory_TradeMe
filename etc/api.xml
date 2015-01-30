@@ -37,25 +37,6 @@
           </unable_to_match_category>
         </faults>
       </trademe_product>
-
-      <catalog_product>
-        <model>trademe/product_api</model>
-
-        <methods>
-          <submitToTM translate="title" module="trademe">
-            <title>Submit product to TradeMe</title>
-            <acl>mventory/catalog/product/submit_to_tm</acl>
-            <method>submit</method>
-          </submitToTM>
-        </methods>
-
-         <faults module="trademe">
-          <unable_to_match_category>
-            <code>201</code>
-            <message>Unable to match TradeMe category</message>
-          </unable_to_match_category>
-        </faults>
-      </catalog_product>
     </resources>
 
     <acl>
@@ -74,17 +55,6 @@
             </submit>
           </product>
         </trademe>
-
-        <mventory>
-          <catalog>
-            <product>
-              <submit_to_tm translate="title" module="trademe">
-                <title>Submit product to TradeMe</title>
-                <sort_order>5</sort_order>
-              </submit_to_tm>
-            </product>
-          </catalog>
-        </mventory>
       </resources>
     </acl>
   </api>

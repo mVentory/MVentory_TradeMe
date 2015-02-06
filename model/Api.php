@@ -73,6 +73,13 @@ class MVentory_TradeMe_Model_Api {
     7 => 'Seven'
   );
 
+  private $_paymentMethods = array(
+    1 => 'BankDeposit',
+    2 => 'CreditCard',
+    4 => 'Cash',
+    8 => 'SafeTrader'
+  );
+
   private $_htmlConvert = array(
     //Remove all CR and LF symbols
     '#\R+#s' => '',
@@ -327,6 +334,15 @@ class MVentory_TradeMe_Model_Api {
 
       $isBrandNew = (int) $this->_getIsBrandNew($product);
 
+      $paymentMethods = '<PaymentMethod>'
+                        . implode(
+                            '</PaymentMethod><PaymentMethod>',
+                            array_intersect_key(
+                              $this->_paymentMethods,
+                              array_flip($this->_getPaymentMethods($store)))
+                          )
+                        . '</PaymentMethod>';
+
       $xml = '<ListingRequest xmlns="http://api.trademe.co.nz/v1">
 <Category>' . $categoryId . '</Category>
 <Title>' . $title . '</Title>
@@ -361,12 +377,9 @@ class MVentory_TradeMe_Model_Api {
                 . $shippingType
                 . '</Type></ShippingOption>';
 
-      $xml .= '</ShippingOptions>
-<PaymentMethods>
-<PaymentMethod>CreditCard</PaymentMethod>
-<PaymentMethod>Cash</PaymentMethod>
-<PaymentMethod>BankDeposit</PaymentMethod>
-</PaymentMethods>';
+      $xml .= '</ShippingOptions>';
+
+      $xml .= '<PaymentMethods>' . $paymentMethods . '</PaymentMethods>';
 
       /**
        * @todo Temporarily disabled. Matching code is buggy in some corner cases
@@ -689,14 +702,7 @@ class MVentory_TradeMe_Model_Api {
       if (!isset($parameters['IsBrandNew']))
         $parameters['IsBrandNew'] = $this->_getIsBrandNew($product);
 
-      //set Payment methods
-      //  None = 0
-      //  BankDeposit = 1
-      //  CreditCard = 2
-      //  Cash = 4
-      //  SafeTrader = 8
-      //  Other = 16
-      $item['PaymentMethods'] = array(1,2,4);
+      $item['PaymentMethods'] = $this->_getPaymentMethods($store);
 
       if (!isset($parameters['SKU']))
         $parameters['SKU'] = htmlspecialchars($product->getSku());
@@ -1247,6 +1253,22 @@ class MVentory_TradeMe_Model_Api {
     return isset($overwrite['duration'])
              ? $overwrite['duration']
              : Mage::helper('trademe')->getDuration($account);
+  }
+
+  /**
+   * Return allowed Tm payment methods
+   *
+   * @param Mage_Core_Model_Store $store
+   *   Store model
+   *
+   * @return array
+   *   List of IDs of allowed payment methods
+   */
+  protected function _getPaymentMethods ($store) {
+    return explode(
+      ',',
+      $store->getConfig(MVentory_TradeMe_Model_Config::_PAYMENT_METHODS)
+    );
   }
 
   public function getCategories () {

@@ -1229,9 +1229,9 @@ EOT;
     //on TradeMe. The flag is used in removeListing() method
     Mage::register('trademe_disable_withdrawal', true, true);
 
-    //Set global flag to enable dummy shipping method in MVentory API
+    //Set global flag to enable mVentory shipping method in MVentory API
     //extension
-    Mage::register('mventory_allow_dummyshipping', true, true);
+    Mage::register('mventory_allow_shipping', true, true);
 
     //Set customer ID for API access checks in MVentory API extension
     Mage::register('mventory_api_customer', $buyer, true);

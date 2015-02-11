@@ -54,7 +54,7 @@ jQuery(document).ready(function ($) {
       for (var i = 0, value; value = attr.values[i++];)
         $values.append($('<option>', {
           value: value.id,
-          text: value.label,
+          html: value.label,
           class: attr.used_values[value.id] ? 'mventory-state-used-value' : ''
         }));
 
@@ -138,7 +138,9 @@ jQuery(document).ready(function ($) {
           for (var n = 0, valueId; valueId = attr.value[n++];)
             for (var m = 0, attrVal; attrVal = attr_data.values[m++];)
               if (valueId == attrVal.id) {
-                value[value.length] = attrVal.label;
+                value[value.length] = attrVal.full_label
+                                        ? attrVal.full_label
+                                        : attrVal.label;
                 break;
               }
 
@@ -277,7 +279,7 @@ jQuery(document).ready(function ($) {
   function reset_attr ($attr) {
     return $attr
              .find('> .trademe-rule-new-attr-name')
-               .val('-1')
+               .val('-2')
              .end();
   }
 
@@ -311,7 +313,7 @@ jQuery(document).ready(function ($) {
       .each(function () {
         var attr = get_attr($(this));
 
-        if (!(attr.id == '-1' || attr.value == null))
+        if (!(attr.id == '-2' || attr.value == null))
           attrs.push(attr);
       });
 

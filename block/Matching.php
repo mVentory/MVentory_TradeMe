@@ -25,20 +25,12 @@
 class MVentory_TradeMe_Block_Matching
   extends Mage_Adminhtml_Block_Template {
 
-  protected $_attrs = null;
+  protected $_attrs = array();
 
   protected $_categories = null;
   protected $_usedCategories = array();
 
   protected function _construct () {
-    $this->_attrs['-1'] = array(
-      'label' => $this->__('Select an attribute...'),
-      'used' => false,
-      'used_values' => array()
-    );
-
-    $labels[] = '';
-
     $attrs = Mage::getResourceModel('catalog/product_attribute_collection')
                ->setAttributeSetFilter($this->_getSetId());
 
@@ -81,6 +73,23 @@ class MVentory_TradeMe_Block_Matching
         'id' => $option->getId(),
         'label' => $option->getValue()
       );
+
+    $this->_attrs = array_replace(
+      array(
+        '-2' => array(
+          'label' => $this->__('Select an attribute...'),
+          'used' => false,
+          'used_values' => array()
+        ),
+        '-1' => array(
+          'label' => $this->__('Categories'),
+          'used' => false,
+          'used_values' => array(),
+          'values' => $this->_getCategoriesForSelect()
+        )
+      ),
+      $this->_attrs
+    );
 
     $api = new MVentory_TradeMe_Model_Api();
     $this->_categories = $api->getCategories();
@@ -238,7 +247,10 @@ class MVentory_TradeMe_Block_Matching
         foreach ($attr['value'] as $valueId)
           foreach ($_attr['values'] as $option)
             if ($valueId == $option['id']) {
-              $values[] = $option['label'];
+              $values[] = isset($option['full_label'])
+                            ? $option['full_label']
+                            : $option['label'];
+
               $_attr['used_values'][$valueId] = true;
 
               break;
@@ -261,5 +273,62 @@ class MVentory_TradeMe_Block_Matching
       'has_category' => $hasCategory,
       'attrs' => $attrs
     );
+  }
+
+  /**
+   * Prepare categories data to use in dropdown field
+   *
+   * @return array
+   *   Prepared categories data
+   */
+  protected function _getCategoriesForSelect () {
+    $categories = Mage::getResourceModel('catalog/category_collection')
+      ->addNameToResult();
+
+    $tree = Mage::getResourceSingleton('catalog/category_tree')
+      ->load()
+      ->addCollectionData($categories)
+      ->getNodeById(Mage_Catalog_Model_Category::TREE_ROOT_ID);
+
+    $categories = array();
+
+    foreach ($tree->getChildren() as $child)
+       $this->_getNode($child, $categories);
+
+    return $categories;
+  }
+
+  /**
+   * Adds prepared category data to the supplied list of categories data.
+   * Processes sub-categories recursively.
+   *
+   * @param Varien_Data_Tree_Node $node
+   *   Category node from the categories tree
+   *
+   * @param array $categories
+   *   Prepared list of categories data
+   *
+   * @param array $fullLabel
+   *   List of full category names, e.g Default / Category / Sub-category
+   */
+  protected function _getNode ($node, &$categories, $fullLabel = array()) {
+    $label = $this->htmlEscape($node->getName());
+
+    $fullLabel[] = $label;
+
+    $indent = str_repeat(
+      '&nbsp;&nbsp;&nbsp;&nbsp;',
+      ($level = $node->getLevel()) ? $level - 1 : 0
+    );
+
+    $item['id']  = $node->getId();
+    $item['label'] = $indent . $label;
+    $item['full_label'] = implode('&nbsp;/&nbsp;', $fullLabel);
+
+    $categories[] = $item;
+
+    if ($node->hasChildren())
+      foreach ($node->getChildren() as $child)
+        $this->_getNode($child, $categories, $fullLabel);
   }
 }

@@ -74,12 +74,13 @@ class MVentory_TradeMe_Block_Matching
 
     $options = Mage::getResourceModel('eav/entity_attribute_option_collection')
                  ->setAttributeFilter(array('in' => array_keys($this->_attrs)))
-                 ->setStoreFilter($attr->getStoreId())
-                 ->setPositionOrder('asc', true);
+                 ->setStoreFilter();
 
     foreach ($options as $option)
-      $this->_attrs[$option->getAttributeId()]['values'][$option->getId()]
-        = $option->getValue();
+      $this->_attrs[$option->getAttributeId()]['values'][] = array(
+        'id' => $option->getId(),
+        'label' => $option->getValue()
+      );
 
     $api = new MVentory_TradeMe_Model_Api();
     $this->_categories = $api->getCategories();
@@ -235,11 +236,13 @@ class MVentory_TradeMe_Block_Matching
         $values = array();
 
         foreach ($attr['value'] as $valueId)
-          if (isset($_attr['values'][$valueId])) {
-            $values[] = $_attr['values'][$valueId];
+          foreach ($_attr['values'] as $option)
+            if ($valueId == $option['id']) {
+              $values[] = $option['label'];
+              $_attr['used_values'][$valueId] = true;
 
-            $_attr['used_values'][$valueId] = true;
-          }
+              break;
+            }
 
         $attrs[$_attr['label']] = implode(', ', $values);
 

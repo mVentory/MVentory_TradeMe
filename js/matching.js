@@ -51,11 +51,11 @@ jQuery(document).ready(function ($) {
                       .find('> div > .trademe-rule-new-attr-value')
                       .empty();
 
-      for (var i in attr.values)
+      for (var i = 0, value; value = attr.values[i++];)
         $values.append($('<option>', {
-          value: i,
-          text: attr.values[i],
-          class: attr.used_values[i] ? 'trademe-state-used-value' : ''
+          value: value.id,
+          text: value.label,
+          class: attr.used_values[value.id] ? 'mventory-state-used-value' : ''
         }));
 
       $values.change();
@@ -133,9 +133,14 @@ jQuery(document).ready(function ($) {
           var attr = new_rule.attrs[i];
           var attr_data = trademe_attrs[attr.id];
 
-          var value = $.map($.makeArray(attr.value), function (value, index) {
-            return attr_data.values[value];
-          });
+          var value = [];
+
+          for (var n = 0, valueId; valueId = attr.value[n++];)
+            for (var m = 0, attrVal; attrVal = attr_data.values[m++];)
+              if (valueId == attrVal.id) {
+                value[value.length] = attrVal.label;
+                break;
+              }
 
           var $values = $attr_template.clone();
 

@@ -920,7 +920,7 @@ EOT;
         if ($attr->getDefaultValue() != $fields['avoid_withdrawal']) {
           $options = $attr
                       ->getSource()
-                      ->getOptionArray();
+                      ->toOptionArray();
 
           if (isset($options[$fields['avoid_withdrawal']]))
             $avoidWithdrawal = (bool) $fields['avoid_withdrawal'];

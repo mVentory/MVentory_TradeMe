@@ -30,7 +30,6 @@ class MVentory_TradeMe_Model_Config
   const MAPPING_STORE = 'trademe/settings/mapping_store';
   const ENABLE_LISTING = 'trademe/settings/enable_listing';
   const LIST_AS_NEW = 'trademe/settings/list_as_new';
-  const _NAME_VARIANTS_ATTR = 'trademe/settings/name_variants_attr';
   const _SHIPPING_ATTR = 'trademe/settings/shipping_attr';
   const _PAYMENT_METHODS = 'trademe/settings/payment_methods';
   const _STOCK_STATUS = 'trademe/settings/stock_status';
@@ -39,6 +38,9 @@ class MVentory_TradeMe_Model_Config
   const _WATERMARK_SIZE = 'trademe/watermark/size';
   const _WATERMARK_OPC = 'trademe/watermark/opacity';
   const _WATERMARK_POS = 'trademe/watermark/position';
+
+  const _AUC_NAME_VAR_ATTR = 'trademe/normal_auction/name_variants_attr';
+  const _AUC_MULT_PER_NAME = 'trademe/normal_auction/per_name_variant';
 
   const _1AUC_ENDTIME = 'trademe/one_dollar/end_time';
   const _1AUC_ENDDAYS = 'trademe/one_dollar/end_days';

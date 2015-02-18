@@ -221,19 +221,6 @@
               <sort_order>108</sort_order>
             </mapping_store>
 
-            <name_variants_attr translate="label comment tooltip">
-              <label>Name variants attribute code</label>
-              <comment>Optional, e.g. prod_names</comment>
-              <tooltip>You can nominate an attribute with name variants to be randomly used for products on TradeMe, one name per line. Create a text area attribute and copy its code into this text box. This feature is optional.</tooltip>
-              <frontend_type>text</frontend_type>
-
-              <show_in_default>1</show_in_default>
-              <show_in_website>0</show_in_website>
-              <show_in_store>0</show_in_store>
-
-              <sort_order>109</sort_order>
-            </name_variants_attr>
-
             <shipping_attr translate="label comment tooltip">
               <label>Shipping method attribute</label>
               <comment>Attribute code for a custom shipping methods</comment>
@@ -245,7 +232,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>110</sort_order>
+              <sort_order>109</sort_order>
             </shipping_attr>
 
             <stock_status translate="label comment tooltip">
@@ -259,7 +246,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>109</sort_order>
+              <sort_order>110</sort_order>
             </stock_status>
 
             <import translate="label comment tooltip">
@@ -298,6 +285,45 @@
           </fields>
         </settings>
 
+        <normal_auction translate="label">
+          <label>Full price auctions</label>
+
+          <show_in_default>1</show_in_default>
+          <show_in_website>1</show_in_website>
+          <show_in_store>0</show_in_store>
+
+          <sort_order>2</sort_order>
+
+          <fields>
+            <name_variants_attr translate="label comment tooltip">
+              <label>Name variants attribute code</label>
+              <comment>Optional, e.g. prod_names</comment>
+              <tooltip>You can nominate an attribute with name variants to be randomly used for products on TradeMe, one name per line. Create a text area attribute and copy its code into this text box. This feature is optional.</tooltip>
+              <frontend_type>text</frontend_type>
+
+              <show_in_default>1</show_in_default>
+              <show_in_website>0</show_in_website>
+              <show_in_store>0</show_in_store>
+
+              <sort_order>1</sort_order>
+            </name_variants_attr>
+
+            <per_name_variant translate="label comment tooltip">
+              <label>Create multiple auctions per product</label>
+              <comment>Name variants attribute code must be provided.</comment>
+              <tooltip>Set to Yes if you want multiple auctions to be created with different name variants - one auction per name variant.</tooltip>
+              <frontend_type>select</frontend_type>
+              <source_model>adminhtml/system_config_source_yesno</source_model>
+
+              <show_in_default>1</show_in_default>
+              <show_in_website>1</show_in_website>
+              <show_in_store>0</show_in_store>
+
+              <sort_order>2</sort_order>
+            </per_name_variant>
+          </fields>
+        </normal_auction>
+
         <one_dollar translate="label footer">
           <label>$1 auctions</label>
           <footer>
@@ -317,7 +343,7 @@
           <show_in_website>1</show_in_website>
           <show_in_store>0</show_in_store>
 
-          <sort_order>2</sort_order>
+          <sort_order>3</sort_order>
 
           <fields>
             <end_days translate="label comment tooltip">

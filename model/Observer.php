@@ -459,15 +459,8 @@ EOT;
     if (!count($accounts))
       return;
 
-    if ($listNormAuc == MVentory_TradeMe_Model_Config::AUCTION_NORMAL_STOCK) {
+    if ($listNormAuc == MVentory_TradeMe_Model_Config::AUCTION_NORMAL_STOCK)
       $auctions = $aucResource->getNumberPerProduct();
-
-      $storeManageStock = (int) $this
-        ->_store
-        ->getConfig(
-            Mage_CatalogInventory_Model_Stock_Item::XML_PATH_MANAGE_STOCK
-          );
-    }
 
     unset($accountId, $accountData, $syncData);
 
@@ -484,24 +477,17 @@ EOT;
       if ($listNormAuc == MVentory_TradeMe_Model_Config::AUCTION_NORMAL_STOCK
           && isset($auctions[$id])) {
 
-        $stock = Mage::getModel('cataloginventory/stock_item')
-          ->loadByProduct($id);
-
-        if (!$stock->getId())
-          continue;
-
-        $manageStock = $stock->getUseConfigManageStock()
-                         ? $storeManageStock
-                         : (int) $stock['manage_stock'];
+        $qty = $this->_getProductQty($product);
 
         MVentory_TradeMe_Model_Log::debug(array(
           'product' => $product,
+          'stock' => $qty,
           'number of auctions' => $auctions[$id],
-          'manage stock' => $manageStock,
-          'qty' => $stock->getQty()
         ));
 
-        if ($manageStock && ($stock->getQty() <= $auctions[$id]))
+        //Go to next product if stock item can't be loaded (QTY === null)
+        //or stock is managed (QTY !== false) and we have no more stock to list
+        if (($qty === null) || ($qty !== false && $qty <= $auctions[$id]))
           continue;
       }
 
@@ -562,56 +548,99 @@ EOT;
         if ($minimalPrice && ($productPrice < $minimalPrice))
           continue;
 
-        $api = new MVentory_TradeMe_Model_Api();
-        $result = $api->send($product, $matchResult['id'], $accountId);
+        $nameVariants = $this->_getProductNameVariants(
+          $product,
+
+          //Use known number of normal + $1 auctions or pass 1 to count
+          //auction with default product name
+          isset($auctions[$id]) ? 1 + $auctions[$id] : 1
+        );
+
+        if ($nameVariants)
+          array_unshift($nameVariants, $product->getName());
+        else
+          $nameVariants[] = Mage::helper('trademe/auction')->getTitle(
+            $product,
+            $this->_store
+          );
 
         MVentory_TradeMe_Model_Log::debug(array(
           'product' => $product,
-          'submit result' => $result,
-          'error' => !is_int($result)
+          'name variants' => $nameVariants
         ));
 
-        if (is_array($result)) foreach ($result as $error)
-          if ($error == 'Insufficient balance') {
-            $this->_negativeBalanceError($accountData['name']);
+        $numberOfListedVariants = 0;
+        $api = new MVentory_TradeMe_Model_Api();
 
-            if (count($accounts) == 1)
-              return;
+        foreach ($nameVariants as $nameVariant) {
+          $result = $api->send(
+            $product,
+            $matchResult['id'],
+            $accountId,
+            array('title' => $nameVariant)
+          );
 
-            unset($accounts[$accountId]);
+          MVentory_TradeMe_Model_Log::debug(array(
+            'product' => $product,
+            'submit result' => $result,
+            'error' => !is_int($result)
+          ));
 
-            continue 2;
+          if (is_array($result)) foreach ($result as $error)
+            if ($error == 'Insufficient balance') {
+              $this->_negativeBalanceError($accountData['name']);
+
+              if (count($accounts) == 1)
+                return;
+
+              unset($accounts[$accountId]);
+
+              //Go to next account
+              continue 3;
+            }
+
+          //If we can't list auction with default name then try to list it
+          //in the next account
+          if (!($numberOfListedVariants || is_int($result)))
+            break;
+
+          if (is_int($result)) {
+            //Add record to the DB only for auction with default name
+            if (!$numberOfListedVariants)
+              Mage::getModel('trademe/auction')
+                ->setData(array(
+                    'product_id' => $product->getId(),
+                    'listing_id' => $result,
+                    'account_id' => $accountId
+                  ))
+                ->save();
+
+            $numberOfListedVariants++;
           }
-
-        if (is_int($result)) {
-          Mage::getModel('trademe/auction')
-            ->setData(array(
-                'product_id' => $product->getId(),
-                'listing_id' => $result,
-                'account_id' => $accountId
-              ))
-            ->save();
-
-          if (!--$accounts[$accountId]['free_slots']) {
-            $accountData['sync_data']['duration'] = $this
-              ->_helper
-              ->getDuration($perShipping);
-
-            Mage::app()->saveCache(
-              serialize($accountData['sync_data']),
-              $accountData['cache_id'],
-              array(self::TAG_FREE_SLOTS),
-              null
-            );
-
-            if (count($accounts) == 1)
-              return;
-
-            unset($accounts[$accountId]);
-          }
-
-          break;
         }
+
+        $accounts[$accountId]['free_slots'] -= $numberOfListedVariants;
+
+        if ($accounts[$accountId]['free_slots'] <= 0) {
+          $accountData['sync_data']['duration'] = $this
+            ->_helper
+            ->getDuration($perShipping);
+
+          Mage::app()->saveCache(
+            serialize($accountData['sync_data']),
+            $accountData['cache_id'],
+            array(self::TAG_FREE_SLOTS),
+            null
+          );
+
+          if (count($accounts) == 1)
+            return;
+
+          unset($accounts[$accountId]);
+        }
+
+        //We have succesfully listed product, go to the next one
+        break;
       }
     }
   }
@@ -1171,6 +1200,95 @@ EOT;
       return true;
 
     return (int) $number < (int) $max;
+  }
+
+  /**
+   * Return product's name variants. Number of variants depends on available
+   * stock
+   *
+   * @param Mage_Catalog_Model_Product $product
+   *   Product model
+   *
+   * @param int $numOfAuctions
+   *   Number of existing auctions for the supplied product
+   *
+   * @return array
+   *   Returns shuffled array of name varients limit by available product's
+   *   stock.
+   */
+  protected function _getProductNameVariants ($product, $numOfAuctions) {
+    $allowMultiple = (bool) $this->_store->getConfig(
+      MVentory_TradeMe_Model_Config::_AUC_MULT_PER_NAME
+    );
+
+    if (!$allowMultiple)
+      return array();
+
+    $names = Mage::helper('trademe/product')->getNameVariants(
+      $product,
+      $this->_store
+    );
+
+    if (!$names)
+      return array();
+
+    $qty = $this->_getProductQty($product);
+
+    //Return no name variants if stock item can't be loaded
+    if ($qty === null)
+      return array();
+
+    //Return all name variants if stock is not managed
+    if ($qty === false)
+      return $names;
+
+    $qty = $qty - $numOfAuctions;
+
+    if ($qty <= 0)
+      return array();
+
+    return (count($names) <= $qty)
+             ? $names
+             : array_intersect_key(
+                 $names,
+                 array_flip((array) array_rand($names, $qty))
+               );
+  }
+
+  /**
+   * Return QTY for the specified product
+   *
+   * @param Mage_Catalog_Model_Product $product
+   *   Product model
+   *
+   * @return int|bool|null
+   *   Returns QTY number or null if stock item can't be loaded or false if
+   *   stock is not managed
+   */
+  protected function _getProductQty ($product) {
+    if (!isset($this->_isStockManagedInStore))
+      $this->_isStockManagedInStore = (int) $this->_store->getConfig(
+        Mage_CatalogInventory_Model_Stock_Item::XML_PATH_MANAGE_STOCK
+      );
+
+    if (!isset($product['trademe_stock_item'])) {
+      $stock = Mage::getModel('cataloginventory/stock_item')->loadByProduct(
+        $product
+      );
+
+      if (!$stock->getId())
+        return null;
+
+      $product['trademe_stock_item'] = $stock;
+    }
+    else
+      $stock = $product['trademe_stock_item'];
+
+    $manageStock = $stock->getUseConfigManageStock()
+                     ? $this->_isStockManagedInStore
+                     : (int) $stock['manage_stock'];
+
+    return $manageStock ? $stock->getQty() : false;
   }
 
   /**

@@ -284,6 +284,32 @@
           </fields>
         </settings>
 
+        <normal_auction translate="label">
+          <label>Full price auctions</label>
+
+          <show_in_default>1</show_in_default>
+          <show_in_website>1</show_in_website>
+          <show_in_store>0</show_in_store>
+
+          <sort_order>2</sort_order>
+
+          <fields>
+            <per_name_variant translate="label comment tooltip">
+              <label>Allow multiple auctions per name variant</label>
+              <comment></comment>
+              <tooltip></tooltip>
+              <frontend_type>select</frontend_type>
+              <source_model>adminhtml/system_config_source_yesno</source_model>
+
+              <show_in_default>1</show_in_default>
+              <show_in_website>1</show_in_website>
+              <show_in_store>0</show_in_store>
+
+              <sort_order>1</sort_order>
+            </per_name_variant>
+          </fields>
+        </normal_auction>
+
         <one_dollar translate="label footer">
           <label>$1 auctions</label>
           <footer>
@@ -303,7 +329,7 @@
           <show_in_website>1</show_in_website>
           <show_in_store>0</show_in_store>
 
-          <sort_order>2</sort_order>
+          <sort_order>3</sort_order>
 
           <fields>
             <end_days translate="label comment tooltip">

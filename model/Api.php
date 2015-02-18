@@ -299,7 +299,7 @@ EOT;
       $client->setUri('https://api.' . $this->_host . '.co.nz/v1/Selling.xml');
       $client->setMethod(Zend_Http_Client::POST);
 
-      $title = $helper->getTitle($product, $store);
+      $title = $this->_getTitle($product, $store, $overwrite);
 
       if (strlen($title) > MVentory_TradeMe_Model_Config::TITLE_MAX_LENGTH)
         $title = htmlspecialchars(substr(
@@ -1313,6 +1313,27 @@ EOT;
       ',',
       $store->getConfig(MVentory_TradeMe_Model_Config::_PAYMENT_METHODS)
     );
+  }
+
+  /**
+   * Get auction title
+   *
+   * @param Mage_Catalog_Model_Product $product
+   *   Product model
+   *
+   * @param Mage_Core_Model_Store $store
+   *   Store model
+   *
+   * @param array $overwrite
+   *   Values to overwrite
+   *
+   * @return string
+   *   Auction title
+   */
+  protected function _getTitle ($product, $store, $overwrite) {
+    return isset($overwrite['title'])
+             ? $overwrite['title']
+             : Mage::helper('trademe/auction')->getTitle ($product, $store);
   }
 
   public function getCategories () {

@@ -39,6 +39,8 @@ class MVentory_TradeMe_Model_Config
   const _WATERMARK_OPC = 'trademe/watermark/opacity';
   const _WATERMARK_POS = 'trademe/watermark/position';
 
+  const _AUC_MULT_PER_NAME = 'trademe/normal_auction/per_name_variant';
+
   const _1AUC_ENDTIME = 'trademe/one_dollar/end_time';
   const _1AUC_ENDDAYS = 'trademe/one_dollar/end_days';
   const _1AUC_DURATION = 'trademe/one_dollar/duration';

@@ -801,26 +801,8 @@ EOT;
   }
 
   public function massCheck ($auctions) {
-    if (!$accessToken = $this->auth())
+    if (!$items = $this->getAllSellingAuctions(count($auctions) * 10))
       return;
-
-    $client = $accessToken->getHttpClient($this->getConfig());
-    $client->setUri(
-      'https://api.' . $this->_host
-        . '.co.nz/v1/MyTradeMe/SellingItems/All.json'
-    );
-    $client->setMethod(Zend_Http_Client::GET);
-
-    //Request more rows than number of auctions to be sure that all listings
-    //from account will be included in a response
-    $client->setParameterGet('rows', count($auctions) * 10);
-
-    $response = $client->request();
-
-    if ($response->getStatus() != 200)
-      return;
-
-    $items = json_decode($response->getBody(), true);
 
     foreach ($auctions as $auction)
       foreach ($items['List'] as $item)
@@ -1109,6 +1091,39 @@ EOT;
       return;
 
     return $response->getBody();
+  }
+
+  /**
+   * Return all selling auctions
+   *
+   * @param int $limit
+   *  Limit number of requested auctions
+   *
+   * @return array
+   *   List of auctions data
+   */
+  public function getAllSellingAuctions ($limit) {
+    if (!$accessToken = $this->auth())
+      return;
+
+    $response = $accessToken
+      ->getHttpClient($this->getConfig())
+      ->setUri(
+          'https://api.'
+          . $this->_host
+          . '.co.nz/v1/MyTradeMe/SellingItems/All.json'
+        )
+      ->setMethod(Zend_Http_Client::GET)
+
+      //Request more rows than number of auctions to be sure that all listings
+      //from account will be included in a response
+      ->setParameterGet('rows', $limit)
+      ->request();
+
+    if ($response->getStatus() != 200)
+      return;
+
+    return json_decode($response->getBody(), true);
   }
 
   public function _parseCategories (&$list, $categories, $names = array()) {

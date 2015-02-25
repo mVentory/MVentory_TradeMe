@@ -246,4 +246,17 @@
       </image>
     </trademe>
   </default>
+
+  <crontab>
+    <jobs>
+      <trademe_automated_withdrawal>
+        <schedule>
+          <cron_expr>*/15 * * * *</cron_expr>
+        </schedule>
+        <run>
+          <model>trademe/cron::automatedWithdrawal</model>
+        </run>
+      </trademe_automated_withdrawal>
+    </jobs>
+  </crontab>
 </config>

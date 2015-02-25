@@ -742,48 +742,7 @@ EOT;
   }
 
   public function massCheck ($auctions) {
-    $accessToken = $this->auth();
-    $client = $accessToken->getHttpClient($this->getConfig());
-    $client->setUri(
-      'https://api.' . $this->_host
-        . '.co.nz/v1/MyTradeMe/SellingItems/All.json'
-    );
-    $client->setMethod(Zend_Http_Client::GET);
-
-    //Request more rows than number of auctions to be sure that all listings
-    //from account will be included in a response
-    $client->setParameterGet('rows', count($auctions) * 10);
-
-    $response = $client->request();
-
-    if (($status = $response->getStatus()) != 200)
-      throw new MVentory_TradeMe_ApiException(sprintf(
-        self::__E_RESPONSE_STATUS,
-        $status,
-        200
-      ));
-
-    $body = $response->getBody();
-
-    if ($body === '')
-      throw new MVentory_TradeMe_ApiException(self::__E_RESPONSE_EMPTY);
-
-    $items = json_decode($body, true);
-
-    if ($items === null)
-      throw new MVentory_TradeMe_ApiException(self::__E_RESPONSE_DECODING);
-
-    if (!isset($items['List']))
-      throw new MVentory_TradeMe_ApiException(sprintf(
-        self::__E_RESPONSE_INCOMPLETE,
-        'List'
-      ));
-
-    if (!isset($items['TotalCount']))
-      throw new MVentory_TradeMe_ApiException(sprintf(
-        self::__E_RESPONSE_INCOMPLETE,
-        'TotalCount'
-      ));
+    $items = $this->getAllSellingAuctions(count($auctions) * 10);
 
     foreach ($auctions as $auction)
       foreach ($items['List'] as $item)
@@ -1089,6 +1048,64 @@ EOT;
       throw new MVentory_TradeMe_ApiException($body['ErrorDescription']);
 
     return $this->_prepareListingDetails($body);
+  }
+
+  /**
+   * Return all selling auctions
+   *
+   * @param int $limit
+   *  Limit number of requested auctions
+   *
+   * @return array
+   *   List of auctions data
+   */
+  public function getAllSellingAuctions ($limit) {
+    $accessToken = $this->auth();
+
+    $response = $accessToken
+      ->getHttpClient($this->getConfig())
+      ->setUri(
+          'https://api.'
+          . $this->_host
+          . '.co.nz/v1/MyTradeMe/SellingItems/All.json'
+        )
+      ->setMethod(Zend_Http_Client::GET)
+
+      //Request more rows than number of auctions to be sure that all listings
+      //from account will be included in a response
+      ->setParameterGet('rows', $limit)
+      ->request();
+
+    if (($status = $response->getStatus()) != 200)
+      throw new MVentory_TradeMe_ApiException(sprintf(
+        self::__E_RESPONSE_STATUS,
+        $status,
+        200
+      ));
+
+    $body = $response->getBody();
+
+    if ($body === '')
+      throw new MVentory_TradeMe_ApiException(self::__E_RESPONSE_EMPTY);
+
+    $items = json_decode($body, true);
+
+    if ($items === null)
+      throw new MVentory_TradeMe_ApiException(self::__E_RESPONSE_DECODING);
+
+    if (!isset($items['List']))
+      throw new MVentory_TradeMe_ApiException(sprintf(
+        self::__E_RESPONSE_INCOMPLETE,
+        'List'
+      ));
+
+    if (!isset($items['TotalCount']))
+      throw new MVentory_TradeMe_ApiException(sprintf(
+        self::__E_RESPONSE_INCOMPLETE,
+        'TotalCount'
+      ));
+
+    return $items;
   }
 
   public function _parseCategories (&$list, $categories, $names = array()) {

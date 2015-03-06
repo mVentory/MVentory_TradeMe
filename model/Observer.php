@@ -399,13 +399,13 @@ EOT;
     elseif ($listNormAuc == MVentory_TradeMe_Model_Config::AUCTION_NORMAL_NEVER)
       $aucResource->filterAllAuctions($products);
 
-    $poolSize = count($products);
-    MVentory_TradeMe_Model_Log::debug(array('pool size' => $poolSize));
+    $ids = $products->getAllIds();
+    MVentory_TradeMe_Model_Log::debug(array('pool size' => count($ids)));
 
-    if (!$poolSize)
+    if (!$ids)
       return;
 
-    unset($productIds);
+    unset($productIds, $products);
 
     //Calculate avaiable slots for current run of the sync script
     foreach ($accounts as $accountId => &$accountData) {
@@ -475,8 +475,6 @@ EOT;
     }
 
     unset($accountId, $accountData, $syncData);
-
-    $ids = array_keys($products->getItems());
 
     shuffle($ids);
 

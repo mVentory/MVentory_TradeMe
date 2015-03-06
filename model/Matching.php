@@ -131,7 +131,10 @@ class MVentory_TradeMe_Model_Matching
     }
 
     if ($categoryId == -1)
-      return false;
+      return array(
+        'id' => $categoryId,
+        'category' => 'Don\'t list on TradeMe'
+      );
 
     if ($categoryId == null && isset($rules[self::DEFAULT_RULE_ID]))
       $categoryId = (int) $rules[self::DEFAULT_RULE_ID]['category'];

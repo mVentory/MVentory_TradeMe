@@ -71,24 +71,32 @@ class MVentory_TradeMe_Helper_Image extends MVentory_TradeMe_Helper_Data
                 ? $newImage
                 : $this->_buildFileName($image, $imageModel, $store);
 
-    if (file_exists($newImage))
+    if (file_exists($newImage)) {
+      if (isset($env))
+        $this->changeStore($env);
+
       return $newImage;
+    }
 
     $newImage = $imageModel
       ->resize()
       ->saveFile()
       ->getNewFile();
 
-    if (isset($env))
-      $this->changeStore($env);
+    if ($newImage && file_exists($newImage)) {
+      if (isset($env))
+        $this->changeStore($env);
 
-    if ($newImage && file_exists($newImage))
       return $newImage;
+    }
 
     $newImage = $this->_download(
       $imageModel->getUrl(),
       $this->_buildFileName($image, $imageModel, $store)
     );
+
+    if (isset($env))
+      $this->changeStore($env);
 
     if (!file_exists($newImage))
       throw new Exception('Prepared image doesn\'t exist');

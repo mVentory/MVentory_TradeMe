@@ -434,6 +434,8 @@ class MVentory_TradeMe_Model_Api {
           $return = $response;
       }
     }
+    else
+      $return = 'Can\'t get access token';
 
     return $return;
   }
@@ -485,6 +487,8 @@ class MVentory_TradeMe_Model_Api {
           $error = $response;
       }
     }
+    else
+      $return = 'Can\'t get access token';
 
     return $error;
   }
@@ -739,6 +743,8 @@ class MVentory_TradeMe_Model_Api {
   	  MVentory_TradeMe_Model_Log::debug(
         'Unable to auth when trying to update listing details ' . $listingId
   	   );
+
+      $return = 'Can\'t get access token';
   	}
 
     return $return;
@@ -830,7 +836,7 @@ class MVentory_TradeMe_Model_Api {
     MVentory_TradeMe_Model_Log::debug();
 
     if (!$accessToken = $this->auth())
-      return;
+      return 'Can\'t get access token';
 
     $client = $accessToken->getHttpClient($this->getConfig());
 

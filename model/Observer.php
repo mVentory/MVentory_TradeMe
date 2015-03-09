@@ -566,6 +566,12 @@ EOT;
         $api = new MVentory_TradeMe_Model_Api();
         $result = $api->send($product, $matchResult['id'], $accountId);
 
+        MVentory_TradeMe_Model_Log::debug(array(
+          'product' => $product,
+          'submit result' => $result,
+          'error' => !is_int($result)
+        ));
+
         if (trim($result) == 'Insufficient balance') {
           $cacheId = array(
             $this->_website->getCode(),
@@ -822,6 +828,12 @@ EOT;
             )
           )
         );
+
+        MVentory_TradeMe_Model_Log::debug(array(
+          'product' => $product,
+          'submit result' => $result,
+          'error' => !is_int($result)
+        ));
 
         if (trim($result) == 'Insufficient balance') {
           $cacheId = array(

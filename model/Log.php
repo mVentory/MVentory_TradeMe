@@ -74,7 +74,7 @@ class MVentory_TradeMe_Model_Log
       case 'boolean': return $var ? 'true' : 'false';
       case 'integer':
       case 'double': return (string) $var;
-      case 'string': return '\'' . $var . '\'';
+      case 'string': return self::_exportString($var);
       case 'array': return self::_exportArray($var);
       case 'object': return self::_exportObject($var);
       case 'resource': return 'resource';
@@ -82,6 +82,12 @@ class MVentory_TradeMe_Model_Log
     }
 
     return 'unknown type';
+  }
+
+  protected static function _exportString ($str) {
+    return '\''
+           . str_replace(array("\n", "\r"), array('\n', '\r'), $str)
+           . '\'';
   }
 
   protected static function _exportArray ($arr) {

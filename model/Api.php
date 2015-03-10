@@ -923,7 +923,19 @@ class MVentory_TradeMe_Model_Api {
     $search[] = '{{attrs}}';
     $replace[] = rtrim($attrs);
 
-    $description = str_replace($search, $replace, $template);
+    /**
+     * @todo temp. solution to calculate how much of data we can insert into
+     *   the template. Calculated number contains length of all tags,
+     *   it decreases free space for data
+     */
+    $limit = MVentory_TradeMe_Model_Config::DESCRIPTION_MAX_LENGTH
+             - strlen($template);
+
+    $description = str_replace(
+      $search,
+      $limit ? $this->_truncateTagsValues($replace, $limit) : '',
+      $template
+    );
 
     do {
       $before = strlen($description);
@@ -934,6 +946,26 @@ class MVentory_TradeMe_Model_Api {
     } while ($before != $after);
 
     return trim($description);
+  }
+
+  protected function _truncateTagsValues ($values, $limit) {
+    $lastId = count($values) - 1;
+
+    foreach ($values as $i => &$value) {
+      $limit -= strlen($value);
+
+      if ($limit > 0)
+        continue;
+
+      if ($limit == 0 && $i == $lastId)
+        return $values;
+
+      $value = substr($value, 0, $limit - 3) . '&hellip;';
+
+      return array_slice($values, 0, $i + 1);
+    }
+
+    return $values;
   }
 
   public function _removeHtml ($text) {

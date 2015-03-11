@@ -110,7 +110,7 @@
   color: blue;
 }
 
-.trademe-rule-new-attr-name > option[value="-1"] {
+.trademe-rule-new-attr-name > option[value="-2"] {
   display: none;
 }
 

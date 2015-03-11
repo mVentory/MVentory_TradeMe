@@ -25,9 +25,6 @@
  */
 class MVentory_TradeMe_Model_Observer {
 
-  const SYNC_START_HOUR = 7;
-  const SYNC_END_HOUR = 23;
-
   const TAG_FREE_SLOTS = 'tag_trademe_free_slots';
   const TAG_EMAILS = 'tag_trademe_emails';
 
@@ -171,7 +168,7 @@ EOT;
    * @return null
    */
   public function sync ($job) {
-    $helper = Mage::helper('trademe');
+    $helper = Mage::helper('trademe/auction');
     $productHelper = Mage::helper('mventory/product');
 
     //Get website and its default store from current cron job
@@ -298,29 +295,26 @@ EOT;
    * @return null
    */
   protected function _listNormalAuctions () {
-    //Get time with Magento timezone offset
-    $now = localtime(Mage::getModel('core/date')->timestamp(time()), true);
+    if (!$this->_helper->isInAllowedHours())
+      return;
 
-    //Check if we are in allowed hours
-    $allowSubmit = $now['tm_hour'] >= self::SYNC_START_HOUR
-                   && $now['tm_hour'] < self::SYNC_END_HOUR;
+    $cronInterval = (int) $this
+      ->_productHelper
+      ->getConfig(
+          MVentory_TradeMe_Model_Config::CRON_INTERVAL,
+          $this->_website
+        );
 
-    if ($allowSubmit) {
-      $cronInterval = (int) $this
-        ->_productHelper
-        ->getConfig(
-            MVentory_TradeMe_Model_Config::CRON_INTERVAL,
-            $this->_website
-          );
+    if ($cronInterval < 1)
+      return;
 
-      //Calculate number of runnings of the sync script during 1 day
-      $runsNumber = $cronInterval
-                      ? (self::SYNC_END_HOUR - self::SYNC_START_HOUR) * 60
-                          / $cronInterval - 1
-                        : 0;
-    }
+    $interval = MVentory_TradeMe_Model_Config::AUC_TIME_END
+                  - MVentory_TradeMe_Model_Config::AUC_TIME_START;
 
-    if (!($allowSubmit && $runsNumber))
+    //Calculate number of runnings of the sync script during 1 day
+    $runsNumber = $interval * 60 / $cronInterval - 1;
+
+    if ($runsNumber < 1)
       return;
 
     //Assign to local variable to preserve original data because the array

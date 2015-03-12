@@ -150,7 +150,7 @@ EOT;
   private function _getConfig ($path) {
     return $this
       ->_helper
-      ->getConfig($path, $this->_website);
+      ->getConfig($path, $this->_getWebsite());
   }
 
   private function getConfig () {
@@ -200,6 +200,22 @@ EOT;
     return $this;
   }
 
+  /**
+   * Getter for _website field
+   *
+   * @return Mage_Core_Model_Website
+   *   Website model
+   *
+   * @throws LogicException
+   *   If _website field is empty
+   */
+  protected function _getWebsite () {
+    if (!$this->_website)
+      throw new LogicException('_website field must be set');
+
+    return $this->_website;
+  }
+
   public function setAccountId ($data) {
     if (is_array($data))
       $this->_accountId = isset($data['account_id'])
@@ -208,7 +224,7 @@ EOT;
     else
       $this->_accountId = $data;
 
-    $accounts = Mage::helper('trademe')->getAccounts($this->_website);
+    $accounts = Mage::helper('trademe')->getAccounts($this->_getWebsite());
 
     if ($this->_accountId)
       $this->_accountData = $accounts[$this->_accountId];
@@ -248,7 +264,10 @@ EOT;
     $this->getWebsiteId($product);
     $this->setAccountId($data);
 
-    $store = $this->_website->getDefaultStore();
+    $store = $this
+      ->_getWebsite()
+      ->getDefaultStore();
+
     $account = $helper->prepareAccount($this->_accountData, $product, $store);
 
     if (!$account)
@@ -534,9 +553,6 @@ EOT;
   public function remove ($auction) {
     MVentory_TradeMe_Model_Log::debug();
 
-    if (!$this->_website)
-      return;
-
     $this->setAccountId($auction['account_id']);
     $listingId = $auction['listing_id'];
 
@@ -585,9 +601,6 @@ EOT;
   public function check ($auction) {
     MVentory_TradeMe_Model_Log::debug();
 
-    if (!$this->_website)
-      return;
-
     $this->setAccountId($auction['account_id']);
     $listingId = $auction['listing_id'];
 
@@ -621,7 +634,10 @@ EOT;
 
     $this->setAccountId($auction['account_id']);
 
-    $store = $this->_website->getDefaultStore();
+    $store = $this
+      ->_getWebsite()
+      ->getDefaultStore();
+
     $account = $helper->prepareAccount($this->_accountData, $product, $store);
 
     if (!$account)
@@ -1245,14 +1261,15 @@ EOT;
     if (isset($overwrite['price']))
       return $overwrite['price'];
 
+    $website = $this->_getWebsite();
     $helper = Mage::helper('trademe');
 
-    $price = $helper->getProductPrice($product, $this->_website);
+    $price = $helper->getProductPrice($product, $website);
 
     $price += $helper->getShippingRate(
       $product,
       $account['name'],
-      $this->_website
+      $website
     );
 
     if ($currency->getCode != MVentory_TradeMe_Model_Config::CURRENCY)
@@ -1260,7 +1277,7 @@ EOT;
         $price,
         $currency,
         MVentory_TradeMe_Model_Config::CURRENCY,
-        $this->_website->getDefaultStore()
+        $website->getDefaultStore()
       );
 
     return $this->_getAddFees($product, $data)

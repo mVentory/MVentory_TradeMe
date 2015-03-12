@@ -53,6 +53,9 @@ EOT;
   const __E_RESPONSE_INCOMPLETE = <<<'EOT'
 Response is missing %s field
 EOT;
+  const __E_IMAGE_FAILED = <<<'EOT'
+Uploading of image failed (status: %d)
+EOT;
 
   //List of TradeMe categories to ignore. Categories are selected by its number
   private $_ignoreCategories = array(
@@ -340,12 +343,7 @@ EOT;
       return $helper->__($msg, $e->getMessage());
     }
 
-    if (!is_int($photoId = $this->uploadImage($image))) {
-      $msg = 'Error occured while uploading image (%s)';
-
-      MVentory_TradeMe_Model_Log::debug(sprintf($msg, $photoId));
-      return $helper->__($msg, $photoId);
-    }
+    $photoId = $this->uploadImage($image);
 
     $client = $accessToken->getHttpClient($this->getConfig());
     $client->setUri('https://api.' . $this->_host . '.co.nz/v1/Selling.xml');
@@ -874,25 +872,36 @@ EOT;
 
     $response = $client->request();
 
-    $result = Zend_Json::decode($response->getBody());
+    if (($status = $response->getStatus()) != 200)
+      throw new MVentory_TradeMe_ApiException(sprintf(
+        self::__E_RESPONSE_STATUS,
+        $status,
+        200
+      ));
 
-    MVentory_TradeMe_Model_Log::debug(array('response' => $result));
+    $body = $response->getBody();
 
-    if ($response->getStatus() != 200)
-      return $result['ErrorDescription'];
+    if ($body === '')
+      throw new MVentory_TradeMe_ApiException(self::__E_RESPONSE_EMPTY);
 
-    if ($result['Status'] != 1) {
-      $msg = 'Error on image uploading ('
-             . $image
-             . '). Error description: '
-             . $result['Description'];
+    MVentory_TradeMe_Model_Log::debug(array('response' => $body));
 
-      MVentory_TradeMe_Model_Log::debug($msg);
+    $result = json_decode($body, true);
 
-      $this->_helper->sendEmail('Unable to upload image to TradeMe', $msg);
+    if ($result === null)
+      throw new MVentory_TradeMe_ApiException(self::__E_RESPONSE_DECODING);
 
-      return $result['Description'];
-    }
+    if (!(isset($result['Status']) && $result['Status'] == 1))
+      throw new MVentory_TradeMe_ApiException(sprintf(
+        self::__E_IMAGE_FAILED,
+        $result['Status']
+      ));
+
+    if (!isset($result['PhotoId']))
+      throw new MVentory_TradeMe_ApiException(sprintf(
+        self::__E_RESPONSE_INCOMPLETE,
+        'PhotoId'
+      ));
 
     return $result['PhotoId'];
   }

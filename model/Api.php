@@ -810,14 +810,39 @@ EOT;
 
     $response = $client->request();
 
-    if ($response->getStatus() != 200)
-      return;
+    if (($status = $response->getStatus()) != 200)
+      throw new MVentory_TradeMe_ApiException(sprintf(
+        self::__E_RESPONSE_STATUS,
+        $status,
+        200
+      ));
 
-    $items = json_decode($response->getBody(), true);
+    $body = $response->getBody();
+
+    if ($body === '')
+      throw new MVentory_TradeMe_ApiException(self::__E_RESPONSE_EMPTY);
+
+    $items = json_decode($body, true);
+
+    if ($items === null)
+      throw new MVentory_TradeMe_ApiException(self::__E_RESPONSE_DECODING);
+
+    if (!isset($items['List']))
+      throw new MVentory_TradeMe_ApiException(sprintf(
+        self::__E_RESPONSE_INCOMPLETE,
+        'List'
+      ));
+
+    if (!isset($items['TotalCount']))
+      throw new MVentory_TradeMe_ApiException(sprintf(
+        self::__E_RESPONSE_INCOMPLETE,
+        'TotalCount'
+      ));
 
     foreach ($auctions as $auction)
       foreach ($items['List'] as $item)
-        if ($item['ListingId'] == $auction['listing_id'])
+        if (isset($item['ListingId'])
+            && $item['ListingId'] == $auction['listing_id'])
           $auction['is_selling'] = true;
 
     return $items['TotalCount'];

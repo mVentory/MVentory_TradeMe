@@ -47,6 +47,12 @@ EOT;
   const __E_RESPONSE_EMPTY = <<<'EOT'
 Response is empty
 EOT;
+  const __E_RESPONSE_DECODING = <<<'EOT'
+Decoding of response failed
+EOT;
+  const __E_RESPONSE_INCOMPLETE = <<<'EOT'
+Response is missing %s field
+EOT;
 
   //List of TradeMe categories to ignore. Categories are selected by its number
   private $_ignoreCategories = array(
@@ -585,18 +591,7 @@ EOT;
     $this->setAccountId($auction['account_id']);
     $listingId = $auction['listing_id'];
 
-    $json = $this->_loadListingDetailsAuth($listingId);
-    $item = $this->_parseListingDetails($json);
-
-    if (is_string($item)) {
-      MVentory_TradeMe_Model_Log::debug(
-        'Error on retrieving listing details ' . $listingId . ' (' . $item . ')'
-      );
-
-      return;
-    }
-
-    unset($json);
+    $item = $this->_loadListingDetailsAuth($listingId);
 
     //Check if item on sold
     if ($item['AsAt'] < $item['EndDate'])
@@ -642,8 +637,7 @@ EOT;
     $client->setUri('https://api.' . $this->_host . '.co.nz/v1/Selling/Edit.json');
     $client->setMethod(Zend_Http_Client::POST);
 
-    $json = $this->_loadListingDetailsAuth($listingId);
-    $item = $this->_parseListingDetails($json);
+    $item = $this->_loadListingDetailsAuth($listingId);
     $item = $this->_listingDetailsToEditingRequest($item);
 
     $formData = $_formData;
@@ -1094,7 +1088,15 @@ EOT;
     if ($body === '')
       throw new MVentory_TradeMe_ApiException(self::__E_RESPONSE_EMPTY);
 
-    return $body;
+    $body = json_decode($body, true);
+
+    if ($body === null)
+      throw new MVentory_TradeMe_ApiException(self::__E_RESPONSE_DECODING);
+
+    if (isset($body['ErrorDescription']))
+      throw new MVentory_TradeMe_ApiException($body['ErrorDescription']);
+
+    return $this->_prepareListingDetails($body);
   }
 
   public function _parseCategories (&$list, $categories, $names = array()) {
@@ -1118,11 +1120,18 @@ EOT;
     }
   }
 
-  public function _parseListingDetails ($details) {
-    $details = json_decode($details, true);
+  public function _prepareListingDetails ($details) {
+    if (!(isset($details['EndDate']) && $details['EndDate']))
+      throw new MVentory_TradeMe_ApiException(sprintf(
+        self::__E_RESPONSE_INCOMPLETE,
+        'EndDate'
+      ));
 
-    if (isset($details['ErrorDescription']))
-      return $details['ErrorDescription'];
+    if (!(isset($details['AsAt']) && $details['AsAt']))
+      throw new MVentory_TradeMe_ApiException(sprintf(
+        self::__E_RESPONSE_INCOMPLETE,
+        'AsAt'
+      ));
 
     $details['EndDate'] = $this->_prepareTimestamp($details['EndDate']);
     $details['AsAt'] = $this->_prepareTimestamp($details['AsAt']);

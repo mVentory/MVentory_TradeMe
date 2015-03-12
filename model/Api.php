@@ -653,10 +653,12 @@ EOT;
     $account = $helper->prepareAccount($this->_accountData, $product, $store);
 
     if (!$account)
-      return 'No settings for product\'s shipping type';
+      throw new MVentory_TradeMe_AccountException(
+        $account,
+        self::__E_ACCOUNT_SHIPPING
+      );
 
     $listingId = $auction['listing_id'];
-    $return = 'Error';
 
     $accessToken = $this->auth();
 
@@ -776,35 +778,40 @@ EOT;
     $client->setRawData(Zend_Json::encode($item), 'application/json');
 
     $response = $client->request();
-    $jsonResponse = json_decode($response->getBody());
 
-    if (isset($jsonResponse->Success) && $jsonResponse->Success == 'true') {
-      if ($_formData) {
-        $helper->setFields($product, $_formData);
+    if (($status = $response->getStatus()) != 200)
+      throw new MVentory_TradeMe_ApiException(sprintf(
+        self::__E_RESPONSE_STATUS,
+        $status,
+        200
+      ));
 
-        $product->save();
-      }
+    $body = $response->getBody();
 
-      $return = (int)$jsonResponse->ListingId;
+    if ($body === '')
+      throw new MVentory_TradeMe_ApiException(self::__E_RESPONSE_EMPTY);
+
+    $body = json_decode($body, true);
+
+    if ($body === null)
+      throw new MVentory_TradeMe_ApiException(self::__E_RESPONSE_DECODING);
+
+    if (!(isset($body['Success']) && $body['Success']))
+      throw new MVentory_TradeMe_ApiException($body['Description']);
+
+    if (!(isset($body['ListingId']) && $body['ListingId']))
+      throw new MVentory_TradeMe_ApiException(sprintf(
+        self::__E_RESPONSE_INCOMPLETE,
+        'ListingId'
+      ));
+
+    if ($_formData) {
+      $helper->setFields($product, $_formData);
+
+      $product->save();
     }
-    else {
-      if (isset($jsonResponse->Description) && (string)$jsonResponse->Description) {
-        $return = (string)$jsonResponse->Description;
-      } elseif (isset($jsonResponse->ErrorDescription)
-                && (string)$jsonResponse->ErrorDescription) {
-        $return = (string)$jsonResponse->ErrorDescription;
-      }
 
-      $this->_helper->sendEmail(
-        'Unable to update TradeMe listing ',
-        $return .' product id ' . $product->getId() . ' listing id '
-          . $listingId
-      );
-    }
-
-    MVentory_TradeMe_Model_Log::debug(array('response' => $return));
-
-    return $return;
+    return (int) $body['ListingId'];
   }
 
   public function massCheck ($auctions) {

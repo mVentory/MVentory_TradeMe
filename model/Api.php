@@ -41,6 +41,12 @@ EOT;
   const __E_TOKEN_INVALID = <<<'EOT'
 Unserializing of OAuth access token failed
 EOT;
+  const __E_RESPONSE_STATUS = <<<'EOT'
+Status of response is %d, expected is %d
+EOT;
+  const __E_RESPONSE_EMPTY = <<<'EOT'
+Response is empty
+EOT;
 
   //List of TradeMe categories to ignore. Categories are selected by its number
   private $_ignoreCategories = array(
@@ -580,10 +586,6 @@ EOT;
     $listingId = $auction['listing_id'];
 
     $json = $this->_loadListingDetailsAuth($listingId);
-
-    if (!$json)
-      return;
-
     $item = $this->_parseListingDetails($json);
 
     if (is_string($item)) {
@@ -639,22 +641,8 @@ EOT;
 
     $client->setUri('https://api.' . $this->_host . '.co.nz/v1/Selling/Edit.json');
     $client->setMethod(Zend_Http_Client::POST);
+
     $json = $this->_loadListingDetailsAuth($listingId);
-
-    if (!$json){
-      MVentory_TradeMe_Model_Log::debug(
-        'Unable to retrieve data for listing ' . $listingId
-      );
-
-      $this->_helper->sendEmail(
-        'Unable to retrieve data for TradeMe listing ',
-        $return . ' product id ' . $product->getId() . ' listing id '
-          . $listingId
-      );
-
-      return 'Unable to retrieve data from TradeMe';
-    }
-
     $item = $this->_parseListingDetails($json);
     $item = $this->_listingDetailsToEditingRequest($item);
 
@@ -1094,10 +1082,19 @@ EOT;
 
     $response = $client->request();
 
-    if ($response->getStatus() != 200)
-      return;
+    if (($status = $response->getStatus()) != 200)
+      throw new MVentory_TradeMe_ApiException(sprintf(
+        self::__E_RESPONSE_STATUS,
+        $status,
+        200
+      ));
 
-    return $response->getBody();
+    $body = $response->getBody();
+
+    if ($body === '')
+      throw new MVentory_TradeMe_ApiException(self::__E_RESPONSE_EMPTY);
+
+    return $body;
   }
 
   public function _parseCategories (&$list, $categories, $names = array()) {

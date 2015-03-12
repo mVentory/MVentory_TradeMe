@@ -548,15 +548,13 @@ EOT;
    * NOTE: requires $this->_website to be set
    *
    * @param MVentory_TradeMe_Model_Auction $auction Auction
-   * @return bool|string
+   * @return bool
    */
   public function remove ($auction) {
     MVentory_TradeMe_Model_Log::debug();
 
     $this->setAccountId($auction['account_id']);
     $listingId = $auction['listing_id'];
-
-    $error = 'error';
 
     $accessToken = $this->auth();
 
@@ -573,23 +571,29 @@ EOT;
     $client->setRawData($xml, 'application/xml');
     $response = $client->request();
 
-    $xml = simplexml_load_string($response->getBody());
+    if (($status = $response->getStatus()) != 200)
+      throw new MVentory_TradeMe_ApiException(sprintf(
+        self::__E_RESPONSE_STATUS,
+        $status,
+        200
+      ));
 
-    if ($xml) {
-      $isSuccess = (string) $xml->Success == 'true';
-      $response = $isSuccess
-                  ? (int) $xml->ListingId
-                  : (string) $xml->Description;
+    $body = $response->getBody();
 
-      MVentory_TradeMe_Model_Log::debug(array('response' => $response));
+    if ($body === '')
+      throw new MVentory_TradeMe_ApiException(self::__E_RESPONSE_EMPTY);
 
-      if ($isSuccess)
-        return true;
-      else if ($response)
-        $error = $response;
-    }
+    $xml = simplexml_load_string($body);
 
-    return $error;
+    if ($xml === false)
+      throw new MVentory_TradeMe_ApiException(self::__E_RESPONSE_DECODING);
+
+    MVentory_TradeMe_Model_Log::debug(array('response' => $xml));
+
+    if ((string) $xml->Success != 'true')
+      throw new MVentory_TradeMe_ApiException((string) $xml->Description);
+
+    return true;
   }
 
   /**

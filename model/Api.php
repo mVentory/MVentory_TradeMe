@@ -41,6 +41,9 @@ EOT;
   const __E_TOKEN_INVALID = <<<'EOT'
 Unserializing of OAuth access token failed
 EOT;
+  const __E_ACCOUNT_SHIPPING = <<<'EOT'
+Account doesn't contain settings for product's shipping type
+EOT;
   const __E_RESPONSE_STATUS = <<<'EOT'
 Status of response is %d, expected is %d
 EOT;
@@ -55,6 +58,12 @@ Response is missing %s field
 EOT;
   const __E_IMAGE_FAILED = <<<'EOT'
 Uploading of image failed (status: %d)
+EOT;
+  const __E_AUCTION_DESC = <<<'EOT'
+Length of the description exceeded the limit of %d characters
+EOT;
+  const __E_STORE_PAYMENT = <<<'EOT'
+TradeMe Payment methods are not selected
 EOT;
 
   //List of TradeMe categories to ignore. Categories are selected by its number
@@ -274,7 +283,10 @@ EOT;
     $account = $helper->prepareAccount($this->_accountData, $product, $store);
 
     if (!$account)
-      return 'No settings for product\'s shipping type';
+      throw new MVentory_TradeMe_AccountException(
+        $account,
+        self::__E_ACCOUNT_SHIPPING
+      );
 
     if (!$isUpdateOptions = is_array($data))
       $_data = $helper->getFields($product, $account);
@@ -295,7 +307,9 @@ EOT;
     $accessToken = $this->auth();
 
     if (!$categoryId)
-      return 'Product doesn\'t have matched TradeMe category';
+      throw new MVentory_TradeMe_ApiException(
+        'Product doesn\'t have matched TradeMe category'
+      );
 
     $shippingType = MVentory_TradeMe_Model_Config::SHIPPING_UNDECIDED;
 
@@ -314,9 +328,10 @@ EOT;
 
     if (strlen($description)
           > MVentory_TradeMe_Model_Config::DESCRIPTION_MAX_LENGTH)
-      return 'Length of the description exceeded the limit of '
-             .  MVentory_TradeMe_Model_Config::DESCRIPTION_MAX_LENGTH
-             . ' characters';
+      throw new MVentory_TradeMe_ApiException(sprintf(
+        self::__E_AUCTION_DESC,
+        MVentory_TradeMe_Model_Config::DESCRIPTION_MAX_LENGTH
+      ));
 
     //Convert all HTML entities to chars first (to allow entities which
     //are not exists in XML) and then convert special chars to entities
@@ -326,22 +341,11 @@ EOT;
       html_entity_decode($description, ENT_COMPAT, 'UTF-8')
     );
 
-    $photoId = null;
-
-    try {
-      $image = Mage::helper('trademe/image')->getImage(
-        $product,
-        $this->_imageSize,
-        $store
-      );
-    } catch (Exception $e) {
-      $msg = 'Error occured while preparing image (%s)';
-
-      Mage::logException($e);
-      MVentory_TradeMe_Model_Log::debug(sprintf($msg, $e->getMessage()));
-
-      return $helper->__($msg, $e->getMessage());
-    }
+    $image = Mage::helper('trademe/image')->getImage(
+      $product,
+      $this->_imageSize,
+      $store
+    );
 
     $photoId = $this->uploadImage($image);
 
@@ -404,9 +408,10 @@ EOT;
 <IsBrandNew>' . $isBrandNew . '</IsBrandNew>
 <SendPaymentInstructions>true</SendPaymentInstructions>';
 
-      if ($photoId
-          && isset($account['category_image']) && $account['category_image'])
+      if (isset($account['category_image']) && $account['category_image'])
         $xml .= '<HasGallery>true</HasGallery>';
+
+      $xml .= '<PhotoIds><PhotoId>' . $photoId . '</PhotoId></PhotoIds>';
 
       if ($photoId) {
         $xml .= '<PhotoIds><PhotoId>' . $photoId . '</PhotoId></PhotoIds>';
@@ -482,64 +487,69 @@ EOT;
       $client->setRawData($xml, 'application/xml');
       $response = $client->request();
 
-      $xml = simplexml_load_string($response->getBody());
+      if (($status = $response->getStatus()) != 200)
+        throw new MVentory_TradeMe_ApiException(sprintf(
+          self::__E_RESPONSE_STATUS,
+          $status,
+          200
+        ));
 
-      if ($xml) {
-        $isSuccess = (string) $xml->Success == 'true';
-        $response = $isSuccess
-                    ? (int) $xml->ListingId
-                    : (string) $xml->Description;
+      $body = $response->getBody();
 
-        MVentory_TradeMe_Model_Log::debug(array('response' => $response));
+      if ($body === '')
+        throw new MVentory_TradeMe_ApiException(self::__E_RESPONSE_EMPTY);
 
-        if ($isSuccess) {
+      $xml = simplexml_load_string($body);
 
-          if ($isUpdateOptions)
-            $helper->setFields($product, $data);
+      if ($xml === false)
+        throw new MVentory_TradeMe_ApiException(self::__E_RESPONSE_DECODING);
 
-          $return = $response;
-        } elseif ((string)$xml->ErrorDescription)
-          $return = $this->_parseErrors((string)$xml->ErrorDescription);
-        elseif ($response) {
-          $return = $this->_parseErrors($response);
+      if (strtolower(trim((string) $xml->Success)) != 'true') {
+        $errors = (string) $xml->Description;
 
-          foreach ($return as $error) {
-            $hasPayNowError = false !== strrpos(
-              strtolower($error),
-              self::PAYNOW_ERR_MSG,
-              -strlen($error)
-            );
+        foreach ($this->_parseErrors($errors) as $error) {
+          $hasPayNowError = false !== strrpos(
+            strtolower($error),
+            self::PAYNOW_ERR_MSG,
+            -strlen($error)
+          );
 
-            if (!$hasPayNowError)
-              continue;
+          if (!$hasPayNowError)
+            continue;
 
-            $paymentMethods = array_diff(
-              $paymentMethods,
-              array(MVentory_TradeMe_Model_Config::PAYMENT_CC)
-            );
+          $paymentMethods = array_diff(
+            $paymentMethods,
+            array(MVentory_TradeMe_Model_Config::PAYMENT_CC)
+          );
 
-            MVentory_TradeMe_Model_Log::debug(array(
-              'price' => $price,
-              'removed payment method' => 'Credit card'
-            ));
+          MVentory_TradeMe_Model_Log::debug(array(
+            'price' => $price,
+            'removed payment method' => 'Credit card'
+          ));
 
-            if (!$paymentMethods) {
-              $msg = 'TradeMe Payment methods are not selected';
+          if (!$paymentMethods)
+            throw new MVentory_TradeMe_ApiException(self::__E_STORE_PAYMENT);
 
-              MVentory_TradeMe_Model_Log::debug($msg);
-              return $helper->__($msg);
-            }
+          $tries++;
 
-            $tries++;
-
-            //We found pay now error, so we don't need to check for others
-            break;
-          }
+          //We found pay now error, so we don't need to check for others
+          continue 2;
         }
+
+        throw new MVentory_TradeMe_ApiException($errors);
       }
+
+      if (!($xml->ListingId && ($listingId = (int) $xml->ListingId)))
+        throw new MVentory_TradeMe_ApiException(sprintf(
+          self::__E_RESPONSE_INCOMPLETE,
+          'ListingId'
+        ));
+
+      if ($isUpdateOptions)
+        $helper->setFields($product, $data);
     } while (--$tries);
 
-    return $return;
+    return $listingId;
   }
 
   /**

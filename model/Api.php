@@ -852,56 +852,6 @@ EOT;
     return $items['TotalCount'];
   }
 
-  /**
-   * NOTE: this function requires $this->_accountId and $this->_accountData
-   * to be set
-   *
-   * @param Mage_Catalog_Model_Product $product Product
-   * @return bool
-   */
-  public function relist ($product) {
-    if (!($this->_accountId && $this->_accountData))
-      return false;
-
-    $this->getWebsiteId($product);
-
-    if (!$listingId = $product->getTmCurrentListingId())
-      return false;
-
-    $accessToken = $this->auth();
-    $client = $accessToken->getHttpClient($this->getConfig());
-
-    $client->setUri('https://api.' . $this->_host . '.co.nz/v1/Selling/Relist.json');
-    $client->setMethod(Zend_Http_Client::POST);
-
-    $data = array('ListingId' => $listingId);
-
-    $client->setRawData(Zend_Json::encode($data), 'application/json');
-
-    $response = $client->request();
-
-    if ($response->getStatus() != 200)
-      return false;
-
-    $response = Zend_Json::decode($response->getBody());
-
-    MVentory_TradeMe_Model_Log::debug(array('response' => $response));
-
-    if (!$response['Success']) {
-      Mage::log(
-        'TradeMe: error on relisting '
-        . $listingId
-        . ' ('
-        . $response['Description']
-        . ')'
-      );
-
-      return false;
-    }
-
-    return $response['ListingId'];
-  }
-
   public function uploadImage ($image) {
     MVentory_TradeMe_Model_Log::debug();
 

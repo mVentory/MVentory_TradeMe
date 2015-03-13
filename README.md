@@ -21,9 +21,14 @@ Note, this extension requires installation of our [Magento Mobile API extension]
 
 ##License
 
-This extension is subject to [Creative Commons License BY-NC-ND](http://creativecommons.org/licenses/by-nc-nd/4.0/).
-* NonCommercial — You may use it for commercial purposes after requesting a free waiver.
-* NoDerivatives — If you remix, transform, or build upon the material, you may not distribute the modified material. Please, contribute your changes back to the [project on Github](https://github.com/mVentory/MVentory_TradeMe).
+This source file is subject to a Commercial Software License.
+
+* No sharing - This file cannot be shared, published or distributed outside of the licensed organisation.
+
+* No Derivatives - You can make changes to this file for your own use, but you cannot share or redistribute the changes.
+
+The full text of the license was supplied to your organisation as part of the licensing agreement with mVetory.
+
 
 ##About the extension
 

@@ -40,10 +40,16 @@ Note, this extension requires installation of our Mobile API extension for Magen
 
 License
 
-This extension is subject to Creative Commons License BY-NC-ND (http://creativecommons.org/licenses/by-nc-nd/4.0/)
+This source file is subject to a Commercial Software License.
 
-* NonCommercial — You may use it for commercial purposes after requesting a free waiver.
-* NoDerivatives — If you remix, transform, or build upon the material, you may not distribute the modified material. Please, contribute your changes back to the project on Github (https://github.com/mVentory/MVentory_TradeMe)
+No sharing - This file cannot be shared, published or
+distributed outside of the licensed organisation.
+
+No Derivatives - You can make changes to this file for your own use,
+but you cannot share or redistribute the changes.
+
+The full text of the license was supplied to your organisation as
+part of the licensing agreement with mVetory.
 
 About the extension
 
@@ -89,10 +95,10 @@ return array(
 'stability'              => 'stable',
 
 //Magento Connect license value 
-'license'                => 'CC BY-NC-ND 4.0',
+'license'                => 'Commerical',
 
 //Magento Connect license URI 
-'license_uri'            => 'http://creativecommons.org/licenses/by-nc-nd/4.0/',
+'license_uri'            => '',
 
 //Magento Connect channel value.  This should almost always (always?) be community
 'channel'                => 'community',

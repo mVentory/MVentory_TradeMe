@@ -193,6 +193,20 @@
               <sort_order>106</sort_order>
             </list_as_new>
 
+            <payment_methods>
+              <label>Allowed payment methods</label>
+              <comment></comment>
+              <tooltip></tooltip>
+              <frontend_type>multiselect</frontend_type>
+              <source_model>trademe/setting_source_paymentmethods</source_model>
+
+              <show_in_default>1</show_in_default>
+              <show_in_website>1</show_in_website>
+              <show_in_store>0</show_in_store>
+
+              <sort_order>107</sort_order>
+            </payment_methods>
+
             <mapping_store translate="label comment">
               <label>Fake store for mapping values of TradeMe attributes</label>
               <comment>Leave blank unless instructed otherwise.</comment>
@@ -203,7 +217,7 @@
               <show_in_website>0</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>107</sort_order>
+              <sort_order>108</sort_order>
             </mapping_store>
 
             <name_variants_attr translate="label comment tooltip">
@@ -216,7 +230,7 @@
               <show_in_website>0</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>108</sort_order>
+              <sort_order>109</sort_order>
             </name_variants_attr>
 
             <shipping_attr translate="label comment tooltip">
@@ -230,7 +244,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>109</sort_order>
+              <sort_order>110</sort_order>
             </shipping_attr>
 
             <import translate="label comment tooltip">
@@ -253,7 +267,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>110</sort_order>
+              <sort_order>111</sort_order>
             </import>
 
             <export translate="label">
@@ -264,7 +278,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>111</sort_order>
+              <sort_order>112</sort_order>
             </export>
           </fields>
         </settings>

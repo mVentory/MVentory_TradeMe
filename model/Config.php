@@ -12,7 +12,7 @@
  * See http://mventory.com/legal/licensing/ for other licensing options.
  *
  * @package MVentory/TradeMe
- * @copyright Copyright (c) 2014 mVentory Ltd. (http://mventory.com)
+ * @copyright Copyright (c) 2014-2015 mVentory Ltd. (http://mventory.com)
  * @license http://creativecommons.org/licenses/by-nc-nd/4.0/
  */
 
@@ -31,6 +31,7 @@ class MVentory_TradeMe_Model_Config
   const LIST_AS_NEW = 'trademe/settings/list_as_new';
   const _NAME_VARIANTS_ATTR = 'trademe/settings/name_variants_attr';
   const _SHIPPING_ATTR = 'trademe/settings/shipping_attr';
+  const _PAYMENT_METHODS = 'trademe/settings/payment_methods';
 
   const _1AUC_ENDTIME = 'trademe/one_dollar/end_time';
   const _1AUC_ENDDAYS = 'trademe/one_dollar/end_days';

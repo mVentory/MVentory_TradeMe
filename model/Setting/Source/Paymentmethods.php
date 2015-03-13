@@ -34,10 +34,22 @@ class MVentory_TradeMe_Model_Setting_Source_Paymentmethods
     $helper = Mage::helper('trademe');
 
     return array(
-      array('value' => 1, 'label' => $helper->__('NZ bank deposit')),
-      array('value' => 2, 'label' => $helper->__('Credit card')),
-      array('value' => 4, 'label' => $helper->__('Cash')),
-      array('value' => 8, 'label' => $helper->__('Safe Trader')),
+      array(
+        'value' => MVentory_TradeMe_Model_Config::PAYMENT_BANK,
+        'label' => $helper->__('NZ bank deposit')
+      ),
+      array(
+        'value' => MVentory_TradeMe_Model_Config::PAYMENT_CC,
+        'label' => $helper->__('Credit card')
+      ),
+      array(
+        'value' => MVentory_TradeMe_Model_Config::PAYMENT_CASH,
+        'label' => $helper->__('Cash')
+      ),
+      array(
+        'value' => MVentory_TradeMe_Model_Config::PAYMENT_SAFE,
+        'label' => $helper->__('Safe Trader')
+      ),
     );
   }
 }

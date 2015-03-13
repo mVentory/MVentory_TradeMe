@@ -74,10 +74,10 @@ class MVentory_TradeMe_Model_Api {
   );
 
   private $_paymentMethods = array(
-    1 => 'BankDeposit',
-    2 => 'CreditCard',
-    4 => 'Cash',
-    8 => 'SafeTrader'
+    MVentory_TradeMe_Model_Config::PAYMENT_BANK => 'BankDeposit',
+    MVentory_TradeMe_Model_Config::PAYMENT_CC => 'CreditCard',
+    MVentory_TradeMe_Model_Config::PAYMENT_CASH => 'Cash',
+    MVentory_TradeMe_Model_Config::PAYMENT_SAFE => 'SafeTrader'
   );
 
   private $_htmlConvert = array(
@@ -334,12 +334,20 @@ class MVentory_TradeMe_Model_Api {
 
       $isBrandNew = (int) $this->_getIsBrandNew($product);
 
+      if (!$paymentMethods = $this->_getPaymentMethods($price, $store)) {
+        $msg = 'TradeMe Payment methods are not selected';
+
+        MVentory_TradeMe_Model_Log::debug($msg);
+        return $helper->__($msg);
+      }
+
       $paymentMethods = '<PaymentMethod>'
                         . implode(
                             '</PaymentMethod><PaymentMethod>',
                             array_intersect_key(
                               $this->_paymentMethods,
-                              array_flip($this->_getPaymentMethods($store)))
+                              array_flip($paymentMethods)
+                            )
                           )
                         . '</PaymentMethod>';
 
@@ -702,7 +710,19 @@ class MVentory_TradeMe_Model_Api {
       if (!isset($parameters['IsBrandNew']))
         $parameters['IsBrandNew'] = $this->_getIsBrandNew($product);
 
-      $item['PaymentMethods'] = $this->_getPaymentMethods($store);
+      $paymentMethods = $this->_getPaymentMethods(
+        $parameters['StartPrice'],
+        $store
+      );
+
+      if (!$paymentMethods) {
+        $msg = 'TradeMe Payment methods are not selected';
+
+        MVentory_TradeMe_Model_Log::debug($msg);
+        return $helper->__($msg);
+      }
+
+      $item['PaymentMethods'] = $paymentMethods;
 
       if (!isset($parameters['SKU']))
         $parameters['SKU'] = htmlspecialchars($product->getSku());
@@ -1256,7 +1276,11 @@ class MVentory_TradeMe_Model_Api {
   }
 
   /**
-   * Return allowed Tm payment methods
+   * Return allowed TradeMe payment methods. Remove Credit card method if
+   * price is over Pay Now limit.
+   *
+   * @param float $price
+   *   Product price
    *
    * @param Mage_Core_Model_Store $store
    *   Store model
@@ -1264,11 +1288,27 @@ class MVentory_TradeMe_Model_Api {
    * @return array
    *   List of IDs of allowed payment methods
    */
-  protected function _getPaymentMethods ($store) {
-    return explode(
+  protected function _getPaymentMethods ($price, $store) {
+    $methods = explode(
       ',',
       $store->getConfig(MVentory_TradeMe_Model_Config::_PAYMENT_METHODS)
     );
+
+    if ($price >= MVentory_TradeMe_Model_Config::PAYNOW_PRICE_LIMIT
+        && in_array(MVentory_TradeMe_Model_Config::PAYMENT_CC, $methods)) {
+
+      $methods = array_diff(
+        $methods,
+        array(MVentory_TradeMe_Model_Config::PAYMENT_CC)
+      );
+
+      MVentory_TradeMe_Model_Log::debug(array(
+        'price' => $price,
+        'removed payment method' => 'Credit card'
+      ));
+    }
+
+    return $methods;
   }
 
   public function getCategories () {

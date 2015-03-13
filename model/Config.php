@@ -41,6 +41,7 @@ class MVentory_TradeMe_Model_Config
 
   const TITLE_MAX_LENGTH = 50;
   const DESCRIPTION_MAX_LENGTH = 2048;
+  const PAYNOW_PRICE_LIMIT = 3000;
 
   //TradeMe shipping types
   //const SHIPPING_UNKNOWN = 0;
@@ -60,6 +61,12 @@ class MVentory_TradeMe_Model_Config
   const FEES_NO = 0;      //No commission
   const FEES_ALWAYS = 1;  //Always add commission
   const FEES_SPECIAL = 2; //Only if the product has a current special price
+
+  //TradeMe payment methods
+  const PAYMENT_BANK = 1;
+  const PAYMENT_CC = 2;
+  const PAYMENT_CASH = 4;
+  const PAYMENT_SAFE = 8;
 
   //Allow to list options
   const LIST_NO = 0;

@@ -27,7 +27,7 @@ This source file is subject to a Commercial Software License.
 
 * No Derivatives - You can make changes to this file for your own use, but you cannot share or redistribute the changes.
 
-The full text of the license was supplied to your organisation as part of the licensing agreement with mVetory.
+The full text of the license was supplied to your organisation as part of the licensing agreement with mVentory.
 
 
 ##About the extension

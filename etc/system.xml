@@ -195,8 +195,8 @@
 
             <payment_methods>
               <label>Allowed payment methods</label>
-              <comment></comment>
-              <tooltip></tooltip>
+              <comment>Select acceptable payment methods. Hold Ctrl to select multiple items.</comment>
+              <tooltip>Specify which payment methods you want to accept with your TradeMe auctions. Note: credit card payment method will be automatically disabled for listings with Buy Now or reserve over $3000.</tooltip>
               <frontend_type>multiselect</frontend_type>
               <source_model>trademe/setting_source_paymentmethods</source_model>
 

@@ -28,6 +28,10 @@ class MVentory_TradeMe_Model_Api {
   const CACHE_CATEGORIES = 'TRADEME_CATEGORIES';
   const CACHE_CATEGORY_ATTRS = 'TRADEME_CATEGORY_ATTRS';
 
+  const PAYNOW_ERR_MSG = <<<'EOT'
+pay now cannot be used with a buy now or reserve price over
+EOT;
+
   //List of TradeMe categories to ignore. Categories are selected by its number
   private $_ignoreCategories = array(
     //'0001-' => true, //Trade Me Motors
@@ -335,25 +339,12 @@ class MVentory_TradeMe_Model_Api {
       $pickup = $this->_pickupValues[$pickup];
 
       $isBrandNew = (int) $this->_getIsBrandNew($product);
+      $paymentMethods = $this->_getPaymentMethods($store);
 
-      if (!$paymentMethods = $this->_getPaymentMethods($price, $store)) {
-        $msg = 'TradeMe Payment methods are not selected';
+      $trys = 1;
 
-        MVentory_TradeMe_Model_Log::debug($msg);
-        return $helper->__($msg);
-      }
-
-      $paymentMethods = '<PaymentMethod>'
-                        . implode(
-                            '</PaymentMethod><PaymentMethod>',
-                            array_intersect_key(
-                              $this->_paymentMethods,
-                              array_flip($paymentMethods)
-                            )
-                          )
-                        . '</PaymentMethod>';
-
-      $xml = '<ListingRequest xmlns="http://api.trademe.co.nz/v1">
+      do {
+        $xml = '<ListingRequest xmlns="http://api.trademe.co.nz/v1">
 <Category>' . $categoryId . '</Category>
 <Title>' . $title . '</Title>
 <Description><Paragraph>' . $description . '</Paragraph></Description>
@@ -365,97 +356,134 @@ class MVentory_TradeMe_Model_Api {
 <IsBrandNew>' . $isBrandNew . '</IsBrandNew>
 <SendPaymentInstructions>true</SendPaymentInstructions>';
 
-      if ($photoId
-          && isset($account['category_image']) && $account['category_image'])
-        $xml .= '<HasGallery>true</HasGallery>';
+        if ($photoId
+            && isset($account['category_image']) && $account['category_image'])
+          $xml .= '<HasGallery>true</HasGallery>';
 
-      if ($photoId) {
-        $xml .= '<PhotoIds><PhotoId>' . $photoId . '</PhotoId></PhotoIds>';
-      }
-
-      $xml .= '<ShippingOptions>';
-
-      if (isset($account['shipping_options']) && $account['shipping_options'])
-        foreach ($account['shipping_options'] as $shippingOption)
-          $xml .= '<ShippingOption><Type>Custom</Type><Price>'
-                  . $shippingOption['price']
-                  . '</Price><Method>'
-                  . $shippingOption['method']
-                  . '</Method></ShippingOption>';
-      else
-        $xml .= '<ShippingOption><Type>'
-                . $shippingType
-                . '</Type></ShippingOption>';
-
-      $xml .= '</ShippingOptions>';
-
-      $xml .= '<PaymentMethods>' . $paymentMethods . '</PaymentMethods>';
-
-      /**
-       * @todo Temporarily disabled. Matching code is buggy in some corner cases
-       * and should be fixed and refactored.
-       */
-      //$attributes = $this->getCategoryAttrs($categoryId);
-      $attributes = false;
-
-      if ($attributes) {
-        $attributes = $helper->fillAttributes(
-          $product,
-          $attributes,
-          $helper->getMappingStore()
-        );
-
-        if ($attributes['error']) {
-          if (isset($attributes['required']))
-            return 'Product has empty "' . $attributes['required']
-                   . '" attribute';
-
-          if (isset($attributes['no_match']))
-            return 'Error in matching "' . $attributes['no_match']
-                   . '" attribute: incorrect value in "fake" store';
+        if ($photoId) {
+          $xml .= '<PhotoIds><PhotoId>' . $photoId . '</PhotoId></PhotoIds>';
         }
 
-        if ($attributes = $attributes['attributes']) {
-          $xml .= '<Attributes>';
+        $xml .= '<ShippingOptions>';
 
-          foreach ($attributes as $attributeName => $attributeValue) {
-            $xml .= '<Attribute>';
-            $xml .= '<Name>' . htmlspecialchars($attributeName) . '</Name>';
-            $xml .= '<Value>' . htmlspecialchars($attributeValue) . '</Value>';
-            $xml .= '</Attribute>';
+        if (isset($account['shipping_options']) && $account['shipping_options'])
+          foreach ($account['shipping_options'] as $shippingOption)
+            $xml .= '<ShippingOption><Type>Custom</Type><Price>'
+                    . $shippingOption['price']
+                    . '</Price><Method>'
+                    . $shippingOption['method']
+                    . '</Method></ShippingOption>';
+        else
+          $xml .= '<ShippingOption><Type>'
+                  . $shippingType
+                  . '</Type></ShippingOption>';
+
+        $xml .= '</ShippingOptions>';
+
+        $xml .= '<PaymentMethods><PaymentMethod>'
+                . implode(
+                    '</PaymentMethod><PaymentMethod>',
+                    array_intersect_key(
+                      $this->_paymentMethods,
+                      array_flip($paymentMethods)
+                    )
+                  )
+                . '</PaymentMethod></PaymentMethods>';
+
+        /**
+         * @todo Temporarily disabled. Matching code is buggy in some corner
+         * cases and should be fixed and refactored.
+         */
+        //$attributes = $this->getCategoryAttrs($categoryId);
+        $attributes = false;
+
+        if ($attributes) {
+          $attributes = $helper->fillAttributes(
+            $product,
+            $attributes,
+            $helper->getMappingStore()
+          );
+
+          if ($attributes['error']) {
+            if (isset($attributes['required']))
+              return 'Product has empty "' . $attributes['required']
+                     . '" attribute';
+
+            if (isset($attributes['no_match']))
+              return 'Error in matching "' . $attributes['no_match']
+                     . '" attribute: incorrect value in "fake" store';
           }
 
-          $xml .= '</Attributes>';
+          if ($attributes = $attributes['attributes']) {
+            $xml .= '<Attributes>';
+
+            foreach ($attributes as $attributeName => $attributeValue) {
+              $xml .= '<Attribute>';
+              $xml .= '<Name>' . htmlspecialchars($attributeName) . '</Name>';
+              $xml .= '<Value>' . htmlspecialchars($attributeValue) . '</Value>';
+              $xml .= '</Attribute>';
+            }
+
+            $xml .= '</Attributes>';
+          }
         }
-      }
 
-      $xml .=  '<SKU>' . htmlspecialchars($product->getSku()) . '</SKU>';
-      $xml .= '</ListingRequest>';
+        $xml .=  '<SKU>' . htmlspecialchars($product->getSku()) . '</SKU>';
+        $xml .= '</ListingRequest>';
 
-      $client->setRawData($xml, 'application/xml');
-      $response = $client->request();
+        $client->setRawData($xml, 'application/xml');
+        $response = $client->request();
 
-      $xml = simplexml_load_string($response->getBody());
+        $xml = simplexml_load_string($response->getBody());
 
-      if ($xml) {
-        $isSuccess = (string) $xml->Success == 'true';
-        $response = $isSuccess
-                    ? (int) $xml->ListingId
-                    : (string) $xml->Description;
+        if ($xml) {
+          $isSuccess = (string) $xml->Success == 'true';
+          $response = $isSuccess
+                      ? (int) $xml->ListingId
+                      : (string) $xml->Description;
 
-        MVentory_TradeMe_Model_Log::debug(array('response' => $response));
+          MVentory_TradeMe_Model_Log::debug(array('response' => $response));
 
-        if ($isSuccess) {
+          if ($isSuccess) {
 
-          if ($isUpdateOptions)
-            $helper->setFields($product, $data);
+            if ($isUpdateOptions)
+              $helper->setFields($product, $data);
 
-          $return = $response;
-        } elseif ((string)$xml->ErrorDescription)
-          $return = (string)$xml->ErrorDescription;
-        elseif ($response)
-          $return = $response;
-      }
+            $return = $response;
+          } elseif ((string)$xml->ErrorDescription)
+            $return = (string)$xml->ErrorDescription;
+          elseif ($response) {
+            $return = $response;
+
+            $hasPayNowError = false !== strrpos(
+              ($response = strtolower(trim($response))),
+              self::PAYNOW_ERR_MSG,
+              -strlen($response)
+            );
+
+            if ($hasPayNowError) {
+              $paymentMethods = array_diff(
+                $paymentMethods,
+                array(MVentory_TradeMe_Model_Config::PAYMENT_CC)
+              );
+
+              MVentory_TradeMe_Model_Log::debug(array(
+                'price' => $price,
+                'removed payment method' => 'Credit card'
+              ));
+
+              if (!$paymentMethods) {
+                $msg = 'TradeMe Payment methods are not selected';
+
+                MVentory_TradeMe_Model_Log::debug($msg);
+                return $helper->__($msg);
+              }
+
+              $try++;
+            }
+          }
+        }
+      } while (--$trys);
     }
     else
       $return = 'Can\'t get access token';
@@ -712,19 +740,7 @@ class MVentory_TradeMe_Model_Api {
       if (!isset($parameters['IsBrandNew']))
         $parameters['IsBrandNew'] = $this->_getIsBrandNew($product);
 
-      $paymentMethods = $this->_getPaymentMethods(
-        $parameters['StartPrice'],
-        $store
-      );
-
-      if (!$paymentMethods) {
-        $msg = 'TradeMe Payment methods are not selected';
-
-        MVentory_TradeMe_Model_Log::debug($msg);
-        return $helper->__($msg);
-      }
-
-      $item['PaymentMethods'] = $paymentMethods;
+      $item['PaymentMethods'] = $this->_getPaymentMethods($store);
 
       if (!isset($parameters['SKU']))
         $parameters['SKU'] = htmlspecialchars($product->getSku());
@@ -1278,11 +1294,7 @@ class MVentory_TradeMe_Model_Api {
   }
 
   /**
-   * Return allowed TradeMe payment methods. Remove Credit card method if
-   * price is over Pay Now limit.
-   *
-   * @param float $price
-   *   Product price
+   * Return allowed TradeMe payment methods
    *
    * @param Mage_Core_Model_Store $store
    *   Store model
@@ -1290,27 +1302,11 @@ class MVentory_TradeMe_Model_Api {
    * @return array
    *   List of IDs of allowed payment methods
    */
-  protected function _getPaymentMethods ($price, $store) {
-    $methods = explode(
+  protected function _getPaymentMethods ($store) {
+    return explode(
       ',',
       $store->getConfig(MVentory_TradeMe_Model_Config::_PAYMENT_METHODS)
     );
-
-    if ($price >= MVentory_TradeMe_Model_Config::PAYNOW_PRICE_LIMIT
-        && in_array(MVentory_TradeMe_Model_Config::PAYMENT_CC, $methods)) {
-
-      $methods = array_diff(
-        $methods,
-        array(MVentory_TradeMe_Model_Config::PAYMENT_CC)
-      );
-
-      MVentory_TradeMe_Model_Log::debug(array(
-        'price' => $price,
-        'removed payment method' => 'Credit card'
-      ));
-    }
-
-    return $methods;
   }
 
   public function getCategories () {

@@ -568,26 +568,7 @@ EOT;
         ));
 
         if (trim($result) == 'Insufficient balance') {
-          $cacheId = array(
-            $this->_website->getCode(),
-            $accountData['name'],
-            'negative_balance'
-          );
-
-          $cacheId = implode('_', $cacheId);
-
-          if (!Mage::app()->loadCache($cacheId)) {
-            $this
-              ->_productHelper
-              ->sendEmailTmpl(
-                  'mventory_negative_balance',
-                  array('account' => $accountData['name']),
-                  $this->_website
-                );
-
-            Mage::app()
-              ->saveCache(true, $cacheId, array(self::TAG_EMAILS), 3600);
-          }
+          $this->_negativeBalanceError($accountData['name']);
 
           if (count($accounts) == 1)
             return;
@@ -831,24 +812,7 @@ EOT;
         ));
 
         if (trim($result) == 'Insufficient balance') {
-          $cacheId = array(
-            $website->getCode(),
-            $accountData['name'],
-            'negative_balance'
-          );
-
-          $cacheId = implode('_', $cacheId);
-
-          if (!Mage::app()->loadCache($cacheId)) {
-            $productHelper->sendEmailTmpl(
-              'mventory_negative_balance',
-              array('account' => $accountData['name']),
-              $website
-            );
-
-            Mage::app()
-              ->saveCache(true, $cacheId, array(self::TAG_EMAILS), 3600);
-          }
+          $this->_negativeBalanceError($accountData['name']);
 
           if (count($accounts) == 1)
             return;
@@ -1264,6 +1228,45 @@ EOT;
     }
 
     Mage::unregister('mventory_website');
+  }
+
+  /**
+   * Report to store owner about insufficient balance in TradeMe account.
+   * It sends email only 1 time per hour.
+   *
+   * @param string $accountName
+   *   Name of account tor report about
+   *
+   * @return MVentory_TradeMe_Model_Observer
+   *   Instance of this class
+   */
+  protected function _negativeBalanceError ($accountName) {
+    $app = Mage::app();
+
+    $cacheId = implode(
+      '_',
+      array(
+        $this->_website->getCode(),
+        $accountName,
+        'negative_balance'
+      )
+    );
+
+    //Don't send email if cache record hasn't expired
+    if ($app->loadCache($cacheId))
+      return $this;
+
+    $this
+      ->_productHelper
+      ->sendEmailTmpl(
+          'mventory_negative_balance',
+          array('account' => $accountName),
+          $this->_website
+        );
+
+    $app->saveCache(true, $cacheId, array(self::TAG_EMAILS), 3600);
+
+    return $this;
   }
 
   /**

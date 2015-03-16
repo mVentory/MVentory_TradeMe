@@ -154,6 +154,10 @@
 
 /* TradeMe tab */
 
+#mventory-logo {
+ display: block;
+}
+
 #product_info_tabs_trademe_content .a-right button {
   margin-left: 4px;
 }

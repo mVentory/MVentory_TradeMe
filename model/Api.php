@@ -33,6 +33,7 @@ class MVentory_TradeMe_Model_Api {
     '0350-' => true, //Trade Me Property
     '5000-' => true, //Trade Me Jobs
     '9374-' => true, //Travel, events & activities
+    '9334-' => true, //Services
   );
 
   private $_imageSize = array('width' => 670, 'height' => 502);

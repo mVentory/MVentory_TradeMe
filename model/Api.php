@@ -341,7 +341,7 @@ EOT;
       $isBrandNew = (int) $this->_getIsBrandNew($product);
       $paymentMethods = $this->_getPaymentMethods($store);
 
-      $trys = 1;
+      $tries = 1;
 
       do {
         $xml = '<ListingRequest xmlns="http://api.trademe.co.nz/v1">
@@ -479,11 +479,11 @@ EOT;
                 return $helper->__($msg);
               }
 
-              $try++;
+              $tries++;
             }
           }
         }
-      } while (--$trys);
+      } while (--$tries);
     }
     else
       $return = 'Can\'t get access token';

@@ -216,8 +216,7 @@ class MVentory_TradeMe_Model_Resource_Auction
             'auction_listed_at' => 'listed_at'
           )
         )
-      ->where($adp->prepareSqlCondition($productId, array('null' => true)))
-      ->group('auction.product_id');
+      ->where($adp->prepareSqlCondition($productId, array('null' => true)));
 
     return $collection;
   }

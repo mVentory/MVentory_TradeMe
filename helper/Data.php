@@ -985,11 +985,11 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
     if (!$value = trim($value))
       return $options;
 
-    foreach (explode("\n", str_replace("\r\n", "\n", $value)) as $option)
-      if (count($option = explode(',', trim($option, " ,\t\n\r\0\x0B"))) == 2)
+    foreach (explode("\n", str_replace("\r\n", "\n", $value)) as $opt)
+      if (count($opt = explode(',', trim($opt, " ,\t\n\r\0\x0B"), 2)) == 2)
         $options[] = array(
-          'price' => (float) rtrim($option[0]),
-          'method' => ltrim($option[1])
+          'price' => (float) rtrim($opt[0]),
+          'method' => ltrim($opt[1])
         );
 
     return $options;

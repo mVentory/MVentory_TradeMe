@@ -1259,7 +1259,7 @@ EOT;
     $this
       ->_productHelper
       ->sendEmailTmpl(
-          'mventory_negative_balance',
+          'trademe_negative_balance',
           array('account' => $accountName),
           $this->_website
         );

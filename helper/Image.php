@@ -13,7 +13,7 @@
  * part of the licensing agreement with mVentory.
  *
  * @package MVentory/TradeMe
- * @copyright Copyright (c) 2014 mVentory Ltd. (http://mventory.com)
+ * @copyright Copyright (c) 2014-2015 mVentory Ltd. (http://mventory.com)
  * @license Commercial
  * @author Anatoly A. Kazantsev <anatoly@mventory.com>
  */
@@ -56,12 +56,21 @@ class MVentory_TradeMe_Helper_Image extends MVentory_TradeMe_Helper_Data
     if ($store->getId != Mage::app()->getStore()->getId())
       $env = $this->changeStore($store);
 
+    $watermarkImg = $this->_getWatermarkImg($store);
+
     $imageModel = Mage::getModel('catalog/product_image')
       ->setDestinationSubdir('image')
-      ->setKeepFrame(false)
+      ->setKeepFrame((bool) $watermarkImg)
       ->setConstrainOnly(true)
       ->setWidth($size['width'])
       ->setHeight($size['height']);
+
+    if ($watermarkImg)
+      $imageModel
+        ->setWatermarkFile($watermarkImg)
+        ->setWatermarkSize($this->_getWatermarkSize($store))
+        ->setWatermarkImageOpacity($this->_getWatermarkOpacity($store))
+        ->setWatermarkPosition($this->_getWatermarkPos($store));
 
     //Don't call this method in chain because some exts can override it
     //but don't return correct object
@@ -79,8 +88,12 @@ class MVentory_TradeMe_Helper_Image extends MVentory_TradeMe_Helper_Data
       return $newImage;
     }
 
+    $imageModel->resize();
+
+    if ($watermarkImg)
+      $imageModel->setWatermark($watermarkImg);
+
     $newImage = $imageModel
-      ->resize()
       ->saveFile()
       ->getNewFile();
 
@@ -231,5 +244,80 @@ class MVentory_TradeMe_Helper_Image extends MVentory_TradeMe_Helper_Data
       $rgb .= ($value === null) ? 'null' : sprintf('%02s', dechex($value));
 
     return $rgb;
+  }
+
+  /**
+   * Parse size from string (e.g 300x200)
+   *
+   * @param str $string
+   *   String with size in WxH format
+   *
+   * @return array|bool
+   *   Parsed size or false if it's not correct
+   */
+  protected function _parseSize ($str) {
+    $size = explode('x', strtolower($str));
+
+    if (sizeof($size) == 2)
+      return array(
+        'width' => ($size[0] > 0) ? $size[0] : null,
+        'heigth' => ($size[1] > 0) ? $size[1] : null
+      );
+
+    return false;
+  }
+
+  /**
+   * Return filename of watermark image from store's config
+   *
+   * @param Mage_Core_Model_Store $store
+   *   Store object
+   *
+   * @return string
+   *   Filename of watermark image
+   */
+  protected function _getWatermarkImg ($store) {
+    return $store->getConfig(MVentory_TradeMe_Model_Config::_WATERMARK_IMG);
+  }
+
+  /**
+   * Return size of watermark image from store's config
+   *
+   * @param Mage_Core_Model_Store $store
+   *   Store object
+   *
+   * @return string
+   *   Size of watermark image
+   */
+  protected function _getWatermarkSize ($store) {
+    return $this->_parseSize(
+      $store->getConfig(MVentory_TradeMe_Model_Config::_WATERMARK_SIZE)
+    );
+  }
+
+  /**
+   * Return opacity of watermark image from store's config
+   *
+   * @param Mage_Core_Model_Store $store
+   *   Store object
+   *
+   * @return string
+   *   Opacity of watermark image
+   */
+  protected function _getWatermarkOpacity ($store) {
+    return $store->getConfig(MVentory_TradeMe_Model_Config::_WATERMARK_OPC);
+  }
+
+  /**
+   * Return position of watermark image from store's config
+   *
+   * @param Mage_Core_Model_Store $store
+   *   Store object
+   *
+   * @return string
+   *   Position of watermark image
+   */
+  protected function _getWatermarkPos ($store) {
+    return $store->getConfig(MVentory_TradeMe_Model_Config::_WATERMARK_POS);
   }
 }

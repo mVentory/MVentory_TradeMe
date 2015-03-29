@@ -53,6 +53,8 @@ class MVentory_TradeMe_Helper_Image extends MVentory_TradeMe_Helper_Data
     if (!$image && $image == 'no_selection')
       return;
 
+    $settings = null;
+
     if ($store->getId != Mage::app()->getStore()->getId())
       $env = $this->changeStore($store);
 
@@ -79,7 +81,11 @@ class MVentory_TradeMe_Helper_Image extends MVentory_TradeMe_Helper_Data
     //Check if resized image exists before resizing it
     $newImage = ($newImage = $imageModel->getNewFile())
                 ? $newImage
-                : $this->_buildFileName($image, $imageModel, $store);
+                : $this->_buildFileName(
+                    $image,
+                    $settings = $this->_extractSettings($imageModel),
+                    $store
+                  );
 
     if (file_exists($newImage)) {
       if (isset($env))
@@ -106,7 +112,11 @@ class MVentory_TradeMe_Helper_Image extends MVentory_TradeMe_Helper_Data
 
     $newImage = $this->_download(
       $imageModel->getUrl(),
-      $this->_buildFileName($image, $imageModel, $store)
+      $this->_buildFileName(
+        $image,
+        $settings ?: $settings = $this->_extractSettings($imageModel),
+        $store
+      )
     );
 
     if (isset($env))
@@ -148,14 +158,63 @@ class MVentory_TradeMe_Helper_Image extends MVentory_TradeMe_Helper_Data
   }
 
   /**
+   * Extract settings from supplied product's image model
+   *
+   * @param Mage_Catalog_Model_Product_Image $model
+   *   Product's image model
+   *
+   * @return array
+   *   Extracted settings
+   */
+  protected function _extractSettings ($model) {
+    $ref = new ReflectionObject($model);
+
+    $prop = function ($name) use ($ref, $model) {
+      $p = $ref->getProperty($name);
+      $p->setAccessible(true);
+
+      return $p->getValue($model);
+    };
+
+    $call = function ($name) use ($ref, $model) {
+      $m = $ref->getMethod($name);
+      $m->setAccessible(true);
+
+      return $m->invokeArgs($model, array());
+    };
+
+    return array(
+      'destination_subdir' => $model->getDestinationSubdir(),
+
+      'width' => $model->getWidth(),
+      'height' => $model->getHeight(),
+
+      'keep_aspect_ratio' => $prop('_keepAspectRatio'),
+      'keep_frame' => $prop('_keepFrame'),
+      'keep_transparency' => $prop('_keepTransparency'),
+      'constrain_only' => $prop('_constrainOnly'),
+      'background_color' => $prop('_backgroundColor'),
+      'angel' => $prop('_angle'),
+      'quality' => $model->getQuality(),
+
+      'watermark_file' => $model->getWatermarkFile(),
+      'watermark_filepath' => $call('_getWatermarkFilePath'),
+      'watermark_opacity' => $model->getWatermarkImageOpacity(),
+      'watermark_position' => $model->getWatermarkPosition(),
+      'watermark_width' => $model->getWatermarkWidth(),
+      'watermark_height' => $model->getWatermarkHeigth()
+    );
+  }
+
+  /**
    * Build full path for prepared image in same way as Magento does for
    * product images
    *
    * @param string $file
    *   Name of image file with dispretion path
    *
-   * @param Mage_Catalog_Model_Product_Image $imageModel
-   *   Initialised Mage_Catalog_Model_Product_Image object
+   * @param array $settings
+   *   Image settings from product's image model
    *
    * @param Mage_Core_Model_Store $store
    *   Store object
@@ -163,63 +222,39 @@ class MVentory_TradeMe_Helper_Image extends MVentory_TradeMe_Helper_Data
    * @return string
    *   Full path for prepared product image
    */
-  protected function _buildFileName ($file, $imageModel, $store) {
+  protected function _buildFileName ($file, $settings, $store) {
     //Most important params
     $path = array(
       Mage::getSingleton('catalog/product_media_config')->getBaseMediaPath(),
       'cache',
       $store->getId(),
-      $imageModel->getDestinationSubdir()
+      $settings['destination_subdir']
     );
 
-    $width = $imageModel->getWidth();
-    $height = $imageModel->getHeight();
+    $width = $settings['width'];
+    $height = $settings['height'];
 
     if ($width || $height)
       $path[] = $width . 'x' . $height;
 
     //Miscellaneous params as a hash
-
-    //NOTE: we can't access protected fields of Mage_Catalog_Model_Product_Image
-    //object and it doesn't provide getter for all following fields, so we
-    //use hardcoded values. Some of them default, some of them are set in
-    //getImage() method
-
-    //Use default value of _keepAspectRatio field
-    $_keepAspectRatio = true;
-
-    //Use value set in the getImage() method for _keepFrame field
-    $_keepFrame = false;
-
-    //Use default value of _keepTransparency field
-    $_keepTransparency = true;
-
-    //Use value set in the getImage() method for _constrainOnly field
-    $_constrainOnly = true;
-
-    //Use default value of _backgroundColor field
-    $_backgroundColor = array(255, 255, 255);
-
-    //Use default value of _angle field
-    $_angle = null;
-
     $params = array(
-      ($_keepAspectRatio ? '' : 'non') . 'proportional',
-      ($_keepFrame ? '' : 'no') . 'frame',
-      ($_keepTransparency ? '' : 'no') . 'transparency',
-      ($_constrainOnly ? 'do' : 'not') . 'constrainonly',
-      $this->_rgbToString($_backgroundColor),
-      'angle' . $_angle,
-      'quality' . $imageModel->getQuality()
+      ($settings['keep_aspect_ratio'] ? '' : 'non') . 'proportional',
+      ($settings['keep_frame'] ? '' : 'no') . 'frame',
+      ($settings['keep_transparency'] ? '' : 'no') . 'transparency',
+      ($settings['constrain_only'] ? 'do' : 'not') . 'constrainonly',
+      $this->_rgbToString($settings['background_color']),
+      'angle' . $settings['angel'],
+      'quality' . $settings['quality']
     );
 
     //If has watermark add watermark params to hash
-    if ($imageModel->getWatermarkFile()) {
-      $params[] = $imageModel->getWatermarkFile();
-      $params[] = $imageModel->getWatermarkImageOpacity();
-      $params[] = $imageModel->getWatermarkPosition();
-      $params[] = $imageModel->getWatermarkWidth();
-      $params[] = $imageModel->getWatermarkHeigth();
+    if ($settings['watermark_file']) {
+      $params[] = $settings['watermark_file'];
+      $params[] = $settings['watermark_opacity'];
+      $params[] = $settings['watermark_position'];
+      $params[] = $settings['watermark_width'];
+      $params[] = $settings['watermark_height'];
     }
 
     $path[] = md5(implode('_', $params));

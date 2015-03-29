@@ -119,6 +119,9 @@ class MVentory_TradeMe_Helper_Image extends MVentory_TradeMe_Helper_Data
       )
     );
 
+    if ($watermarkImg && file_exists($newImage))
+      $this->_addWatermark($newImage, $settings);
+
     if (isset($env))
       $this->changeStore($env);
 
@@ -155,6 +158,41 @@ class MVentory_TradeMe_Helper_Image extends MVentory_TradeMe_Helper_Data
       mkdir($path, 0777, true);
 
     return (file_put_contents($file, $imgData) == false) ? null : $file;
+  }
+
+  /**
+   * Add watermark specified in settings to passed image file. Overwrites
+   * original file.
+   *
+   * @param string $file
+   *   Path to original image file
+   *
+   * @param array $settings
+   *   Settings from product's image model
+   *
+   * @return MVentory_TradeMe_Helper_Image
+   *   Instance of this class
+   */
+  protected function _addWatermark ($file, $settings) {
+    $image = new Varien_Image($file);
+
+    $image->keepAspectRatio($settings['keep_aspect_ratio']);
+    $image->keepFrame($settings['keep_frame']);
+    $image->keepTransparency($settings['keep_transparency']);
+    $image->constrainOnly($settings['constrain_only']);
+    $image->backgroundColor($settings['background_color']);
+    $image->quality($settings['quality']);
+
+    $image
+      ->setWatermarkPosition($settings['watermark_position'])
+      ->setWatermarkImageOpacity($settings['watermark_opacity'])
+      ->setWatermarkWidth($settings['watermark_width'])
+      ->setWatermarkHeigth($settings['watermark_height']);
+
+    $image->watermark($settings['watermark_filepath']);
+    $image->save($file);
+
+    return $this;
   }
 
   /**

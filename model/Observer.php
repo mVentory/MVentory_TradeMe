@@ -567,16 +567,17 @@ EOT;
           'error' => !is_int($result)
         ));
 
-        if (trim($result) == 'Insufficient balance') {
-          $this->_negativeBalanceError($accountData['name']);
+        if (is_array($result)) foreach ($result as $error)
+          if ($error == 'Insufficient balance') {
+            $this->_negativeBalanceError($accountData['name']);
 
-          if (count($accounts) == 1)
-            return;
+            if (count($accounts) == 1)
+              return;
 
-          unset($accounts[$accountId]);
+            unset($accounts[$accountId]);
 
-          continue;
-        }
+            continue 2;
+          }
 
         if (is_int($result)) {
           Mage::getModel('trademe/auction')
@@ -811,16 +812,17 @@ EOT;
           'error' => !is_int($result)
         ));
 
-        if (trim($result) == 'Insufficient balance') {
-          $this->_negativeBalanceError($accountData['name']);
+        if (is_array($result)) foreach ($result as $error)
+          if ($error == 'Insufficient balance') {
+            $this->_negativeBalanceError($accountData['name']);
 
-          if (count($accounts) == 1)
-            return;
+            if (count($accounts) == 1)
+              return;
 
-          unset($accounts[$accountId]);
+            unset($accounts[$accountId]);
 
-          continue;
-        }
+            continue 2;
+          }
 
         if (is_int($result)) {
           Mage::getModel('trademe/auction')

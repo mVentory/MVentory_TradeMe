@@ -451,17 +451,20 @@ EOT;
 
             $return = $response;
           } elseif ((string)$xml->ErrorDescription)
-            $return = (string)$xml->ErrorDescription;
+            $return = $this->_parseErrors((string)$xml->ErrorDescription);
           elseif ($response) {
-            $return = $response;
+            $return = $this->_parseErrors($response);
 
-            $hasPayNowError = false !== strrpos(
-              ($response = strtolower(trim($response))),
-              self::PAYNOW_ERR_MSG,
-              -strlen($response)
-            );
+            foreach ($return as $error) {
+              $hasPayNowError = false !== strrpos(
+                strtolower($error),
+                self::PAYNOW_ERR_MSG,
+                -strlen($error)
+              );
 
-            if ($hasPayNowError) {
+              if (!$hasPayNowError)
+                continue;
+
               $paymentMethods = array_diff(
                 $paymentMethods,
                 array(MVentory_TradeMe_Model_Config::PAYMENT_CC)
@@ -480,6 +483,9 @@ EOT;
               }
 
               $tries++;
+
+              //We found pay now error, so we don't need to check for others
+              break;
             }
           }
         }
@@ -1371,5 +1377,22 @@ EOT;
       return $this->_attrTypes[$id];
 
     return 'Unknown';
+  }
+
+  /**
+   * Parse and prepare errors from TradeMe API response
+   *
+   * @param string $errors
+   *   Raw string of errors from TradeMe API response
+   *
+   * @return array
+   *   Parse and prepare list of errors
+   */
+  protected function _parseErrors ($errors) {
+    $errors = explode("\r\n", $errors);
+
+    array_walk($errors, 'trim');
+
+    return array_filter($errors);
   }
 }

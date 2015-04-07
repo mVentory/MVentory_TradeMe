@@ -548,14 +548,18 @@ EOT;
           continue;
 
         $minimalPrice = $this->_helper->getMinimalPrice($perShipping);
+        $productPrice = $this->_helper->getProductPrice(
+          $product,
+          $this->_website
+        );
 
         MVentory_TradeMe_Model_Log::debug(array(
           'product' => $product,
-          'product price' => $product->getPrice(),
+          'product price' => $productPrice,
           'minimal price' => $minimalPrice
         ));
 
-        if ($minimalPrice && ($product->getPrice() < $minimalPrice))
+        if ($minimalPrice && ($productPrice < $minimalPrice))
           continue;
 
         $api = new MVentory_TradeMe_Model_Api();
@@ -779,17 +783,21 @@ EOT;
           continue;
 
         $minimalPrice = $this->_helper->getMinimalPrice($perShipping);
+        $productPrice = $this->_helper->getProductPrice(
+          $product,
+          $this->_website
+        );
 
         MVentory_TradeMe_Model_Log::debug(array(
           'product' => $product,
-          'product price' => $product->getPrice(),
+          'product price' => $productPrice,
           'minimal price' => $minimalPrice
         ));
 
         /**
          * @todo Should we check minimal price limit for $1 auctions?
          */
-        if ($minimalPrice && ($product->getPrice() < $minimalPrice))
+        if ($minimalPrice && ($productPrice < $minimalPrice))
           continue;
 
         $api = new MVentory_TradeMe_Model_Api();

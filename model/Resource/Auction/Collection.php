@@ -34,4 +34,32 @@ class MVentory_TradeMe_Model_Resource_Auction_Collection
   protected function _construct () {
     $this->_init('trademe/auction');
   }
+
+  /**
+   * Retrive all product IDs for collection
+   *
+   * @param int|null $limit
+   *   The number of rows to return
+   *
+   * @param int|null $offset
+   *   Start returning after this many rows
+   *
+   * @return array
+   *   List of all product IDs for collection
+   */
+  public function getProductIds ($limit = null, $offset = null) {
+    $select = clone $this->getSelect();
+
+    $select
+      ->reset(Zend_Db_Select::ORDER)
+      ->reset(Zend_Db_Select::LIMIT_COUNT)
+      ->reset(Zend_Db_Select::LIMIT_OFFSET)
+      ->reset(Zend_Db_Select::COLUMNS)
+      ->columns('product_id', 'main_table')
+      ->limit($limit, $offset);
+
+    return $this
+      ->getConnection()
+      ->fetchCol($select);
+  }
 }

@@ -116,6 +116,9 @@ class MVentory_TradeMe_Model_Resource_Auction
    * @param  string $fromData Filter by period of time (from date)
    * @param  strint $toDate Filter by period of time (to date)
    * @return array List of product IDs
+   *
+   * @todo Replace this method by getProductIds() method from auction's
+   *   collection model
    */
   public function getListedProducts ($type, $fromData, $toDate) {
     $adp = $this->_getReadAdapter();

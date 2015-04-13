@@ -373,8 +373,7 @@ EOT;
 
     unset($accountId, $accountData);
 
-    $products = Mage::getModel('catalog/product')
-      ->getCollection()
+    $products = Mage::getResourceModel('trademe/product_collection')
       ->addAttributeToFilter('type_id', 'simple')
 
       //Load all allowed to list products (incl. for $1 dollar auctions)
@@ -395,16 +394,19 @@ EOT;
       ->_store
       ->getConfig(MVentory_TradeMe_Model_Config::_1AUC_FULL_PRICE);
 
-    $aucResource = Mage::getResourceModel('trademe/auction');
+    if ($listedProductIds = $this->_getListedProductIds($listNormAuc))
+      $products->addIdFilter($listedProductIds, true);
+
+    //$aucResource = Mage::getResourceModel('trademe/auction');
 
     //Filter out product which have normal auctions when List full price
     //setting set to Always or If stocl allowed
-    if ($listNormAuc == MVentory_TradeMe_Model_Config::AUCTION_NORMAL_ALWAYS
-        || $listNormAuc == MVentory_TradeMe_Model_Config::AUCTION_NORMAL_STOCK)
-      $aucResource->filterNormalAuctions($products);
+    //if ($listNormAuc == MVentory_TradeMe_Model_Config::AUCTION_NORMAL_ALWAYS
+    //    || $listNormAuc == MVentory_TradeMe_Model_Config::AUCTION_NORMAL_STOCK)
+    //  $aucResource->filterNormalAuctions($products);
     //Otherwise filter out all products with any auction
-    elseif ($listNormAuc == MVentory_TradeMe_Model_Config::AUCTION_NORMAL_NEVER)
-      $aucResource->filterAllAuctions($products);
+    //elseif ($listNormAuc == MVentory_TradeMe_Model_Config::AUCTION_NORMAL_NEVER)
+    //  $aucResource->filterAllAuctions($products);
 
     $ids = $products->getAllIds();
     MVentory_TradeMe_Model_Log::debug(array('pool size' => count($ids)));
@@ -412,7 +414,12 @@ EOT;
     if (!$ids)
       return;
 
-    unset($productIds, $products);
+    //Store queries (from collection and from getAllIds() method) to output them
+    //in debug message if we find product which doesn't satisfy the requirements
+    //for pool
+    $this->_assembledQueries = $products->getAssembledQueries();
+
+    unset($products);
 
     //Calculate avaiable slots for current run of the sync script
     foreach ($accounts as $accountId => &$accountData) {
@@ -472,17 +479,43 @@ EOT;
       return;
 
     if ($listNormAuc == MVentory_TradeMe_Model_Config::AUCTION_NORMAL_STOCK)
-      $auctions = $aucResource->getNumberPerProduct();
+      $auctions = Mage::getResourceModel('trademe/auction')
+        ->getNumberPerProduct();
 
     unset($accountId, $accountData, $syncData);
 
     shuffle($ids);
 
+    //Flip array for faster search
+    $listedProductIds = array_flip($listedProductIds);
+
     foreach ($ids as $id) {
+
+      //Check for products which don't satisfy the requirements for pool
+      if (isset($listedProductIds[$id])) {
+        $this->_logUnnecessaryProduct(
+          $id,
+          'Product already has full price auctions and can\'t be listed more'
+        );
+
+        continue;
+      }
+
       $product = Mage::getModel('catalog/product')->load($id);
 
       if (!$id = $product->getId())
         continue;
+
+      //Check for products which don't satisfy the requirements for pool
+      list($isProductAllowed, $reason) = $this->_isProductAllowed(
+        $product,
+        MVentory_TradeMe_Model_Config::LIST_YES
+      );
+
+      if (!$isProductAllowed) {
+        $this->_logUnnecessaryProduct($product, $reason);
+        continue;
+      }
 
       if ($listNormAuc == MVentory_TradeMe_Model_Config::AUCTION_NORMAL_STOCK
           && isset($auctions[$id])) {
@@ -722,8 +755,7 @@ EOT;
 
     unset($auctions);
 
-    $products = Mage::getModel('catalog/product')
-      ->getCollection()
+    $products = Mage::getResourceModel('trademe/product_collection')
       ->addAttributeToFilter('type_id', 'simple')
 
       //Allow only product enabled for $1 auctions
@@ -752,7 +784,12 @@ EOT;
     if (!$ids)
       return;
 
-    unset($products, $filterIds);
+    //Store queries (from collection and from getAllIds() method) to output them
+    //in debug message if we find product which doesn't satisfy the requirements
+    //for pool
+    $this->_assembledQueries = $products->getAssembledQueries();
+
+    unset($products);
 
     $auctions = Mage::getResourceSingleton('trademe/auction')
       ->getNumberPerProduct(
@@ -762,11 +799,36 @@ EOT;
 
     shuffle($ids);
 
+    //Flip array for faster search
+    $filterIds = array_flip($filterIds);
+
     foreach ($ids as $id) {
+
+      //Check for products which don't satisfy the requirements for pool
+      if (isset($filterIds[$id])) {
+        $this->_logUnnecessaryProduct(
+          $id,
+          'Product was listed today or/and number of auctions is equal to QTY'
+        );
+
+        continue;
+      }
+
       $product = Mage::getModel('catalog/product')->load($id);
 
       if (!$productId = $product->getId())
         continue;
+
+      //Check for products which don't satisfy the requirements for pool
+      list($isProductAllowed, $reason) = $this->_isProductAllowed(
+        $product,
+        MVentory_TradeMe_Model_Config::LIST_FIXEDEND
+      );
+
+      if (!$isProductAllowed) {
+        $this->_logUnnecessaryProduct($product, $reason);
+        continue;
+      }
 
       //Check if current number of product's $1 auctions is smaller than allowed
       //maximum number in the product
@@ -1471,5 +1533,96 @@ EOT;
     );
 
     return $data;
+  }
+
+  /**
+   * Check if product satisfies the requirements for pool
+   *
+   * @param  Mage_Catalog_Model_Product $product
+   *   Product model
+   *
+   * @param  int $allowList
+   *   Minimal level of Allow to list setting in product
+   *
+   * @return array
+   *   Yes/No and reason why the product doesn't satisfy the requirements
+   */
+  protected function _isProductAllowed ($product, $allowList) {
+    if ($product->getTypeId() != 'simple')
+      return array(false, 'Type of product is not simple');
+
+    if ($product['tm_relist'] < $allowList)
+      return array(false, 'Product is not allowed to list on TradeMe');
+
+    $status = $product->getStatus();
+
+    if ($status != Mage_Catalog_Model_Product_Status::STATUS_ENABLED)
+      return array(false, 'Product is disabled');
+
+    $image = $product->getImage();
+
+    if (!$image || $image == 'no_selection')
+      return array(false, 'Product has no main image');
+
+    $qty = $this->_getProductQty($product);
+
+    if ($qty == null)
+      return array(false, 'Product\'s stock data can\'t be loaded');
+
+    if ($qty == false)
+      return array(false, 'Product has unmanaged stock');
+
+    if ($qty <= 0)
+      return array(false, 'Product is out of stock');
+
+    return array(true, null);
+  }
+
+  /**
+   * Return IDs of listed products depending on List full price setting
+   *
+   * @param int $listNormAuc
+   *   Value of List full price setting
+   *
+   * @return array
+   *   List of IDs for listed products
+   */
+  protected function _getListedProductIds ($listNormAuc) {
+    $collection = Mage::getResourceModel('trademe/auction_collection');
+
+    if ($listNormAuc == MVentory_TradeMe_Model_Config::AUCTION_NORMAL_ALWAYS
+         || $listNormAuc == MVentory_TradeMe_Model_Config::AUCTION_NORMAL_STOCK)
+      $collection->addFieldToFilter(
+        'type',
+        MVentory_TradeMe_Model_Config::AUCTION_NORMAL
+      );
+
+    return $collection->getProductIds();
+  }
+
+  /**
+   * Output debug message for product which doesn't satisfy the requirements
+   * for pool
+   *
+   * @param Mage_Catalog_Model_Product $product
+   *   Product model
+   *
+   * @param string $reason
+   *   Reason why the product which doesn't satisfy the requirements
+   *   (error message)
+   *
+   * @return MVentory_TradeMe_Model_Observer
+   *   Instance of this class
+   */
+  protected function _logUnnecessaryProduct ($product, $reason) {
+    MVentory_TradeMe_Model_Log::debug(array(
+      'extra auction found' => 'ignore product',
+      'collection query' => $this->_assembledQueries['collection'],
+      'all IDs query' => $this->_assembledQueries['ids'],
+      'product' => $product,
+      'reason' => $reason
+    ));
+
+    return $this;
   }
 }

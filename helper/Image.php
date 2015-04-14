@@ -334,6 +334,9 @@ class MVentory_TradeMe_Helper_Image extends MVentory_TradeMe_Helper_Data
     if (sizeof($size) == 2)
       return array(
         'width' => ($size[0] > 0) ? $size[0] : null,
+        'height' => ($size[1] > 0) ? $size[1] : null,
+
+        //Magento has misprint in height word in watermark functions
         'heigth' => ($size[1] > 0) ? $size[1] : null
       );
 

@@ -119,8 +119,13 @@ class MVentory_TradeMe_Helper_Image extends MVentory_TradeMe_Helper_Data
       )
     );
 
-    if ($watermarkImg && file_exists($newImage))
-      $this->_addWatermark($newImage, $settings);
+    if ($watermarkImg && file_exists($newImage)) {
+      $image = $this->_getVarienImage($newImage, $settings);
+
+      $this->_addWatermark($image, $settings);
+
+      $image->save($newImage);
+    }
 
     if (isset($env))
       $this->changeStore($env);
@@ -161,19 +166,18 @@ class MVentory_TradeMe_Helper_Image extends MVentory_TradeMe_Helper_Data
   }
 
   /**
-   * Add watermark specified in settings to passed image file. Overwrites
-   * original file.
+   * Get image handler for passed image file
    *
    * @param string $file
-   *   Path to original image file
+   *   Path to image file
    *
    * @param array $settings
    *   Settings from product's image model
    *
-   * @return MVentory_TradeMe_Helper_Image
-   *   Instance of this class
+   * @return Varien_Image
+   *   Image handler for the passed image file
    */
-  protected function _addWatermark ($file, $settings) {
+  protected function _getVarienImage ($file, $settings) {
     $image = new Varien_Image($file);
 
     $image->keepAspectRatio($settings['keep_aspect_ratio']);
@@ -183,14 +187,28 @@ class MVentory_TradeMe_Helper_Image extends MVentory_TradeMe_Helper_Data
     $image->backgroundColor($settings['background_color']);
     $image->quality($settings['quality']);
 
+    return $image;
+  }
+
+  /**
+   * Add watermark specified in settings to passed image handler
+   *
+   * @param Varien_Image $image
+   *   Image handler
+   *
+   * @param array $settings
+   *   Settings from product's image model
+   *
+   * @return MVentory_TradeMe_Helper_Image
+   *   Instance of this class
+   */
+  protected function _addWatermark ($image, $settings) {
     $image
       ->setWatermarkPosition($settings['watermark_position'])
       ->setWatermarkImageOpacity($settings['watermark_opacity'])
       ->setWatermarkWidth($settings['watermark_width'])
-      ->setWatermarkHeigth($settings['watermark_height']);
-
-    $image->watermark($settings['watermark_filepath']);
-    $image->save($file);
+      ->setWatermarkHeigth($settings['watermark_height'])
+      ->watermark($settings['watermark_filepath']);
 
     return $this;
   }

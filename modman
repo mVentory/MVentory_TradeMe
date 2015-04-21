@@ -6,6 +6,7 @@ etc/                   app/code/community/MVentory/TradeMe/etc/
 setup/sql/*            app/code/community/MVentory/TradeMe/sql/trademe_setup
 setup/tables           app/code/community/MVentory/TradeMe/sql/trademe_setup/tables
 setup/data/            app/code/community/MVentory/TradeMe/data/trademe_setup/
+exceptions/*           app/code/community/MVentory/TradeMe/
 
 module.xml             app/etc/modules/MVentory_TradeMe.xml
 

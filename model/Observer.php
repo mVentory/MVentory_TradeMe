@@ -203,13 +203,29 @@ EOT;
       $auctions = Mage::getResourceModel('trademe/auction_collection')
         ->addFieldToFilter('account_id', $accountId);
 
-      $connector = new MVentory_TradeMe_Model_Api();
+      try {
+        $connector = new MVentory_TradeMe_Model_Api();
 
-      $connector
-        ->setWebsiteId($this->_website)
-        ->setAccountId($accountId);
+        $connector
+          ->setWebsiteId($this->_website)
+          ->setAccountId($accountId);
 
-      $accountData['listings'] = $connector->massCheck($auctions);
+        $accountData['listings'] = $connector->massCheck($auctions);
+      }
+      catch (Exception $e) {
+        //Unset account so it won't be used for listing auctions
+        unset($this->_accounts[$accountId]);
+
+        Mage::logException($e);
+
+        MVentory_TradeMe_Model_Log::debug(array(
+          'account' => $accountData['name'],
+          'error on mass checking of auctions' => $e->getMessage(),
+          'error' => true
+        ));
+
+        continue;
+      }
 
       MVentory_TradeMe_Model_Log::debug(array(
         'account' => $accountData['name'],
@@ -232,14 +248,28 @@ EOT;
           continue;
         }
 
-        $result = $connector->check($auction);
+        try {
+          $result = $connector->check($auction);
+        }
+        catch (Exception $e) {
+          Mage::logException($e);
+
+          MVentory_TradeMe_Model_Log::debug(array(
+            'auction' => $auction,
+            'error on getting status' => $e->getMessage(),
+            'error' => true
+          ));
+
+          continue;
+        }
 
         MVentory_TradeMe_Model_Log::debug(array(
           'auction' => $auction,
           'status' => $result
         ));
 
-        if (!$result || $result == 3) {
+        //Auction is on sell
+        if ($result == 3) {
 
           //Increase number of active auctions to include auctions
           //which weren't counted by massCheck() method for some reason
@@ -249,6 +279,7 @@ EOT;
           continue;
         }
 
+        //Auction was sold
         if ($result == 2) {
           $product = Mage::getModel('catalog/product')->load(
             $auction['product_id']
@@ -562,56 +593,69 @@ EOT;
         if ($minimalPrice && ($productPrice < $minimalPrice))
           continue;
 
-        $api = new MVentory_TradeMe_Model_Api();
-        $result = $api->send($product, $matchResult['id'], $accountId);
+        try {
+          $api = new MVentory_TradeMe_Model_Api();
+          $listingId = $api->send($product, $matchResult['id'], $accountId);
+        }
+        catch (Exception $e) {
+          $errors = $this->_parseErrors($e->getMessage());
+
+          Mage::logException($e);
+          MVentory_TradeMe_Model_Log::debug(array(
+            'product' => $product,
+            'submit result' => $errors,
+            'error' => true
+          ));
+
+          foreach ($errors as $error)
+            if ($error == 'Insufficient balance') {
+              $this->_negativeBalanceError($accountData['name']);
+
+              if (count($accounts) == 1)
+                return;
+
+              unset($accounts[$accountId]);
+
+              break;
+            }
+
+          //Try next account
+          continue;
+        }
 
         MVentory_TradeMe_Model_Log::debug(array(
           'product' => $product,
-          'submit result' => $result,
-          'error' => !is_int($result)
+          'submit result' => $listingId,
+          'error' => false
         ));
 
-        if (is_array($result)) foreach ($result as $error)
-          if ($error == 'Insufficient balance') {
-            $this->_negativeBalanceError($accountData['name']);
+        Mage::getModel('trademe/auction')
+          ->setData(array(
+              'product_id' => $product->getId(),
+              'listing_id' => $listingId,
+              'account_id' => $accountId
+            ))
+          ->save();
 
-            if (count($accounts) == 1)
-              return;
+        if (!--$accounts[$accountId]['free_slots']) {
+          $accountData['sync_data']['duration'] = $this
+            ->_helper
+            ->getDuration($perShipping);
 
-            unset($accounts[$accountId]);
+          Mage::app()->saveCache(
+            serialize($accountData['sync_data']),
+            $accountData['cache_id'],
+            array(self::TAG_FREE_SLOTS),
+            null
+          );
 
-            continue 2;
-          }
+          if (count($accounts) == 1)
+            return;
 
-        if (is_int($result)) {
-          Mage::getModel('trademe/auction')
-            ->setData(array(
-                'product_id' => $product->getId(),
-                'listing_id' => $result,
-                'account_id' => $accountId
-              ))
-            ->save();
-
-          if (!--$accounts[$accountId]['free_slots']) {
-            $accountData['sync_data']['duration'] = $this
-              ->_helper
-              ->getDuration($perShipping);
-
-            Mage::app()->saveCache(
-              serialize($accountData['sync_data']),
-              $accountData['cache_id'],
-              array(self::TAG_FREE_SLOTS),
-              null
-            );
-
-            if (count($accounts) == 1)
-              return;
-
-            unset($accounts[$accountId]);
-          }
-
-          break;
+          unset($accounts[$accountId]);
         }
+
+        break;
       }
     }
   }
@@ -800,50 +844,63 @@ EOT;
         if ($minimalPrice && ($productPrice < $minimalPrice))
           continue;
 
-        $api = new MVentory_TradeMe_Model_Api();
-        $result = $api->send(
-          $product,
-          $matchResult['id'],
-          $accountId,
-          array(
-            'price' => 1,
-            'allow_buy_now' => false,
-            'duration' => (int) $store->getConfig(
-              MVentory_TradeMe_Model_Config::_1AUC_DURATION
+        try {
+          $api = new MVentory_TradeMe_Model_Api();
+          $listingId = $api->send(
+            $product,
+            $matchResult['id'],
+            $accountId,
+            array(
+              'price' => 1,
+              'allow_buy_now' => false,
+              'duration' => (int) $store->getConfig(
+                MVentory_TradeMe_Model_Config::_1AUC_DURATION
+              )
             )
-          )
-        );
+          );
+        }
+        catch (Exception $e) {
+          $errors = $this->_parseErrors($e->getMessage());
+
+          Mage::logException($e);
+          MVentory_TradeMe_Model_Log::debug(array(
+            'product' => $product,
+            'submit result' => $errors,
+            'error' => true
+          ));
+
+          foreach ($errors as $error)
+            if ($error == 'Insufficient balance') {
+              $this->_negativeBalanceError($accountData['name']);
+
+              if (count($accounts) == 1)
+                return;
+
+              unset($accounts[$accountId]);
+
+              break;
+            }
+
+          //Try next account
+          continue;
+        }
 
         MVentory_TradeMe_Model_Log::debug(array(
           'product' => $product,
-          'submit result' => $result,
-          'error' => !is_int($result)
+          'submit result' => $listingId,
+          'error' => false
         ));
 
-        if (is_array($result)) foreach ($result as $error)
-          if ($error == 'Insufficient balance') {
-            $this->_negativeBalanceError($accountData['name']);
+        Mage::getModel('trademe/auction')
+          ->setData(array(
+              'product_id' => $product->getId(),
+              'type' => MVentory_TradeMe_Model_Config::AUCTION_FIXED_END_DATE,
+              'listing_id' => $listingId,
+              'account_id' => $accountId
+            ))
+          ->save();
 
-            if (count($accounts) == 1)
-              return;
-
-            unset($accounts[$accountId]);
-
-            continue 2;
-          }
-
-        if (is_int($result)) {
-          Mage::getModel('trademe/auction')
-            ->setData(array(
-                'product_id' => $product->getId(),
-                'type' => MVentory_TradeMe_Model_Config::AUCTION_FIXED_END_DATE,
-                'listing_id' => $result,
-                'account_id' => $accountId
-              ))
-            ->save();
-
-          break;
-        }
+        break;
       }
     }
   }
@@ -906,8 +963,6 @@ EOT;
         }
       }
 
-      $hasError = false;
-
       $api = new MVentory_TradeMe_Model_Api();
 
       if ($avoidWithdrawal) {
@@ -916,24 +971,32 @@ EOT;
         if ($fields['add_fees'])
           $price = $trademe->addFees($price);
 
-        $result = $api->update(
-          $product,
-          $auction,
-          array('StartPrice' => $price)
-        );
+        try {
+          $api->update(
+            $product,
+            $auction,
+            array('StartPrice' => $price)
+          );
+        }
+        catch (Exception $e) {
+          Mage::logException($e);
 
-        if (!is_int($result))
-          $hasError = true;
-      } else {
-        $result = $api
-          ->setWebsiteId($website)
-          ->remove($auction);
-
-        if ($result !== true)
-          $hasError = true;
+          $error = $e->getMessage();
+        }
       }
+      else
+        try {
+          $api
+            ->setWebsiteId($website)
+            ->remove($auction);
+        }
+        catch (Exception $e) {
+          Mage::logException($e);
 
-      if ($hasError) {
+          $error = $e->getMessage();
+        }
+
+      if (isset($error)) {
         //Send email with error message to website's general contact address
 
         $productUrl = $productHelper->getUrl($product);
@@ -945,7 +1008,7 @@ EOT;
                    . ') linked to product ('
                    . $productUrl
                    . ')'
-                   . ' Error: ' . $result;
+                   . ' Error: ' . $error;
 
         $productHelper->sendEmail($subject, $message);
 
@@ -1277,6 +1340,23 @@ EOT;
     $app->saveCache(true, $cacheId, array(self::TAG_EMAILS), 3600);
 
     return $this;
+  }
+
+  /**
+   * Parse and prepare errors from TradeMe API response
+   *
+   * @param string $errors
+   *   Raw string of errors from TradeMe API response
+   *
+   * @return array
+   *   Parse and prepare list of errors
+   */
+  protected function _parseErrors ($errors) {
+    $errors = explode("\r\n", $errors);
+
+    array_walk($errors, 'trim');
+
+    return array_filter($errors);
   }
 
   /**

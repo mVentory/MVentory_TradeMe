@@ -124,32 +124,35 @@ EOT;
     //Remove all CR and LF symbols
     '#\R+#s' => '',
 
-    //Remove any whitespace symbols surrounding tags
-    '#\s*(<[^<>]+>)\s*#is' => '\1',
-
-    //Replace single tab symbol, &nbsp; and whitespace symbols with space symbol
-    '#\t|&nbsp;|\s{2,}#s' => ' ',
-
-    //Remove <table> tag and its content completely
-    '#<table[^<>]*>.*</table>#is' => '',
-
-    //Replace empty tags with new lines
-    '#<([a-z1-9]+)[^<>]*>\s*</\g{1}>#is' => "\r\n",
+    //Replace single tab symbol, &nbsp;, </td> and whitespace symbols with space
+    //symbol
+    '#\t|&nbsp;|</td>|\h{2,}#is' => ' ',
 
     //Replace <li> tag with '* ' string
     '#<li[^<>]*>#i' => '* ',
 
-    //Replace opening and ending <div>, <p>, <hx> tags with 2 empty lines
+    //Replace all whitespans other than single space with single space
+    //Either one [\t\r\n\f\v] and zero or more ws,
+    //or two or more consecutive-any-whitespace.
+    '#(?>[^\S ]\s*|\s{2,})#ix' => ' ',
+
+    //Replace empty tags with newline symbol
+    '#<([a-z1-9]+)[^<>]*>\s*</\g{1}>#is' => "\r\n",
+
+    //Replace opening and ending <div>, <p>, <hx> tags with empty line
     '#</?(div|p|h[1-6])[^<>]*>#i' => "\r\n\r\n",
 
-    //Replace <br>, </br>, </li> tags with newline symbol
-    '#</?br[^<>]*>|</li>#i' => "\r\n",
+    //Replace <br>, <br />, </br>, </li>, </tr> tags with newline symbol
+    '#</?br[^<>]*>|</li>|</tr>#i' => "\r\n",
 
     //Remove remained tags
     '#<[^<>]+>#s' => '',
 
     //Replace multiple empty lines with single line
     '#\R{2,}#s' => "\r\n\r\n",
+
+    //Remove any horizontal space adjacent to newline symbols
+    '#\h*(\R+)\h*#' => '$1',
 
     //Remove all CR and LF symbols from start and end
     '#|^\R+|\R+$#s' => '',

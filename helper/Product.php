@@ -148,4 +148,38 @@ class MVentory_TradeMe_Helper_Product extends MVentory_TradeMe_Helper_Data
 
     return isset($cond) ? '(' . implode(') OR (', $cond) . ')' : null;
   }
+
+  /**
+   * Return name variants for the supplied product
+   *
+   * @param Mage_Catalog_Model_Product $product
+   *   Product model
+   *
+   * @param Mage_Core_Model_Store $store
+   *   Store model
+   *
+   * @return array
+   *   List of name variants
+   */
+  public function getNameVariants ($product, $store) {
+    $code = trim(
+      $store->getConfig(MVentory_TradeMe_Model_Config::_AUC_NAME_VAR_ATTR)
+    );
+
+    if (!$code)
+      return array();
+
+    if (!$_names = trim($product[strtolower($code)]))
+      return array();
+
+    $_names = explode("\n", str_replace("\r\n", "\n", $_names));
+
+    $names = array();
+
+    foreach ($_names as $_name)
+      if ($_name = trim($_name))
+        $names[] = $_name;
+
+    return $names;
+  }
 }

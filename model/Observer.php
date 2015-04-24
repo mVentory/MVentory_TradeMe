@@ -386,28 +386,9 @@ EOT;
         )
       ->addStoreFilter($this->_store);
 
-    Mage::getSingleton('cataloginventory/stock')
-      ->addInStockFilterToCollection($products);
-
-    $globalManageStock = $this
-      ->_store
-      ->getConfig(
-          Mage_CatalogInventory_Model_Stock_Item::XML_PATH_MANAGE_STOCK
-        );
-
-    $condition = array(
-      '{{table}}.use_config_manage_stock = 0 AND {{table}}.manage_stock=1'
-    );
-
-    if ($globalManageStock)
-      $condition[] = '{{table}}.use_config_manage_stock = 1';
-
-    $products->joinField(
-      'inventory_manage_stock',
-      'cataloginventory/stock_item',
-      'manage_stock',
-      'product_id=entity_id',
-      '(' . join(') OR (', $condition) . ')'
+    Mage::helper('trademe/product')->addStockStatusFilter(
+      $products,
+      $this->_store
     );
 
     $listNormAuc = (int) $this
@@ -733,22 +714,9 @@ EOT;
     if ($filterIds)
       $products->addIdFilter($filterIds, true);
 
-    Mage::getSingleton('cataloginventory/stock')
-      ->addInStockFilterToCollection($products);
-
-    $condition = array(
-      '{{table}}.use_config_manage_stock = 0 AND {{table}}.manage_stock=1'
-    );
-
-    if ($storeManageStock)
-      $condition[] = '{{table}}.use_config_manage_stock = 1';
-
-    $products->joinField(
-      'inventory_manage_stock',
-      'cataloginventory/stock_item',
-      'manage_stock',
-      'product_id=entity_id',
-      '(' . join(') OR (', $condition) . ')'
+    Mage::helper('trademe/product')->addStockStatusFilter(
+      $products,
+      $this->_store
     );
 
     $ids = $products->getAllIds();

@@ -492,7 +492,7 @@
             <watermark_image translate="label comment tooltip">
               <label>Image</label>
               <comment>Allowed file types: jpeg, gif, png.</comment>
-              <tooltip>GIF and PNG alpha channels are only considered if Watermark Position is selected to Stretch. In this case transparency can be created by setting alpha = 0. Any other value of alpha channel will be ignored, i.e. semi-transparancy is not supported.</tooltip>
+              <tooltip>GIF and PNG alpha channels are only considered if Watermark Position is selected to Stretch. In this case selective transparency can be created by setting alpha = 0 for some parts of the watermark image. Any other value of alpha channel will be ignored, i.e. semi-transparancy is not supported.</tooltip>
               <frontend_type>image</frontend_type>
               <backend_model>adminhtml/system_config_backend_image</backend_model>
               <upload_dir config="system/filesystem/media" scope_info="1">catalog/product/watermark</upload_dir>
@@ -507,8 +507,8 @@
 
             <watermark_size translate="label comment tooltip">
               <label>Size</label>
-              <comment>Example format: 200x300.</comment>
-              <tooltip>TradeMe images are resized to the following dimensions: 670 x 502 px.</tooltip>
+              <comment>Leave empty if watermark image doesn't need resizing.</comment>
+              <tooltip>Example format: 200x400. Tip: TradeMe images are resized to the following dimensions: 670 x 502 px.</tooltip>
               <frontend_type>text</frontend_type>
 
               <show_in_default>1</show_in_default>
@@ -533,7 +533,7 @@
 
             <watermark_position translate="label tooltip">
               <label>Position</label>
-              <tooltip>GIF and PNG alpha channels are only considered if Watermark Position is selected to Stretch. In this case transparency can be created by setting alpha = 0. Any other value of alpha channel will be ignored, i.e. semi-transparancy is not supported.</tooltip>
+              <tooltip>GIF and PNG alpha channels are only considered if Watermark Position is selected to Stretch. In this case selective transparency can be created by setting alpha = 0 for some parts of the watermark image. Any other value of alpha channel will be ignored, i.e. semi-transparancy is not supported.</tooltip>
               <frontend_type>select</frontend_type>
               <source_model>adminhtml/system_config_source_watermark_position</source_model>
 

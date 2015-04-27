@@ -484,8 +484,6 @@ EOT;
       if (!$id = $product->getId())
         continue;
 
-      $log = array('product' => $product);
-
       if ($listNormAuc == MVentory_TradeMe_Model_Config::AUCTION_NORMAL_STOCK
           && isset($auctions[$id])) {
 

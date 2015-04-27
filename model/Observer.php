@@ -581,6 +581,8 @@ EOT;
           'name variants' => $nameVariants
         ));
 
+        $numberOfListedVariants = 0;
+
         foreach ($nameVariants as $nameVariant) {
           try {
             $api = new MVentory_TradeMe_Model_Api();

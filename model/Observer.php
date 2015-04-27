@@ -583,6 +583,7 @@ EOT;
 
         foreach ($nameVariants as $nameVariant) {
           try {
+            $api = new MVentory_TradeMe_Model_Api();
             $listingId = $api->send(
               $product,
               $matchResult['id'],

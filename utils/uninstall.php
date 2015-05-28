@@ -72,7 +72,8 @@ function _getAttrs () {
     'tm_add_fees',
     'tm_pickup',
     'tm_condition',
-    'tm_fixedend_limit'
+    'tm_fixedend_limit',
+    'tm_listing_date'
   );
 }
 

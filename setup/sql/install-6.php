@@ -136,9 +136,13 @@ $attrs = array(
   )
 );
 
+$groups = array('TM');
+
 $this->startSetup();
 
-$this->addAttributes($attrs);
+$this
+  ->addAttributeGroups($groups)
+  ->addAttributes($attrs);
 
 $this->createTable('matching_rules');
 $this->createTable('auction');

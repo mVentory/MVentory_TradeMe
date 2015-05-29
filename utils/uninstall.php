@@ -39,7 +39,9 @@ stage2();
 function stage1 () {
   $setup = Mage::getResourceModel('trademe/setup', 'core_setup');
 
-  $setup->removeAttributes(_getAttrs(), true);
+  $setup
+    ->removeAttributes(_getAttrs(), true)
+    ->removeAttributeGroups(_getAttrGroups());
 
   foreach (_getTables() as $table)
     $setup->run('DROP TABLE ' . $table);
@@ -72,6 +74,10 @@ function _getAttrs () {
     'tm_condition',
     'tm_fixedend_limit'
   );
+}
+
+function _getAttrGroups () {
+  return array('TM');
 }
 
 function _getTables () {

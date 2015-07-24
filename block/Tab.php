@@ -436,8 +436,14 @@ class MVentory_TradeMe_Block_Tab
       if (strpos($key, 'tm_') === 0)
         $data['product'][substr($key, 3)] = $value;
 
+    //Remove sensitive infomation from exported data of TM accounts
     foreach ($data['accounts'] as &$account)
-      unset($account['key'], $account['secret'], $account['access_token']);
+      unset(
+        $account['key'],
+        $account['secret'],
+        $account[Zend_Oauth_Token::TOKEN_PARAM_KEY],
+        $account[Zend_Oauth_Token::TOKEN_SECRET_PARAM_KEY]
+      );
 
     return $data;
   }

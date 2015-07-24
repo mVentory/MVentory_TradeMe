@@ -35,11 +35,8 @@ EOT;
   const __E_NO_ACCOUNT = <<<'EOT'
 Account data is not loaded
 EOT;
-  const __E_NO_TOKEN = <<<'EOT'
+  const __E_TOKENS_MISSING = <<<'EOT'
 OAuth access token is not available
-EOT;
-  const __E_TOKEN_INVALID = <<<'EOT'
-Unserializing of OAuth access token failed
 EOT;
   const __E_ACCOUNT_SHIPPING = <<<'EOT'
 Account doesn't contain settings for product's shipping type
@@ -222,14 +219,18 @@ EOT;
 
     $account = $this->_accountData;
 
-    if (!(isset($account['access_token'])
-          && $params = $account['access_token']))
-      throw new MVentory_TradeMe_AccountException($account, self::__E_NO_TOKEN);
+    $keys = [
+      Zend_Oauth_Token::TOKEN_PARAM_KEY => '',
+      Zend_Oauth_Token::TOKEN_SECRET_PARAM_KEY => ''
+    ];
 
-    if (($params = unserialize($params)) === null)
+    $params = array_intersect_key($account, $keys);
+
+    //Check if all tokens exists and their values are not empty
+    if (count($params) != 2 || array_intersect_assoc($params, $keys))
       throw new MVentory_TradeMe_AccountException(
         $account,
-        self::__E_TOKEN_INVALID
+        self::__E_TOKENS_MISSING
       );
 
     $token = new Zend_Oauth_Token_Access();

@@ -62,6 +62,9 @@ EOT;
   const __E_AUCTION_DESC = <<<'EOT'
 Length of the description exceeded the limit of %d characters
 EOT;
+  const __E_MATCHING_MISSING = <<<'EOT'
+Product has empty value for %s attribute required by the selected TradeMe category
+EOT;
   const __E_STORE_PAYMENT = <<<'EOT'
 TradeMe Payment methods are not selected
 EOT;
@@ -408,25 +411,20 @@ EOT;
        * @todo Temporarily disabled. Matching code is buggy in some corner cases
        * and should be fixed and refactored.
        */
-      //$attributes = $this->getCategoryAttrs($categoryId);
-      $attributes = false;
+      $attributes = $this->getCategoryAttrs($categoryId);
 
       if ($attributes) {
-        $attributes = $helper->fillAttributes(
+        $attributes = Mage::helper('trademe/attribute')->fillAttributes(
           $product,
           $attributes,
           $helper->getMappingStore()
         );
 
-        if ($attributes['error']) {
-          if (isset($attributes['required']))
-            return 'Product has empty "' . $attributes['required']
-                   . '" attribute';
-
-          if (isset($attributes['no_match']))
-            return 'Error in matching "' . $attributes['no_match']
-                   . '" attribute: incorrect value in "fake" store';
-        }
+        if ($attributes['error'] && isset($attributes['required']))
+          throw new MVentory_TradeMe_ApiException(sprintf(
+            self::__E_MATCHING_MISSING,
+            $attributes['required']
+          ));
 
         if ($attributes = $attributes['attributes']) {
           $xml .= '<Attributes>';

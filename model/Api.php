@@ -408,12 +408,12 @@ EOT;
 <IsBrandNew>' . $isBrandNew . '</IsBrandNew>
 <SendPaymentInstructions>true</SendPaymentInstructions>';
 
-      if (isset($account['category_image']) && $account['category_image'])
-        $xml .= '<HasGallery>true</HasGallery>';
-
-      $xml .= '<PhotoIds><PhotoId>' . $photoId . '</PhotoId></PhotoIds>';
-
+      //Add photo to auction if we have one in the product and use it as gallery
+      //image if it's allowed in the settings
       if ($photoId) {
+        if (isset($account['category_image']) && $account['category_image'])
+          $xml .= '<HasGallery>true</HasGallery>';
+
         $xml .= '<PhotoIds><PhotoId>' . $photoId . '</PhotoId></PhotoIds>';
       }
 

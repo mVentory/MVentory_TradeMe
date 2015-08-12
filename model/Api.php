@@ -279,6 +279,11 @@ EOT;
         'Product doesn\'t have matched TradeMe category'
       );
 
+    if ($attrs = $this->_getAttrs($categoryId, $product)) {
+      $attrsXml = $this->_exportAttrsAsXml($attrs);
+      unset($attrs);
+    }
+
     $shippingType = MVentory_TradeMe_Model_Config::SHIPPING_UNDECIDED;
 
     Mage::unregister('product');
@@ -407,38 +412,8 @@ EOT;
                 )
               . '</PaymentMethod></PaymentMethods>';
 
-      /**
-       * @todo Temporarily disabled. Matching code is buggy in some corner cases
-       * and should be fixed and refactored.
-       */
-      $attributes = $this->getCategoryAttrs($categoryId);
-
-      if ($attributes) {
-        $attributes = Mage::helper('trademe/attribute')->fillAttributes(
-          $product,
-          $attributes,
-          $helper->getMappingStore()
-        );
-
-        if ($attributes['error'] && isset($attributes['required']))
-          throw new MVentory_TradeMe_ApiException(sprintf(
-            self::__E_MATCHING_MISSING,
-            $attributes['required']
-          ));
-
-        if ($attributes = $attributes['attributes']) {
-          $xml .= '<Attributes>';
-
-          foreach ($attributes as $attributeName => $attributeValue) {
-            $xml .= '<Attribute>';
-            $xml .= '<Name>' . htmlspecialchars($attributeName) . '</Name>';
-            $xml .= '<Value>' . htmlspecialchars($attributeValue) . '</Value>';
-            $xml .= '</Attribute>';
-          }
-
-          $xml .= '</Attributes>';
-        }
-      }
+      if (isset($attrsXml))
+        $xml .= $attrsXml;
 
       $xml .=  '<SKU>' . htmlspecialchars($product->getSku()) . '</SKU>';
       $xml .= '</ListingRequest>';
@@ -1333,6 +1308,40 @@ EOT;
       ',',
       $store->getConfig(MVentory_TradeMe_Model_Config::_PAYMENT_METHODS)
     );
+  }
+
+  protected function _getAttrs ($categoryId, $product) {
+    $attributes = $this->getCategoryAttrs($categoryId);
+    if (!$attributes)
+      return;
+
+    $helper = Mage::helper('trademe/attribute');
+
+    $attributes = $helper->fillAttributes(
+      $product,
+      $attributes,
+      $helper->getMappingStore()
+    );
+
+    if ($attributes['error'] && isset($attributes['required']))
+      throw new MVentory_TradeMe_ApiException(sprintf(
+        self::__E_MATCHING_MISSING,
+        $attributes['required']
+      ));
+
+    return $attributes['attributes'];
+  }
+
+  protected function _exportAttrsAsXml ($attrs) {
+    $xml = '';
+
+    foreach ($attrs as $name => $value)
+      $xml .= '<Attribute>'
+              . '<Name>' . htmlspecialchars($name) . '</Name>'
+              . '<Value>' . htmlspecialchars($value) . '</Value>'
+              .'</Attribute>';
+
+    return '<Attributes>' . $xml . '</Attributes>';
   }
 
   /**

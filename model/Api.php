@@ -63,7 +63,7 @@ EOT;
 Length of the description exceeded the limit of %d characters
 EOT;
   const __E_MATCHING_MISSING = <<<'EOT'
-Product has empty value for %s attribute required by the selected TradeMe category
+Product has empty value for %s attribute(s) required by the selected TradeMe category
 EOT;
   const __E_STORE_PAYMENT = <<<'EOT'
 TradeMe Payment methods are not selected

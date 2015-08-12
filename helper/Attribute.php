@@ -73,19 +73,19 @@ class MVentory_TradeMe_Helper_Attribute extends MVentory_TradeMe_Helper_Data
   public function fillAttributes ($product, $attrs, $store) {
     $storeId = $store->getId();
 
-    //Prepare list of TM attributes and use attribute name in lower case as
-    //array's key for faster and case-independent search
-    foreach ($attrs as $attr)
-      $_attrs[strtolower($attr['Name'])] = $attr;
+    //Prepare list of TM attributes and list of required attributes.
+    //Use attribute name in lower case as array's key for faster
+    //and case-independent search
+    list($names, $required) = $this->_prepareAttrs($attrs);
 
-    unset($attrs);
+    $collected = [];
 
-    //Iterater over all product's attributes to find which should be mapped to
-    //TM attributes and collect them
+    //Iterater over all product's attributes to collect mapped TradeMe
+    //attributes
     foreach ($product->getAttributes() as $pAttr) {
 
       /**
-       * Check if magento has allowed type
+       * Check if magento attribute has allowed type
        *
        * @see MVentory_TradeMe_Helper_Attribute::_allowedTypes
        *   For list if allowed attribute types
@@ -94,42 +94,56 @@ class MVentory_TradeMe_Helper_Attribute extends MVentory_TradeMe_Helper_Data
       if (!isset($this->_allowedTypes[$input]))
         continue;
 
-      //Get TM attributes name-value pairs. Got to next Magento attribute if
-      //current one doesn't have matched TM attributes
-      $data = $this->_getTmAttrData($product, $pAttr, $storeId);
-      if (!$data)
-        continue;
-
-      foreach ($data as $pair) {
-        //Convert name of TM attribute lo lower case to make case-insesitive
-        //search in the list of TM attirbutes
-        $name = strtolower($pair['name']);
-        if (!isset($_attrs[$name]))
-          continue;
-
-        $attr = $_attrs[$name];
-        $value = $pair['value'];
-
-        //Return error if TM attribute is required and if doesn't have value in
-        //the supplied product
-        if (!$value && $attr['IsRequiredForSell'])
-          return array(
-            'error' => true,
-            'required' => $attr['DisplayName']
-          );
-
-        $result[$attr['Name']] = $value;
-      }
+      $collected = array_merge(
+        $collected,
+        $this->_getTmAttrData($product, $pAttr, $storeId)
+      );
     }
+
+    //Get lists of mapped and missed attributes
+    $mapped = array_intersect_key($collected, $names);
+    $missed = array_diff_key($required, $mapped);
+
+    if ($missed)
+      return array(
+        'error' => true,
+        'required' => implode(', ', $missed)
+      );
 
     return array(
       'error' => false,
-      'attributes' => isset($result) ? $result : null
+
+      //Restore lowercased names of the mapped attributes to their originals
+      'attributes' => $this->_restoreNames($mapped, $names)
     );
   }
 
   /**
-   * Return TM attribute name and its value for supplied product and attribute
+   * Prepare list of names of TradeMe attributes and list of required attributes
+   *
+   * @param array $attrs
+   *   TradeMe attributes
+   *
+   * @return array
+   *   List of names of TradeMe attributes and list of required attributes
+   */
+  protected function _prepareAttrs ($attrs) {
+    $names = $required = [];
+
+    foreach ($attrs as $attr) {
+      $name = $this->_prepareName($attr['Name']);
+
+      $names[$name] = $attr['Name'];
+
+      if (isset($attr['IsRequiredForSell']) && $attr['IsRequiredForSell'])
+        $required[$name] = $attr['Name'];
+    }
+
+    return [$names, $required];
+  }
+
+  /**
+   * Return name-value pairs of TM attributes for supplied product and attribute
    *
    * @param Mage_Catalog_Model_Product $product
    *   Product model
@@ -140,9 +154,8 @@ class MVentory_TradeMe_Helper_Attribute extends MVentory_TradeMe_Helper_Data
    * @param int $storeId
    *   Store ID for TM attributes matching
    *
-   * @return array|null
-   *   Pair of TM attribute and its value or null if name and/or value can't be
-   *   obtained
+   * @return array
+   *   List of name-value pairs of TM attributes
    */
   protected function _getTmAttrData ($product, $attr, $storeId) {
     //Try to get TM attributes' name and value from Magento's attribute label
@@ -155,7 +168,7 @@ class MVentory_TradeMe_Helper_Attribute extends MVentory_TradeMe_Helper_Data
     $input = $attr->getFrontendInput();
 
     if (!($input == 'select' || $input == 'multiselect'))
-      return;
+      return [];
 
     //and return TM attributes' name and value from Magento attribute's option
     //label
@@ -163,7 +176,7 @@ class MVentory_TradeMe_Helper_Attribute extends MVentory_TradeMe_Helper_Data
   }
 
   /**
-   * Return name and value for TM attributes from supplied Magento's attribute
+   * Return name-value pairs of TM attributes from supplied Magento's attribute
    * label used in store for TM attributes mapping
    *
    * @param Mage_Catalog_Model_Product $product
@@ -175,25 +188,25 @@ class MVentory_TradeMe_Helper_Attribute extends MVentory_TradeMe_Helper_Data
    * @param int $storeId
    *   Store ID for TM attributes matching
    *
-   * @return array|null
-   *   List of name and value pairs for TM attributes
+   * @return array
+   *   List of name-value pairs of TM attributes
    */
   protected function _getDataFromLabel ($product, $attr, $storeId) {
 
     //Get attribute labels for all stores
     $labels = $attr->getStoreLabels();
     if (!isset($labels[$storeId]))
-      return;
+      return [];
 
     //Ignore empty label
     $names = trim($labels[$storeId]);
     if (!$names)
-      return;
+      return [];
 
     //Split attribute label by comma to get list of all TM attributes names
     $names = explode(',', trim($labels[$storeId]));
     if (!$names)
-      return;
+      return [];
 
     //Get value of Magento attribute in supplied product.
     //Return empty string for attributes without values in the products because
@@ -215,14 +228,11 @@ class MVentory_TradeMe_Helper_Attribute extends MVentory_TradeMe_Helper_Data
       function ($name) use (&$data, $value) {
 
         //Ignore empty names
-        $name = trim($name);
+        $name = $this->_prepareName($name);
         if (!$name)
           return;
 
-        $data[] = [
-          'name' => $name,
-          'value' => $value
-        ];
+        $data[$name] = $value;
       }
     );
 
@@ -230,7 +240,7 @@ class MVentory_TradeMe_Helper_Attribute extends MVentory_TradeMe_Helper_Data
   }
 
   /**
-   * Return name and value for TM attributes from supplied Magento's attribute
+   * Return name-value pairs of TM attributes from supplied Magento's attribute
    * option label used in store for TM attributes mapping
    *
    * @param Mage_Catalog_Model_Product $product
@@ -242,8 +252,8 @@ class MVentory_TradeMe_Helper_Attribute extends MVentory_TradeMe_Helper_Data
    * @param int $storeId
    *   Store ID for TM attributes matching
    *
-   * @return array|null
-   *   List of name-value pairs of TM attribute
+   * @return array
+   *   List of name-value pairs of TM attributes
    */
   protected function _getDataFromValue ($product, $attr, $storeId) {
     $frontend = $attr->getFrontend();
@@ -262,18 +272,18 @@ class MVentory_TradeMe_Helper_Attribute extends MVentory_TradeMe_Helper_Data
     //Similar values mean we probably don't have data for TM attributes mathing,
     //return nothing
     if ($defaultValue == $value)
-      return;
+      return [];
 
     //Ignore empty value
     $value = trim($value);
     if (!$value)
-      return;
+      return [];
 
     //Split name-value pairs by comma. Comma is used to specify multiple TradeMe
     //attributes for one to many mapping
     $pairs = explode(',', $value);
     if (!$pairs)
-      return;
+      return [];
 
     $data = [];
 
@@ -297,18 +307,54 @@ class MVentory_TradeMe_Helper_Attribute extends MVentory_TradeMe_Helper_Data
         if (!(count($parts) == 2 && $parts[0]))
           return;
 
+        //Ignore empty names
+        $name = $this->_prepareName($parts[0]);
+        if (!$name)
+          return;
+
         //Ignore TM attributes with empty value. TradeMe will use default one
         $value = ltrim($parts[1]);
         if ($value === '')
           return;
 
-        $data[] = [
-          'name' => rtrim($parts[0]),
-          'value' => $value
-        ];
+        $data[$name] = $value;
       }
     );
 
     return $data;
+  }
+
+  /**
+   * Prepare name of TradeMe attribute for case-insensitive checks
+   *
+   * @param string $name
+   *   Name of TradeMe attribute
+   *
+   * @return string
+   *   Prepared name of TradeMe attribute
+   */
+  protected function _prepareName ($name) {
+    return strtolower(trim($name));
+  }
+
+  /**
+   * Restore lowercased names of the mapped TM attributes to their originals
+   *
+   * @param array $mapped
+   *   List of mapped TM attributes
+   *
+   * @param array $names
+   *   List of mapping between lowercased names and original names
+   *
+   * @return array
+   *   List of mapped TM attributes with original names
+   */
+  protected function _restoreNames ($mapped, $names) {
+    $_mapped = [];
+
+    foreach ($mapped as $name => $value)
+      $_mapped[$names[$name]] = $value;
+
+    return $_mapped;
   }
 };

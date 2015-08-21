@@ -138,10 +138,13 @@ EOT;
    * @param Mage_Core_Model_Website $website
    *   Product's website
    *
+   * @param boolean $inclTax
+   *   Add taxes to product's price
+   *
    * @return float
    *   Final price
    */
-  public function getPrice ($product, $website) {
+  public function getPrice ($product, $website, $inclTax = true) {
     Mage::register(
       'rule_data',
       new Varien_Object(array(
@@ -154,6 +157,40 @@ EOT;
     $price = (float) $product->getFinalPrice();
 
     Mage::unregister('rule_data');
+
+    if (!$inclTax)
+      return $price;
+
+    $store = $website->getDefaultStore();
+
+    //Remember current price display type to restore it after calculating
+    //taxes
+    $priceDisplayType = $store->getConfig(
+      Mage_Tax_Model_Config::CONFIG_XML_PATH_PRICE_DISPLAY_TYPE
+    );
+
+    //Temporarily set current price display to include tax type to trigger
+    //tax calculation even if price display setting is to to exclude taxes
+    $store->setConfig(
+      Mage_Tax_Model_Config::CONFIG_XML_PATH_PRICE_DISPLAY_TYPE,
+      Mage_Tax_Model_Config::DISPLAY_TYPE_INCLUDING_TAX
+    );
+
+    $price = Mage::helper('tax')->getPrice(
+      $product,
+      $price,
+      true,
+      null,
+      null,
+      null,
+      $store
+    );
+
+    //Restore original value of current price display type
+    $store->setConfig(
+      Mage_Tax_Model_Config::CONFIG_XML_PATH_PRICE_DISPLAY_TYPE,
+      $priceDisplayType
+    );
 
     return $price;
   }

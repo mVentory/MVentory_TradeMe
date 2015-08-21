@@ -1365,7 +1365,10 @@ EOT;
       //Make order for the product
       $result = Mage::getModel('mventory/cart_api')->createOrderForProduct(
         $product->getSku(),
-        $product->getPrice(),
+
+        //Final product price without taxes
+        $this->_tmProductHelper->getPrice($product, $this->_website, false),
+
         1, //QTY
         $buyer->getId()
       );

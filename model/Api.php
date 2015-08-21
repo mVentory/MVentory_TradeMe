@@ -1245,9 +1245,9 @@ EOT;
       return $overwrite['price'];
 
     $website = $this->_getWebsite();
-    $helper = Mage::helper('trademe');
+    $helper = Mage::helper('trademe/product');
 
-    $price = $helper->getProductPrice($product, $website);
+    $price = $helper->getPrice($product, $website);
 
     $price += $helper->getShippingRate(
       $product,

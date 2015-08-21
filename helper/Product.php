@@ -127,6 +127,38 @@ EOT;
   }
 
   /**
+   * Return final price.
+   *
+   * Set data for calculation of catalog price rule as required in
+   * @see Mage_CatalogRule_Model_Observer::processAdminFinalPrice()
+   *
+   * @param Mage_Catalog_Model_Product $product
+   *   Product model
+   *
+   * @param Mage_Core_Model_Website $website
+   *   Product's website
+   *
+   * @return float
+   *   Final price
+   */
+  public function getPrice ($product, $website) {
+    Mage::register(
+      'rule_data',
+      new Varien_Object(array(
+        'website_id' => $website->getId(),
+        'customer_group_id' => Mage_Customer_Model_Group::NOT_LOGGED_IN_ID
+      )),
+      true
+    );
+
+    $price = (float) $product->getFinalPrice();
+
+    Mage::unregister('rule_data');
+
+    return $price;
+  }
+
+  /**
    * Parse Minimum stock level setting and return list if modes for stock
    * filtering
    *

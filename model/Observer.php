@@ -183,6 +183,7 @@ EOT;
     //Cache loaded objects and data for re-using
     $this->_helper = $helper;
     $this->_productHelper = $productHelper;
+    $this->_tmProductHelper = Mage::helper('trademe/product');
     $this->_website = $website;
     $this->_store = $store;
     $this->_accounts = $accounts;
@@ -386,7 +387,7 @@ EOT;
         )
       ->addStoreFilter($this->_store);
 
-    Mage::helper('trademe/product')->addStockStatusFilter(
+    $this->_tmProductHelper->addStockStatusFilter(
       $products,
       $this->_store
     );
@@ -544,7 +545,7 @@ EOT;
           continue;
 
         $minimalPrice = $this->_helper->getMinimalPrice($perShipping);
-        $productPrice = $this->_helper->getProductPrice(
+        $productPrice = $this->_tmProductHelper->getPrice(
           $product,
           $this->_website
         );
@@ -733,7 +734,7 @@ EOT;
     if ($filterIds)
       $products->addIdFilter($filterIds, true);
 
-    Mage::helper('trademe/product')->addStockStatusFilter(
+    $this->_tmProductHelper->addStockStatusFilter(
       $products,
       $this->_store
     );
@@ -814,7 +815,7 @@ EOT;
           continue;
 
         $minimalPrice = $this->_helper->getMinimalPrice($perShipping);
-        $productPrice = $this->_helper->getProductPrice(
+        $productPrice = $this->_tmProductHelper->getPrice(
           $product,
           $this->_website
         );

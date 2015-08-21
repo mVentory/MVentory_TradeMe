@@ -51,7 +51,7 @@ class MVentory_TradeMe_Block_Tab
   public function __construct() {
     parent::__construct();
 
-    $trademe = Mage::helper('trademe');
+    $trademe = Mage::helper('trademe/product');
 
     $product = $this->getProduct();
 
@@ -63,7 +63,7 @@ class MVentory_TradeMe_Block_Tab
     $this->_store = $this->_website->getDefaultStore();
 
     $this->_currency = $this->_store->getBaseCurrency();
-    $this->_productPrice = $trademe->getProductPrice($product, $this->_website);
+    $this->_productPrice = $trademe->getPrice($product, $this->_website);
     $this->_hasSpecialPrice = $this->_productPrice < $product->getPrice();
 
     if ($this->_currency->getCode() != MVentory_TradeMe_Model_Config::CURRENCY)

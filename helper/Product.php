@@ -29,9 +29,38 @@ class MVentory_TradeMe_Helper_Product extends MVentory_TradeMe_Helper_Data
   /**
    * Regex to replace tag with atttribute code by its product's value
    *
+   * Groups:
+   *
+   *   - pre, post: whitespaces around tag
+   *   - tag: whole tag
+   *   - before, after: any text around code group inside tag group
+   *   - code: attribute code which is replaced by its value in a product
+   *
+   * Example:
+   *
+   * Beach shorts   { in {color} color}   and t-shirt
+   *             \A/\_B_/\__C__/\__D__/\E/
+   *                \________F________/
+   *
+   * - A: pre
+   * - B: before
+   * - C: code
+   * - D: after
+   * - E: post
+   * - F: tag
+   *
+   * Notes:
+   *
+   *   - Whole tag is removed when code is empty
+   *     Above example become "Beach shorts and t-shirt"
+   *   - Any number of spaces around tag is replaced with single space
+   *     if tag is removed.
+   *
    * @see MVentory_TradeMe_Helper_Product::_processNames()
    */
-  const _RE_TAGS = '/(?<before>\s*)(?<tag>{{(?<code>[^{}]*)}})(?<after>\s*)/';
+  const _RE_TAGS = <<<'EOT'
+/(?<pre>\s*)(?<tag>{(?<before>[^{}]*){(?<code>[^{}]*)}(?<after>[^{}]*)})(?<post>\s*)/
+EOT;
 
   /**
    * Add filtering by selected stock statuses in specified store to product
@@ -219,6 +248,9 @@ class MVentory_TradeMe_Helper_Product extends MVentory_TradeMe_Helper_Data
    * Replace {{attribute_code}} tags in the supplied list of product's
    * alternative names with corresponding value from the specified product
    *
+   * @see MVentory_TradeMe_Helper_Product::_RE_TAGS
+   *   See description of regex
+   *
    * @param array $names
    *   List of product's alternative names
    *
@@ -239,9 +271,14 @@ class MVentory_TradeMe_Helper_Product extends MVentory_TradeMe_Helper_Data
                    ? trim($attr->getFrontend()->getValue($product))
                    : false;
 
-        return $value
-                 ? $matches['before'] . $value . $matches['after']
-                 : (($matches['before'] . $matches['after']) ? ' ' : '');
+        if ($value)
+          return $matches['pre']
+                 . $matches['before']
+                 . $value
+                 . $matches['after']
+                 . $matches['post'];
+
+        return ($matches['pre'] . $matches['post']) ? ' ' : '';
       },
       $names
     );

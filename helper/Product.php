@@ -267,7 +267,16 @@ EOT;
       self::_RE_TAGS,
       function ($matches) use ($product, $attrs) {
         $code = trim($matches['code']);
-        $value = ($code && isset($attrs[$code]) && ($attr = $attrs[$code]))
+
+        //We check raw value in the condition because product can contain
+        //null/empty string as value and dropdown attribute's frontend
+        //returns "No" in this case
+        $cond = $code
+                && $product->getData($code)
+                && isset($attrs[$code])
+                && ($attr = $attrs[$code]);
+
+        $value = $cond
                    ? trim($attr->getFrontend()->getValue($product))
                    : false;
 

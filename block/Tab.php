@@ -359,6 +359,10 @@ class MVentory_TradeMe_Block_Tab
     return (int) $this->_getAttributeValue($attr, $field);
   }
 
+  public function getClearance () {
+    return (int) $this->_getAttributeValue('tm_clearance', 'clearance');
+  }
+
   public function getAccounts () {
     $_accounts = array();
 
@@ -385,12 +389,12 @@ class MVentory_TradeMe_Block_Tab
         $value = $source[$key];
 
         if ($value === null)
-          return -1;
+          return $this->_getAttrDefValue($code);
 
         return $value;
       }
 
-    return -1;
+    return $this->_getAttrDefValue($code);
   }
 
   public function getShippingRate () {
@@ -588,6 +592,25 @@ class MVentory_TradeMe_Block_Tab
       //$account['free_shipping_fees']
       //  = $helper->calculateFees($this->_productPrice + $freeShippingCost);
     }
+  }
+
+  /**
+   * Return default value for product attribute by its code
+   *
+   * @param string $code
+   *   Attribute code
+   *
+   * @return string|int
+   *   Default value of attribute
+   */
+  protected function _getAttrDefValue ($code) {
+    $attributes = $this
+      ->getProduct()
+      ->getAttributes();
+
+    return isset($attributes[$code])
+             ? $attributes[$code]->getDefaultValue()
+             : -1;
   }
 }
 

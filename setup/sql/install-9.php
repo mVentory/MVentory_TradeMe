@@ -149,6 +149,20 @@ $attrs = array(
 
     //Fields from Mage_Catalog_Model_Resource_Setup
     'is_configurable' => false
+  ),
+
+  'tm_clearance' => array(
+    //Fields from Mage_Eav_Model_Entity_Setup
+    'type' => 'int',
+    'input' => 'select',
+    'label' => 'Clearance',
+    'source' => 'eav/entity_attribute_source_boolean',
+    'required' => false,
+    'default' => 0,
+    'global' => Mage_Catalog_Model_Resource_Eav_Attribute::SCOPE_GLOBAL,
+
+    //Fields from Mage_Catalog_Model_Resource_Setup
+    'is_configurable' => false
   )
 );
 

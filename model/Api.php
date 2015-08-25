@@ -353,6 +353,7 @@ EOT;
 
     $isBrandNew = (int) $this->_getIsBrandNew($product);
     $paymentMethods = $this->_getPaymentMethods($store);
+    $clearance = (int) $this->_getClearance($_data);
 
     $tries = 1;
 
@@ -408,6 +409,8 @@ EOT;
 
       if (isset($attrsXml))
         $xml .= $attrsXml;
+
+      $xml .= '<IsClearance>' . $clearance . '</IsClearance>';
 
       $xml .=  '<SKU>' . htmlspecialchars($product->getSku()) . '</SKU>';
       $xml .= '</ListingRequest>';
@@ -695,6 +698,10 @@ EOT;
     //Set pickup option
     if (!isset($parameters['Pickup']) && isset($formData['pickup']))
       $parameters['Pickup'] = $this->_getPickup($formData, $account);
+
+    //Set IsClearance option
+    if (!isset($parameters['IsClearance']) && isset($formData['clearance']))
+      $parameters['IsClearance'] = $this->_getClearance($formData);
 
     $item['PaymentMethods'] = $this->_getPaymentMethods($store);
 
@@ -1338,6 +1345,19 @@ EOT;
     return isset($overwrite['title'])
              ? $overwrite['title']
              : Mage::helper('trademe/auction')->getTitle ($product, $store);
+  }
+
+  /**
+   * Return value for IsClearance flag
+   *
+   * @param array $data
+   *   Options values
+   *
+   * @return mixed
+   *  Value for IsClearance flag
+   */
+  protected function _getClearance ($data) {
+    return isset($data['clearance']) && $data['clearance'];
   }
 
   public function getCategories () {

@@ -75,7 +75,8 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
 
   protected $_fieldsWithoutDefaults = array(
     'relist' => 'tm_relist',
-    'pickup' => 'tm_pickup'
+    'pickup' => 'tm_pickup',
+    'clearance' => 'tm_clearance'
   );
 
   public function getAttributes ($categoryId) {

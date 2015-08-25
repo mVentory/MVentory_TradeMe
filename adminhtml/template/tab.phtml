@@ -35,6 +35,7 @@ $_shippingType = $this->getShippingType();
 $_pickup = $this->getPickup();
 $_relist = $this->getRelist();
 $_avoidWithdrawal = $this->getAvoidWithdrawal();
+$_clearance = $this->getClearance();
 $_accounts = $this->getAccounts();
 
 $_shippingRate = $this->getShippingRate();
@@ -94,6 +95,15 @@ $__remove = $this->__('Remove');
       <select id="trademe-tab-add-fees" class="select" name="product[tm_add_fees]">
         <?php foreach ($this->getAttributeOptions('tm_add_fees') as $_option): ?>
         <option value="<?php echo $_option['value']; ?>" <?php if ($_option['value'] == $_addFees) echo 'selected="selected"'; ?>><?php echo $_option['label']; ?></option>
+        <?php endforeach; ?>
+      </select>
+    </label>
+
+    <label class="trademe-option">
+      <?php echo $this->getAttributeLabel('tm_clearance'); ?>:
+      <select id="trademe-tab-add-fees" class="select" name="product[tm_clearance]">
+        <?php foreach ($this->getAttributeOptions('tm_clearance') as $_option): ?>
+        <option value="<?php echo $_option['value']; ?>" <?php if ($_option['value'] == $_clearance) echo 'selected="selected"'; ?>><?php echo $_option['label']; ?></option>
         <?php endforeach; ?>
       </select>
     </label>

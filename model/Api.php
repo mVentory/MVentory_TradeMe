@@ -332,6 +332,15 @@ EOT;
 
     $price = $this->_getPrice($product, $account, $_data, $store, $overwrite);
 
+    $subtitle = $this->_getSubtitle(
+      $product,
+      $price,
+      $account,
+      $_data,
+      $store,
+      $overwrite
+    );
+
     $buyNow = '';
 
     if ($this->_getAllowBuyNow($_data, $overwrite))
@@ -358,8 +367,12 @@ EOT;
     do {
       $xml = '<ListingRequest xmlns="http://api.trademe.co.nz/v1">
 <Category>' . $categoryId . '</Category>
-<Title>' . $title . '</Title>
-<Description><Paragraph>' . $description . '</Paragraph></Description>
+<Title>' . $title . '</Title>';
+
+      if ($subtitle)
+        $xml .= '<Subtitle>' . $subtitle . '</Subtitle>';
+
+      $xml .= '<Description><Paragraph>' . $description . '</Paragraph></Description>
 <StartPrice>' . $price . '</StartPrice>
 <ReservePrice>' . $price . '</ReservePrice>'
 . $buyNow .
@@ -602,6 +615,15 @@ EOT;
     if (!isset($parameters['StartPrice']))
       $parameters['StartPrice'] = $this->_getPrice(
         $product,
+        $account,
+        $formData,
+        $store
+      );
+
+    if (!isset($parameters['Subtitle']))
+      $parameters['Subtitle'] = $this->_getSubtitle(
+        $product,
+        $parameters['StartPrice'],
         $account,
         $formData,
         $store
@@ -1576,6 +1598,81 @@ EOT;
       $this->_getConfig(MVentory_TradeMe_Model_Config::_IMG_MULTIPLE)
         ? $helper->getAllImages($product, $this->_imageSize, $store)
         : [$helper->getImage($product, $this->_imageSize, $store)]
+    );
+  }
+
+  /**
+   * Return subtitle for auction
+   *
+   * Chances specific change: return predefined text
+   * if product has active special price
+   *
+   * @param Mage_Catalog_Model_Product $product
+   *   Product model
+   *
+   * @param float $currentPrice
+   *   Final auction price
+   *
+   * @param array $account
+   *   Account data
+   *
+   * @param  array $data
+   *   Form data
+   *
+   * @param array $overwrite
+   *   Data to overwrite values from $account and $data parameters
+   *
+   * @param Mage_Core_Model_Store $store
+   *   Store model
+   *
+   * @return string
+   *   Subtitle for auction if product has active special price
+   */
+  protected function _getSubtitle ($product,
+                                   $currentPrice,
+                                   $account,
+                                   $data,
+                                   $store,
+                                   $overwrite = []) {
+
+    if (!Mage::helper('trademe/product')->hasSpecialPrice($product, $store))
+      return;
+
+    /**
+     * Remove values of final price and special price in the product
+     * to recalculate its final price based on original price.
+     *
+     * @see Mage_Catalog_Model_Product::getFinalPrice()
+     *   See this method to find why we need to remove final price
+     *
+     * @see Mage_Catalog_Model_Product_Type_Price::getFinalPrice()
+     *   See this method to find how final price is calculated
+     */
+
+    $specialPrice = $product->getSpecialPrice();
+    $finalPrice = $product->getFinalPrice();
+
+    $product
+      ->setSpecialPrice(null)
+      ->setFinalPrice(null);
+
+    $price = $this->_getPrice(
+      $product,
+      $account,
+      $data,
+      $store,
+      $overwrite
+    );
+
+    $product
+      ->setSpecialPrice($specialPrice)
+      ->setFinalPrice($finalPrice);
+
+    //Return subtitle text with original price and percents
+    return sprintf(
+      'Was $%.2f - now %u%% off',
+      $price,
+      round(($price - $currentPrice) / $price  * 100)
     );
   }
 }

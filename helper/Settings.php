@@ -30,6 +30,24 @@ class MVentory_TradeMe_Helper_Settings extends MVentory_TradeMe_Helper_Data
   const NUM_OF_COLUMNS = 14;
 
   /**
+   * Column numbers
+   */
+  const COL_ACCOUNT = 0;
+  const COL_SHIPPING_TYPE = 1;
+  const COL_WEIGHT = 2;
+  const COL_MINIMAL_PRICE = 3;
+  const COL_FREE_SHIPPING_COST = 4;
+  const COL_ALLOW_BUY_NOW = 5;
+  const COL_AVOID_WITHDRAWAL = 6;
+  const COL_ADD_FEES = 7;
+  const COL_ALLOW_PICKUP = 8;
+  const COL_CATEGORY_IMAGE = 9;
+  const COL_BUYER = 10;
+  const COL_DURATION = 11;
+  const COL_SHIPPING_OPTIONS = 12;
+  const COL_FOOTER = 13;
+
+  /**
    * Upload TradeMe optons file and import data from it
    *
    * @param Varien_Object $object
@@ -201,22 +219,30 @@ class MVentory_TradeMe_Helper_Settings extends MVentory_TradeMe_Helper_Data
     foreach ($row as $k => $v)
       $row[$k] = trim($v);
 
-    $account = strtolower($row[0]);
+    $account = strtolower($row[self::COL_ACCOUNT]);
 
     if (!isset($params['account'][$account])) {
       $msg = 'Invalid account ("%s") in row %s.';
-      $params['errors'][] = $this->__($msg, $row[0], $rowNumber);
+      $params['errors'][] = $this->__(
+        $msg,
+        $row[self::COL_ACCOUNT],
+        $rowNumber
+      );
 
       return false;
     }
 
     $account = $params['account'][$account];
 
-    $shippingType = strtolower($row[1]);
+    $shippingType = strtolower($row[self::COL_SHIPPING_TYPE]);
 
     if (!isset($params['type'][$shippingType])) {
       $msg = 'Invalid shipping type ("%s") in row %s.';
-      $params['errors'][] = $this->__($msg, $row[1], $rowNumber);
+      $params['errors'][] = $this->__(
+        $msg,
+        $row[self::COL_SHIPPING_TYPE],
+        $rowNumber
+      );
 
       return false;
     }
@@ -224,45 +250,59 @@ class MVentory_TradeMe_Helper_Settings extends MVentory_TradeMe_Helper_Data
     $shippingType = $params['type'][$shippingType];
 
     //Validate maximum weight
-    $weight = $this->_parseWeight($row[2]);
+    $weight = $this->_parseWeight($row[self::COL_WEIGHT]);
 
     if ($weight === false) {
       $msg = 'Invalid Maximum weight value ("%s") in row %s.';
-      $params['errors'][] = $this->__($msg, $row[2], $rowNumber);
+      $params['errors'][] = $this->__($msg, $row[self::COL_WEIGHT], $rowNumber);
 
       return false;
     }
 
     //Validate minimal price
-    $minimalPrice = $this->_parsePrice($row[3]);
+    $minimalPrice = $this->_parsePrice($row[self::COL_MINIMAL_PRICE]);
 
     if ($minimalPrice === false) {
       $msg = 'Invalid Minimal price value ("%s") in row %s.';
-      $params['errors'][] = $this->__($msg, $row[3], $rowNumber);
+      $params['errors'][] = $this->__(
+        $msg,
+        $row[self::COL_MINIMAL_PRICE],
+        $rowNumber
+      );
 
       return false;
     }
 
-    $freeShippingCost = $this->_parseDecimalValue($row[4]);
+    $freeShippingCost = $this->_parseDecimalValue(
+      $row[self::COL_FREE_SHIPPING_COST]
+    );
 
     if ($freeShippingCost === false) {
       $msg = 'Invalid Free shipping cost value ("%s") in row %s.';
-      $params['errors'][] = $this->__($msg, $row[4], $rowNumber);
+      $params['errors'][] = $this->__(
+        $msg,
+        $row[self::COL_FREE_SHIPPING_COST],
+        $rowNumber
+      );
 
       return false;
     }
 
-    $addFees = $this->_parseAddfeesValue($row[7]);
+    $addFees = $this->_parseAddfeesValue($row[self::COL_ADD_FEES]);
 
     if ($addFees === false) {
       $msg = 'Invalid Add fees value ("%s") in row %s.';
-      $params['errors'][] = $this->__($msg, $row[7], $rowNumber);
+      $params['errors'][] = $this->__(
+        $msg,
+        $row[self::COL_ADD_FEES],
+        $rowNumber
+      );
 
       return false;
     }
 
     //Validate listing duration value
-    $listingDuaration = (int) $row[11];
+    $listingDuaration = (int) $row[self::COL_DURATION];
 
     //!!!TODO: use getDuration() method
     if (!$listingDuaration || $listingDuaration > self::LISTING_DURATION_MAX)
@@ -289,15 +329,17 @@ class MVentory_TradeMe_Helper_Settings extends MVentory_TradeMe_Helper_Data
       'weight' => $weight,
       'minimal_price' => $minimalPrice,
       'free_shipping_cost' => $freeShippingCost,
-      'allow_buy_now' => (bool) $row[5],
-      'avoid_withdrawal' => (bool) $row[6],
+      'allow_buy_now' => (bool) $row[self::COL_ALLOW_BUY_NOW],
+      'avoid_withdrawal' => (bool) $row[self::COL_AVOID_WITHDRAWAL],
       'add_fees' => $addFees,
-      'allow_pickup' => (bool) $row[8],
-      'category_image' => (bool) $row[9],
-      'buyer' => (int) $row[10],
+      'allow_pickup' => (bool) $row[self::COL_ALLOW_PICKUP],
+      'category_image' => (bool) $row[self::COL_CATEGORY_IMAGE],
+      'buyer' => (int) $row[self::COL_BUYER],
       'duration' => $listingDuaration,
-      'shipping_options' => $this->_parseShippingOptionsValue($row[12]),
-      'footer' => $row[13]
+      'shipping_options' => $this->_parseShippingOptionsValue(
+        $row[self::COL_SHIPPING_OPTIONS]
+      ),
+      'footer' => $row[self::COL_FOOTER]
     );
   }
 

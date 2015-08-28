@@ -47,6 +47,12 @@ class MVentory_TradeMe_Helper_Settings extends MVentory_TradeMe_Helper_Data
   const COL_SHIPPING_OPTIONS = 12;
   const COL_FOOTER = 13;
 
+  protected $_conditions = ['weight'];
+
+  public function getAvailConds () {
+    return $this->_conditions;
+  }
+
   /**
    * Upload TradeMe optons file and import data from it
    *
@@ -143,10 +149,15 @@ class MVentory_TradeMe_Helper_Settings extends MVentory_TradeMe_Helper_Data
       $io->streamClose();
 
       if ($data) {
-        $data = $this->_restructureImportedOptions($data);
+        $data = $this->_restructureRows($data);
+        $data = $this->_prepareConditions($data, $this->_conditions);
+
         $this->_saveImportedOptions($data, $website);
 
-        $missingSettings = $this->_checkMissingSettings($data, $shippingTypes);
+        $missingShippingTypes = $this->_getMissingShippingTypes(
+          $data,
+          $shippingTypes
+        );
       } else
         $params['errors'][] = $this->__('No options in the file');
 
@@ -178,8 +189,8 @@ class MVentory_TradeMe_Helper_Settings extends MVentory_TradeMe_Helper_Data
       );
     }
 
-    if ($missingSettings) {
-      foreach ($missingSettings as $accountId => $shippingTypes) {
+    if ($missingShippingTypes) {
+      foreach ($missingShippingTypes as $accountId => $shippingTypes) {
         $name = $accounts[$accountId]['name'];
 
         foreach ($shippingTypes as $type)
@@ -475,7 +486,7 @@ class MVentory_TradeMe_Helper_Settings extends MVentory_TradeMe_Helper_Data
     foreach ($accounts as $id => $data)
       $config->saveConfig(
         'trademe/' . $id . '/shipping_types',
-        serialize($data),
+        Mage::helper('core')->jsonEncode($data),
         'websites',
         $websiteId
       );
@@ -485,35 +496,115 @@ class MVentory_TradeMe_Helper_Settings extends MVentory_TradeMe_Helper_Data
     Mage::app()->reinitStores();
   }
 
-  protected function _restructureImportedOptions ($data) {
+  protected function _restructureRows ($rows) {
     $accounts = array();
 
-    foreach ($data as $options) {
-      $accountId = $options['account'];
-      unset($options['account']);
+    foreach ($rows as $row) {
+      $accountId = $row['account'];
+      $shippingType = $row['shipping_type'];
 
-      $accounts[$accountId][] = $options;
+      unset($row['account'], $row['shipping_type']);
+
+      $accounts[$accountId][$shippingType]['settings'][] = $row;
     }
 
     return $accounts;
   }
 
-  protected function _checkMissingSettings ($accounts, $shippingTypes) {
-    $result = array();
+  /**
+   * Prepare conditions for all shipping types in supplied accounts settings
+   *
+   * @param array $accounts
+   *   Settings for accounts
+   *
+   * @param array $availConds
+   *   List of available conditions
+   *
+   * @return array
+   *   Settings for accounts with prepared conditions
+   */
+  protected function _prepareConditions ($accounts, $availConds) {
+    foreach ($accounts as &$shippingTypes) {
+      foreach ($shippingTypes as &$shippingType) {
+        $condition = $this->_getCondition(
+          $shippingType['settings'],
+          $availConds
+        );
 
-    foreach ($accounts as $id => $data) {
-      foreach ($data as $settings) {
-        if ($settings['shipping_type'] == '*')
-          continue 2;
+        $shippingType = [
+          'condition' => $condition['name'],
+          'settings' => $condition['values']
+        ];
+      }
+    }
 
-        if ($settings['shipping_type'] == '')
-          continue;
+    return $accounts;
+  }
 
-        $types[$settings['shipping_type']] = true;
+  /**
+   * Return condition for the supplied settings for shipping type
+   *
+   * @param array $settings
+   *   Settings for shipping type
+   *
+   * @param array $availConds
+   *   List of available conditions
+   *
+   * @return array
+   *   Condition's name and values
+   */
+  protected function _getCondition ($settings, $availConds) {
+    $cond = [];
+
+    foreach ($settings as $setting) {
+      $found = [];
+
+      //Collect all available conditions and their values from the setting row
+      foreach ($availConds as $availCond) {
+        if ($setting[$availCond] !== '')
+          $found[$availCond] = $setting[$availCond];
+
+        unset($setting[$availCond]);
       }
 
-      if (isset($types) && ($missing = array_diff_key($shippingTypes, $types)))
-        $result[$id] = $missing;
+      //Found no conditions in the setting row
+      if (!$found) {
+
+        //Raise error if setting row without conditions is sole one
+        if (count($settings) > 1)
+          return;
+
+        $cond['name'] = null;
+        $cond['values'][] = $setting;
+
+        return $cond;
+      }
+
+      //Found setting row with multiple conditions - raise error
+      if (count($found) > 1)
+        return;
+
+      //Found setting row with different condition from previous row - raise
+      //error
+      if (isset($cond['name']) && $cond['name'] != key($found))
+        return;
+
+      $cond['name'] = key($found);
+      $cond['values'][current($found)] = $setting;
+    }
+
+    return $cond;
+  }
+
+  protected function _getMissingShippingTypes ($accounts, $allShippingTypes) {
+    $result = array();
+
+    foreach ($accounts as $accountsId => $shippingTypes) {
+      unset($shippingTypes[''], $shippingTypes['*']);
+
+      if ($shippingTypes
+          && ($missing = array_diff_key($allShippingTypes, $shippingTypes)))
+        $result[$accountsId] = $missing;
     }
 
     return $result;

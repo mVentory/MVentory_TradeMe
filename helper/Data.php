@@ -227,6 +227,7 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
    * @return array List of accounts
    */
   public function getAccounts ($website) {
+    $helper = Mage::helper('core');
     $website = Mage::app()->getWebsite($website);
 
     $configData = Mage::getModel('adminhtml/config_data')
@@ -241,11 +242,12 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
 
     foreach ($groups as $id => $fields)
       if (strpos($id, 'account_', 0) === 0) {
-        if (isset($fields['shipping_types']))
-          $fields['shipping_types']
-            = (($types = unserialize($fields['shipping_types'])) === false)
-                 ? array()
-                   : $types;
+        if (isset($fields['shipping_types'])) try {
+          $fields['shipping_types'] = $helper->jsonDecode($fields['shipping_types']);
+        }
+        catch (Zend_Json_Exception $e) {
+          $fields['shipping_types'] = array();
+        }
 
         $accounts[$id] = $fields;
       }
@@ -291,7 +293,8 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
 
   /**
    * Prepare account for the supplied product.
-   * Leave TradeMe options for product's shipping type and weight only
+   * Leave TradeMe options from matched product's shipping type
+   * and its condition
    *
    * @param array $account
    *   TradeMe account data
@@ -303,27 +306,70 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
    *   Store model or null for current store
    *
    * @return array|boolean
-   *   Prepared account data only for the product's shipping type and weight
-   *   or false if account doesn't match product's parameters
+   *   Prepared account data only for the product's shipping type
+   *   and its condition or false if account doesn't match product's parameters
    */
   public function prepareAccount ($account, $product, $store = null) {
-    $type = $this->getShippingType($product, true, $store);
-    $weight = $product->getWeight();
 
-    foreach ($account['shipping_types'] as $settings) {
-      $_type = $settings['shipping_type'];
-      $_weight = $settings['weight'];
+    //Get shipping type of product and select appropriate shipping type from
+    //account
+    //Product's shipping type is casted to string to convert null and false
+    //values to empty string and then use it to select empty shipping type
+    //in account
+    $type = (string) $this->getShippingType($product, true, $store);
 
-      $cond = ($_type == '*' || $_type == $type)
-              && ($_weight === '' || (float) $weight <= (float) $_weight);
+    $shippingTypes = [];
 
-      if ($cond) {
-        unset($account['shipping_types']);
+    switch (true) {
+      case isset($account['shipping_types'][$type]):
+        $shippingTypes[] = $account['shipping_types'][$type];
 
-        return $account + $settings;
-      }
+      case isset($account['shipping_types']['*']):
+        $shippingTypes[] = $account['shipping_types']['*'];
+        break;
+
+      //No shipping types to match - return nothing
+      default:
+        return false;
     }
 
+    //We don't need data of account's shipping types in the function anymore
+    unset($account['shipping_types']);
+
+    foreach ($shippingTypes as $shippingType) {
+
+      //Shipping type doesn't have condition - use sole set of settings
+      if (!$shippingType['condition'])
+        return $account + $shippingType['settings'][0];
+
+      switch ($shippingType['condition']) {
+        case 'weight':
+          $productValue = $product->getWeight();
+          break;
+
+        //Unknown condition - go to next shipping type
+        default:
+          //We use 2 because switch is also looping construction in PHP
+          continue 2;
+      }
+
+      //Match appropriate set of settings comparing condition's value in product
+      //and value assign to set of settings.
+      //Pick the first set of settings with the value equal or bigger
+      //than the product's one.
+      $value = null;
+      $values = array_keys($shippingType['settings']);
+
+      foreach ($values as $v)
+        if (($productValue <= $v) && ($value = $v))
+          break;
+
+      //Return set of setting if we found it
+      if ($value !== null)
+        return $account + $shippingType['settings'][$value];
+    }
+
+    //Nothing matched
     return false;
   }
 

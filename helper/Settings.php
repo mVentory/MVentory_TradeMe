@@ -35,7 +35,7 @@ class MVentory_TradeMe_Helper_Settings extends MVentory_TradeMe_Helper_Data
   const COL_ACCOUNT = 0;
   const COL_SHIPPING_TYPE = 1;
   const COL_WEIGHT = 2;
-  const COL_MINIMAL_PRICE = 3;
+  const COL_PRICE = 3;
   const COL_FREE_SHIPPING_COST = 4;
   const COL_ALLOW_BUY_NOW = 5;
   const COL_AVOID_WITHDRAWAL = 6;
@@ -47,7 +47,7 @@ class MVentory_TradeMe_Helper_Settings extends MVentory_TradeMe_Helper_Data
   const COL_SHIPPING_OPTIONS = 12;
   const COL_FOOTER = 13;
 
-  protected $_conditions = ['weight'];
+  protected $_conditions = ['weight', 'price'];
 
   public function getAvailConds () {
     return $this->_conditions;
@@ -270,16 +270,12 @@ class MVentory_TradeMe_Helper_Settings extends MVentory_TradeMe_Helper_Data
       return false;
     }
 
-    //Validate minimal price
-    $minimalPrice = $this->_parsePrice($row[self::COL_MINIMAL_PRICE]);
+    //Validate maximum price
+    $price = $this->_parsePrice($row[self::COL_PRICE]);
 
-    if ($minimalPrice === false) {
+    if ($price === false) {
       $msg = 'Invalid Minimal price value ("%s") in row %s.';
-      $params['errors'][] = $this->__(
-        $msg,
-        $row[self::COL_MINIMAL_PRICE],
-        $rowNumber
-      );
+      $params['errors'][] = $this->__($msg,$row[self::COL_PRICE], $rowNumber);
 
       return false;
     }
@@ -322,7 +318,7 @@ class MVentory_TradeMe_Helper_Settings extends MVentory_TradeMe_Helper_Data
       $listingDuaration = self::LISTING_DURATION_MIN;
 
     //Protect from duplicate
-    $hash = sprintf('%s-%s-%s', $account, $shippingType, $weight);
+    $hash = sprintf('%s-%s-%s-%s', $account, $shippingType, $weight, $price);
 
     if (isset($params['hash'][$hash])) {
       $msg = 'Duplicate row %s.';
@@ -338,7 +334,7 @@ class MVentory_TradeMe_Helper_Settings extends MVentory_TradeMe_Helper_Data
       'account' => $account,
       'shipping_type' => $shippingType,
       'weight' => $weight,
-      'minimal_price' => $minimalPrice,
+      'price' => $price,
       'free_shipping_cost' => $freeShippingCost,
       'allow_buy_now' => (bool) $row[self::COL_ALLOW_BUY_NOW],
       'avoid_withdrawal' => (bool) $row[self::COL_AVOID_WITHDRAWAL],

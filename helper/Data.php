@@ -336,6 +336,8 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
     //We don't need data of account's shipping types in the function anymore
     unset($account['shipping_types']);
 
+    $helper = Mage::helper('trademe/auction');
+
     foreach ($shippingTypes as $shippingType) {
 
       //Shipping type doesn't have condition - use sole set of settings
@@ -345,6 +347,11 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
       switch ($shippingType['condition']) {
         case 'weight':
           $productValue = $product->getWeight();
+          break;
+
+        case 'price':
+          $productValue = $helper->getPrice($product, $account, $store);
+
           break;
 
         //Unknown condition - go to next shipping type

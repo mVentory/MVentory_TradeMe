@@ -66,8 +66,8 @@ class MVentory_TradeMe_Block_Options
         'type' => self::TYPE_FLOAT,
         'empty' => true
       ),
-      'minimal_price' => array(
-        'label' => 'Minimal price',
+      'price' => array(
+        'label' => 'Maximum price',
         'type' => self::TYPE_PRICE,
         'empty' => true
       ),

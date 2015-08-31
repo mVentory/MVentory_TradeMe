@@ -525,20 +525,6 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
   }
 
   /**
-   * Return minimal price level for TradeMe listing
-   *
-   * @param array $data
-   *   TradeMe account data per shipping
-   *
-   * @return float
-   *   Minimal price level from the supplied account data
-   *   or zero if it doesn't exists in the data
-   */
-  public function getMinimalPrice ($data) {
-    return isset($data['minimal_price']) ? (float) $data['minimal_price'] : 0;
-  }
-
-  /**
    * Return buyer (pre-configured customer for TradeMe sells) from supplied
    * TradeMe account data and store
    *

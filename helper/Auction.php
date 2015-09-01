@@ -134,6 +134,67 @@ class MVentory_TradeMe_Helper_Auction extends MVentory_TradeMe_Helper_Data
   }
 
   /**
+   * Calculate final price for auction
+   *
+   * @todo Allow to calculate "partial" price, e.g. only product final price +
+   *   TradeMe shipping rate or only product final price + currency conversion.
+   *   It should be specified via optional parameter - array with parameters
+   *
+   *   Example:
+   *     $price = $helper->getPrice(
+   *       $product,
+   *       $account,
+   *       $store,
+   *       [
+   *         'product_price' => true,
+   *         'shipping_rate' => true
+   *       ]
+   *     );
+   *
+   * @param Mage_Catalog_Model_Product $product
+   *   Product model
+   *
+   * @param array $account
+   *   Account data
+   *
+   * @param Mage_Core_Model_Store $store
+   *   Store model
+   *
+   * @return float
+   *   Final price for TradeMe auction
+   */
+  public function getPrice ($product, $account, $store) {
+    $productHelper = Mage::helper('trademe/product');
+    $website = $store->getWebsite();
+
+    $price = $productHelper->getPrice($product, $website);
+    $price += $this->getShippingRate($product, $account['name'], $website);
+
+    $currency = $store->getBaseCurrency();
+
+    /**
+     * @todo Replace with MVentory_TradeMe_Helper_Data::applyTmCurrency()
+     *   helper method after it'll have been implemented.
+     *
+     * @see MVentory_TradeMe_Helper_Data::currencyConvert()
+     *   See description for the method to find more info
+     */
+    if ($currency->getCode != MVentory_TradeMe_Model_Config::CURRENCY)
+      $price = $this->currencyConvert(
+        $price,
+        $currency,
+        MVentory_TradeMe_Model_Config::CURRENCY,
+        $store
+      );
+
+    $hasSpecialPrice = $productHelper->hasSpecialPrice($product, $store);
+
+    return $this->_hasAddFees($account, $hasSpecialPrice)
+             ? $this->addFees($price)
+             : $price;
+  }
+
+  /**
    * Return period of time when listing of $1 auction is allowed using value
    * of Auction end time setting for the supplied store (it adds +/-30 mins
    * to that value)
@@ -201,5 +262,29 @@ class MVentory_TradeMe_Helper_Auction extends MVentory_TradeMe_Helper_Data
     }
 
     return false;
+  }
+
+  /**
+   * Check if TradeMe fees should be added
+   *
+   * @param array $auction
+   *   Account data
+   *
+   * @param boolean $hasSpecialPrice
+   *   Flag shows if product has active special price
+   *
+   * @return boolean
+   *   Result of the check
+   */
+  protected function _hasAddFees ($auction, $hasSpecialPrice) {
+    if (!isset($auction['add_fees']))
+      return false;
+
+    if ($auction['add_fees'] == MVentory_TradeMe_Model_Config::FEES_ALWAYS)
+      return true;
+
+    return $auction['add_fees'] == MVentory_TradeMe_Model_Config::FEES_SPECIAL
+             ? $hasSpecialPrice
+             : false;
   }
 }

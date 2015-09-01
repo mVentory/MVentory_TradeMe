@@ -390,4 +390,30 @@ EOT;
       $names
     );
   }
+
+  /**
+   * Check if supplied product has active special price
+   *
+   * @param Mage_Catalog_Model_Product $product
+   *   Product model
+   *
+   * @param Mage_Core_Model_Store $store
+   *   Store model
+   *
+   * @return boolean
+   *   Result of the check
+   */
+  public function hasSpecialPrice ($product, $store) {
+    $specialPrice = $product->getSpecialPrice();
+
+    return $specialPrice !== null
+           && $specialPrice !== false
+           && Mage::app()
+                ->getLocale()
+                ->isStoreDateInInterval(
+                    $store,
+                    $product->getSpecialFromDate(),
+                    $product->getSpecialToDate()
+              );
+  }
 }

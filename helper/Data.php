@@ -1079,6 +1079,14 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
   /**
    * Convert supplied price from one currency to another
    *
+   * @todo implement additional helper method to apply TradeMe's currency
+   *   to specified price. The method should have only two parameter: $amount
+   *   and $store. New method will prepare required data and call this method.
+   *
+   *   Example:
+   *
+   *     $price = $helper->applyTmCurrency($price, $store);
+   *
    * @param float $amount
    *   Price to convert
    *

@@ -63,9 +63,26 @@ class MVentory_TradeMe_Block_Tab
     $this->_store = $this->_website->getDefaultStore();
 
     $this->_currency = $this->_store->getBaseCurrency();
-    $this->_productPrice = $trademe->getPrice($product, $this->_website);
-    $this->_hasSpecialPrice = $this->_productPrice < $product->getPrice();
 
+    /**
+     * @var MVentory_TradeMe_Helper_Auction::getPrice()
+     *
+     * @todo This should be replace with call to the function above
+     *   after it will be updated to calculate "partial" auction price
+     */
+    $this->_productPrice = $trademe->getPrice($product, $this->_website);
+
+    $this->_hasSpecialPrice = Mage::helper('trademe/product')->hasSpecialPrice(
+      $product,
+      $this->_store
+    );
+
+    /**
+     * @var MVentory_TradeMe_Helper_Auction::getPrice()
+     *
+     * @todo This should be replace with call to the function above after
+     *   it will be updated to calculate "partial" auction price
+     */
     if ($this->_currency->getCode() != MVentory_TradeMe_Model_Config::CURRENCY)
       $this->_productPrice = $trademe->currencyConvert(
         $this->_productPrice,
@@ -525,6 +542,13 @@ class MVentory_TradeMe_Block_Tab
 
         $code = $this->_currency;
 
+        /**
+         * @todo Replace with MVentory_TradeMe_Helper_Data::applyTmCurrency()
+         *   helper method after it'll have been implemented.
+         *
+         * @see MVentory_TradeMe_Helper_Data::currencyConvert()
+         *   See description for the method to find more info
+         */
         if ($code->getCode() != MVentory_TradeMe_Model_Config::CURRENCY)
           $account['shipping_rate'] = $helper->currencyConvert(
             $account['shipping_rate'],

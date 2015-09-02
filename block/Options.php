@@ -58,7 +58,7 @@ class MVentory_TradeMe_Block_Options
         'type' => self::TYPE_TEXT
       ),
       'shipping_type' => array(
-        'label' => 'Shipping type',
+        'label' => 'Shipping method',
         'type' => self::TYPE_TEXT
       ),
       'weight' => array(

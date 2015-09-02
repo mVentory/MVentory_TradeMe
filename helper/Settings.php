@@ -44,7 +44,7 @@ class MVentory_TradeMe_Helper_Settings extends MVentory_TradeMe_Helper_Data
     if (!$shippingTypes)
       Mage::throwException($this->__('There\'re no available shipping types'));
 
-    $accounts = $this->getAccounts($website, false);
+    $accounts = $this->getAccounts($website);
 
     if (!$accounts)
       Mage::throwException($this->__('There\'re no accounts in this website'));

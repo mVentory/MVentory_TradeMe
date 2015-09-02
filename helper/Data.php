@@ -226,7 +226,7 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
    * @param mixin $websiteId
    * @return array List of accounts
    */
-  public function getAccounts ($website, $withRandom = true) {
+  public function getAccounts ($website) {
     $website = Mage::app()->getWebsite($website);
 
     $configData = Mage::getModel('adminhtml/config_data')
@@ -238,9 +238,6 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
     $groups = $configData->getConfigDataValue('trademe')->asArray();
 
     $accounts = array();
-
-    if ($withRandom)
-      $accounts[null] = array('name' => $this->__('Random'));
 
     foreach ($groups as $id => $fields)
       if (strpos($id, 'account_', 0) === 0) {
@@ -338,7 +335,7 @@ class MVentory_TradeMe_Helper_Data extends Mage_Core_Helper_Abstract
    * @return bool
    */
   public function removeAccount ($id, $website) {
-    $accounts = $this->getAccounts($website, false);
+    $accounts = $this->getAccounts($website);
 
     if (!isset($accounts[$id]))
       return;

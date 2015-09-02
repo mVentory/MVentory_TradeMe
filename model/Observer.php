@@ -1125,7 +1125,7 @@ EOT;
     if (!$website = $observer->getWebsite())
       return;
 
-    $accounts = Mage::helper('trademe')->getAccounts($website, false);
+    $accounts = Mage::helper('trademe')->getAccounts($website);
 
     foreach ($accounts as $account)
       if (!(isset($account['shipping_types']) && $account['shipping_types']))

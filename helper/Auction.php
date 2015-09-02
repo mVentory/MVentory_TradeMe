@@ -119,7 +119,7 @@ class MVentory_TradeMe_Helper_Auction extends MVentory_TradeMe_Helper_Data
 
     foreach (Mage::app()->getWebsites(false, true) as $code => $website)
       if ($website->getConfig(MVentory_TradeMe_Model_Config::SANDBOX))
-        $allowed += array_keys($this->getAccounts($website, false));
+        $allowed += array_keys($this->getAccounts($website));
 
     if (!$allowed)
       return $this;

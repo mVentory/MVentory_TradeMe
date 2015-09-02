@@ -124,10 +124,7 @@ class MVentory_TradeMe_Block_Options
   protected function _prepareCollection () {
     $collection = new Varien_Data_Collection();
 
-    $accounts = Mage::helper('trademe')->getAccounts(
-      $this->getWebsite(),
-      false
-    );
+    $accounts = Mage::helper('trademe')->getAccounts($this->getWebsite());
 
     $_shippingTypes = $this->_getShippingTypes();
 

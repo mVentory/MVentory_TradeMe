@@ -47,6 +47,16 @@ class MVentory_TradeMe_Helper_Settings extends MVentory_TradeMe_Helper_Data
   const COL_SHIPPING_OPTIONS = 12;
   const COL_FOOTER = 13;
 
+  const __E_COND_EMPTY_ROWS = <<<'EOT'
+There's more than one row with empty weight and price conditions. Shipping type should contain only one default row
+EOT;
+  const __E_COND_BOTH_IN_ROW = <<<'EOT'
+One of rows contains both weight and price conditions. Only one condition is allowed at a time
+EOT;
+  const __E_COND_MULTIPLE = <<<'EOT'
+Rows contain both weight and price conditions. Only one condition is allowed per shipping type
+EOT;
+
   protected $_conditions = ['weight', 'price'];
 
   public function getAvailConds () {
@@ -152,7 +162,24 @@ class MVentory_TradeMe_Helper_Settings extends MVentory_TradeMe_Helper_Data
         $data = $this->_restructureRows($data);
         $data = $this->_prepareConditions($data, $this->_conditions);
 
-        $this->_saveImportedOptions($data, $website);
+        foreach ($data as $accountId => $_shippingTypes) {
+          if (!isset($_shippingTypes['errors']))
+            continue;
+
+          foreach ($_shippingTypes['errors'] as $error) {
+            $params['errors'][] = sprintf(
+              '%s (account "%s", shipping type "%s")',
+              $error['message'],
+              $accounts[$accountId]['name'],
+              isset($shippingTypes[$error['shipping_type_id']])
+                ? $shippingTypes[$error['shipping_type_id']]
+                : $error['shipping_type_id']
+            );
+          }
+        }
+
+        if (!$params['errors'])
+          $this->_saveImportedOptions($data, $website);
 
         $missingShippingTypes = $this->_getMissingShippingTypes(
           $data,
@@ -521,7 +548,9 @@ class MVentory_TradeMe_Helper_Settings extends MVentory_TradeMe_Helper_Data
    */
   protected function _prepareConditions ($accounts, $availConds) {
     foreach ($accounts as &$shippingTypes) {
-      foreach ($shippingTypes as &$shippingType) {
+      $errors = [];
+
+      foreach ($shippingTypes as $shippingTypeId => &$shippingType) try {
         $condition = $this->_getCondition(
           $shippingType['settings'],
           $availConds
@@ -532,6 +561,15 @@ class MVentory_TradeMe_Helper_Settings extends MVentory_TradeMe_Helper_Data
           'settings' => $condition['values']
         ];
       }
+      catch (MVentory_TradeMe_Exception $e) {
+        $errors[] = [
+          'shipping_type_id' => $shippingTypeId,
+          'message' => $e->getMessage()
+        ];
+      }
+
+      if ($errors)
+        $shippingTypes['errors'] = $errors;
     }
 
     return $accounts;
@@ -566,9 +604,11 @@ class MVentory_TradeMe_Helper_Settings extends MVentory_TradeMe_Helper_Data
       //Found no conditions in the setting row
       if (!$found) {
 
-        //Raise error if setting row without conditions is sole one
+        //Raise error if setting row without conditions is not sole one
         if (count($settings) > 1)
-          return;
+          throw new MVentory_TradeMe_Exception($this->__(
+            self::__E_COND_EMPTY_ROWS
+          ));
 
         $cond['name'] = null;
         $cond['values'][] = $setting;
@@ -578,12 +618,16 @@ class MVentory_TradeMe_Helper_Settings extends MVentory_TradeMe_Helper_Data
 
       //Found setting row with multiple conditions - raise error
       if (count($found) > 1)
-        return;
+        throw new MVentory_TradeMe_Exception($this->__(
+          self::__E_COND_BOTH_IN_ROW
+        ));
 
       //Found setting row with different condition from previous row - raise
       //error
       if (isset($cond['name']) && $cond['name'] != key($found))
-        return;
+        throw new MVentory_TradeMe_Exception($this->__(
+          self::__E_COND_MULTIPLE
+        ));
 
       $cond['name'] = key($found);
       $cond['values'][current($found)] = $setting;

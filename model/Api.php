@@ -531,32 +531,6 @@ EOT;
     return true;
   }
 
-  /**
-   * NOTE: requires $this->_website to be set
-   *
-   * @param MVentory_TradeMe_Model_Auction $auction Auction
-   * @return null|int Status of auction
-   */
-  public function check ($auction) {
-    MVentory_TradeMe_Model_Log::debug();
-
-    $this->setAccountId($auction['account_id']);
-    $listingId = $auction['listing_id'];
-
-    $item = $this->_loadListingDetailsAuth($listingId);
-
-    //Check if item on sold
-    if ($item['AsAt'] < $item['EndDate'])
-      return 3;
-
-    //Check if item was sold
-    if ($item['BidCount'] > 0)
-      return 2;
-
-    //Item wasn't sold or was withdrawn
-    return 1;
-  }
-
   public function update ($product,
                           $auction,
                           $parameters = null,
@@ -806,6 +780,26 @@ EOT;
       ));
 
     return $result['PhotoId'];
+  }
+
+  /**
+   * Return the details of a single listing
+   *
+   * NOTE: requires $this->_website to be set
+   *
+   * @param MVentory_TradeMe_Model_Auction $auction
+   *   Auction model
+   *
+   * @return array
+   *   Details of the listing
+   */
+  public function getListingDetails ($auction) {
+    MVentory_TradeMe_Model_Log::debug();
+
+    $this->setAccountId($auction['account_id']);
+    $listingId = $auction['listing_id'];
+
+    return $this->_loadListingDetailsAuth($listingId);
   }
 
   private function processDescription ($template, $data) {

@@ -252,7 +252,7 @@ EOT;
         }
 
         try {
-          $result = $connector->check($auction);
+          $listingDetails = $connector->getListingDetails($auction);
         }
         catch (Exception $e) {
           Mage::logException($e);
@@ -265,6 +265,8 @@ EOT;
 
           continue;
         }
+
+        $result = $this->_helper->getSaleStatus($listingDetails);
 
         MVentory_TradeMe_Model_Log::debug(array(
           'auction' => $auction,

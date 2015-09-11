@@ -802,6 +802,69 @@ EOT;
     return $this->_loadListingDetailsAuth($listingId);
   }
 
+  /**
+   * Get and prepare sale data from supplied listing data
+   *
+   * @param array $listing
+   *   Listing data
+   *
+   * @return array|null
+   *   Prepared sale data
+   */
+  public function getSaleDataFromListing ($listing) {
+    if (!isset($listing['Sales']))
+      return;
+
+    $sale = end($listing['Sales']);
+
+    if (isset($sale['Buyer'])) {
+      $_buyer = $sale['Buyer'];
+
+      $buyer = [
+        'email' => $_buyer['Email'],
+        'nickname' => $_buyer['Nickname']
+      ];
+
+      unset($_buyer);
+    }
+    else
+      $buyer = [];
+
+    if (isset($sale['DeliveryAddress'])) {
+      $_address = $sale['DeliveryAddress'];
+
+      $address = [
+        'name' => $_address['Name'],
+        'street' => [
+          $_address['Address1'],
+          isset($_address['Address2']) ? $_address['Address2'] : ''
+        ],
+        'city' => $_address['City'],
+        'country' => $_address['Country']
+      ];
+
+      if (isset($_address['Suburb']))
+        $address['suburb'] = $_address['Suburb'];
+
+      if (isset($_address['Postcode']))
+        $address['postcode'] = $_address['Postcode'];
+
+      if (isset($_address['PhoneNumber']))
+        $address['telephone'] = $_address['PhoneNumber'];
+
+      unset($_address);
+    }
+    else
+      $address = [];
+
+    return [
+      'price' => $sale['Price'],
+      'qty' => $sale['QuantitySold'],
+      'buyer' => $buyer,
+      'shipping_address' => $address
+    ];
+  }
+
   private function processDescription ($template, $data) {
     $search = array();
     $replace = array();

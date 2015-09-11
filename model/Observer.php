@@ -305,7 +305,11 @@ EOT;
             continue;
           }
 
-          $this->_createOrder($product, $perShipping);
+          $this->_createOrder(
+            $product,
+            $perShipping,
+            $connector->getSaleDataFromListing($listingDetails)
+          );
         }
 
         $auction->delete();
@@ -1300,25 +1304,24 @@ EOT;
    * @param array $account
    *   Account data
    */
-  protected function _createOrder ($product, $account) {
+  protected function _createOrder ($product, $account, $saleData) {
     MVentory_TradeMe_Model_Log::debug();
 
-    $buyer = $this
-      ->_helper
-      ->getBuyer($account, $this->_store);
+    //Add ID of default buyer to the data array which is passed to
+    //buyer's helper to use it in case loading or creating of buyer fails.
+    $saleData['default_buyer_id'] = isset($account['buyer'])
+      ? (int) $account['buyer']
+      : null;
+
+    list($buyer, $address) = Mage::helper('trademe/buyer')->get(
+      $saleData,
+      $this->_store
+    );
 
     MVentory_TradeMe_Model_Log::debug(array('buyer' => $buyer));
 
     if (!$buyer)
       return;
-
-    //API function for creating order requires curren store to be set
-    Mage::app()->setCurrentStore($this->_store);
-
-    //Remember current website to use in API functions. The value is
-    //used in getCurrentWebsite() helper function
-    Mage::unregister('mventory_website');
-    Mage::register('mventory_website', $this->_website, true);
 
     //Set global flag to prevent removing product from TradeMe during
     //order creating. No need to remove it because it was bought
@@ -1329,35 +1332,30 @@ EOT;
     //extension
     Mage::register('mventory_allow_shipping', true, true);
 
-    //Set customer ID for API access checks in MVentory API extension
-    Mage::register('mventory_api_customer', $buyer, true);
-
     try {
       //Make order for the product
-      $result = Mage::getModel('mventory/cart_api')->createOrderForProduct(
-        $product->getSku(),
+      $order = Mage::helper('trademe/order')->create(
+        $product,
 
         //Final product price without taxes
         $this->_tmProductHelper->getPrice($product, $this->_website, false),
 
         1, //QTY
-        $buyer->getId()
+        $buyer,
+        $address,
+        $this->_store
       );
 
       MVentory_TradeMe_Model_Log::debug(array(
-        'result' => isset($result['order_id'])
-                      ? $result['order_id']
-                      : 'no order'
+        'result' => $order->getIncrementId()
       ));
-    } catch (Mage_Api_Exception $e) {
+    } catch (Exception $e) {
       MVentory_TradeMe_Model_Log::debug(array(
-        'error on order creating' => $e->getCustomMessage()
+        'error on order creating' => $e->getMessage()
       ));
 
       throw $e;
     }
-
-    Mage::unregister('mventory_website');
   }
 
   /**

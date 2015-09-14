@@ -305,6 +305,20 @@ EOT;
             continue;
           }
 
+          //Get sale data from listing details.
+          //If sale data is missing then probably the listing is not yet in
+          //"closed" state.
+          //Try to create order next time
+          $saleData = $connector->getSaleDataFromListing($listingDetails);
+          if (!$saleData) {
+            MVentory_TradeMe_Model_Log::debug(array(
+              'auction' => $auction,
+              'warning' => 'Sale data is not presented in the listing details'
+            ));
+
+            continue;
+          }
+
           $this->_createOrder(
             $product,
             $perShipping,

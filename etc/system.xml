@@ -249,6 +249,25 @@
               <sort_order>110</sort_order>
             </stock_status>
 
+            <min_allowed_qty translate="label comment tooltip">
+              <label>Minimum Stock Quantity</label>
+              <comment>Only products with this quantity or more will be listed.</comment>
+              <tooltip>Only applies to products with managed stock.</tooltip>
+              <frontend_type>text</frontend_type>
+              <frontend_class>validate-number-range number-range-1-</frontend_class>
+
+              <depends>
+                <!-- 0 = Managed and in stock -->
+                <stock_status>0</stock_status>
+              </depends>
+
+              <show_in_default>1</show_in_default>
+              <show_in_website>1</show_in_website>
+              <show_in_store>0</show_in_store>
+
+              <sort_order>111</sort_order>
+            </min_allowed_qty>
+
             <import translate="label comment tooltip">
               <label>Import configuration file</label>
               <comment>A valid config file is required for the extension to work</comment>
@@ -269,7 +288,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>111</sort_order>
+              <sort_order>112</sort_order>
             </import>
 
             <export translate="label">
@@ -280,7 +299,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>112</sort_order>
+              <sort_order>113</sort_order>
             </export>
           </fields>
         </settings>

@@ -35,6 +35,7 @@ class MVentory_TradeMe_Model_Config
   const _STOCK_STATUS = 'trademe/settings/stock_status';
   const _MIN_ALLOWED_QTY = 'trademe/settings/min_allowed_qty';
 
+  const _IMG_MULTIPLE = 'trademe/image/allow_multiple';
   const _IMG_PADDING = 'trademe/image/padding';
 
   const _WATERMARK_IMG = 'trademe/image/watermark_image';
@@ -54,6 +55,7 @@ class MVentory_TradeMe_Model_Config
   const TITLE_MAX_LENGTH = 50;
   const DESCRIPTION_MAX_LENGTH = 2048;
   const PAYNOW_PRICE_LIMIT = 3000;
+  const AUCTION_MAX_IMGS = 20;
 
   //TradeMe shipping types
   //const SHIPPING_UNKNOWN = 0;

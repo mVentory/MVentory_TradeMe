@@ -237,6 +237,13 @@
         <allow_withdrawal>0</allow_withdrawal>
 
       </one_dollar>
+
+      <image>
+
+        <!-- 0 = No -->
+        <allow_multiple>0</allow_multiple>
+
+      </image>
     </trademe>
   </default>
 </config>

@@ -75,6 +75,66 @@ EOT;
    * Return full path to prepared images for uploading to TradeMe
    * It tries to download image by the URL used on the frontend
    * if product's image doesn't exist on server (e.g. images are served from
+   * someCDN service)
+   *
+   * @param Mage_Catalog_Model_Product $product
+   *   Product model
+   *
+   * @param array $size
+   *   Array which contains 'width' and 'height' keys
+   *
+   * @param Mage_Core_Model_Store $store
+   *   Store object
+   *
+   * @return array
+   *   List of full paths for prepared images
+   *
+   * @throws Exception
+   *   If prepared image doesn't exist
+   */
+  public function getAllImages ($product, $size, $store) {
+    if ($store->getId != Mage::app()->getStore()->getId())
+      $env = $this->changeStore($store);
+
+    $images = $product
+      ->getMediaGalleryImages()
+      ->getColumnValues('file');
+
+    if (count($images) > MVentory_TradeMe_Model_Config::AUCTION_MAX_IMGS)
+      $images = array_slice(
+        $images,
+        0,
+        MVentory_TradeMe_Model_Config::AUCTION_MAX_IMGS
+      );
+
+    $images = $this->_get($images, $size, $store);
+
+    if (isset($env))
+      $this->changeStore($env);
+
+    //Check if no images were prepared
+    if (!array_filter($images))
+      throw new MVentory_TradeMe_Exception(self::__E_NO_PREPARED_IMGS);
+
+    //Move product's main image to the first position in the array if product
+    //has main image and this image is prepared
+    $cond = ($image = $product->getImage())
+            && $image != 'no_selection'
+            && isset($images[$image])
+            && ($preparedImage = $images[$image]);
+
+    if ($cond) {
+      unset($images[$image]);
+      $images = array_merge([$image => $preparedImage], $images);
+    }
+
+    return $images;
+  }
+
+  /**
+   * Return full path to prepared images for uploading to TradeMe
+   * It tries to download image by the URL used on the frontend
+   * if product's image doesn't exist on server (e.g. images are served from
    * some CDN service)
    *
    * @param array

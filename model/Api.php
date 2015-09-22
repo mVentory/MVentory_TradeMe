@@ -306,13 +306,7 @@ EOT;
       html_entity_decode($description, ENT_COMPAT, 'UTF-8')
     );
 
-    $image = Mage::helper('trademe/image')->getImage(
-      $product,
-      $this->_imageSize,
-      $store
-    );
-
-    $photoId = $this->uploadImage($image);
+    $photoIds = $this->_getPhotoIds($product, $store);
 
     $client = $accessToken->getHttpClient($this->getConfig());
     $client->setUri('https://api.' . $this->_host . '.co.nz/v1/Selling.xml');
@@ -375,11 +369,13 @@ EOT;
 
       //Add photo to auction if we have one in the product and use it as gallery
       //image if it's allowed in the settings
-      if ($photoId) {
+      if ($photoIds) {
         if (isset($account['category_image']) && $account['category_image'])
           $xml .= '<HasGallery>true</HasGallery>';
 
-        $xml .= '<PhotoIds><PhotoId>' . $photoId . '</PhotoId></PhotoIds>';
+        $xml .= '<PhotoIds><PhotoId>'
+                . implode('</PhotoId><PhotoId>', $photoIds)
+                . '</PhotoId></PhotoIds>';
       }
 
       $xml .= '<ShippingOptions>';
@@ -1441,5 +1437,29 @@ EOT;
     array_walk($errors, 'trim');
 
     return array_filter($errors);
+  }
+
+  /**
+   * Get main image or all images depending on Submit all images setting
+   * and upload one by one, return IDs of uploaded images
+   *
+   * @param Mage_Catalog_Model_Product $product
+   *   Product model
+   *
+   * @param Mage_Core_Model_Store
+   *   Store model
+   *
+   * @return array
+   *   List of photo IDs returned by Trademe for uploaded images
+   */
+  protected function _getPhotoIds ($product, $store) {
+    $helper = Mage::helper('trademe/image');
+
+    return array_map(
+      [$this, 'uploadImage'],
+      $this->_getConfig(MVentory_TradeMe_Model_Config::_IMG_MULTIPLE)
+        ? $helper->getAllImages($product, $this->_imageSize, $store)
+        : [$helper->getImage($product, $this->_imageSize, $store)]
+    );
   }
 }

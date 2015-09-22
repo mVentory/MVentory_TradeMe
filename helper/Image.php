@@ -26,6 +26,10 @@
  */
 class MVentory_TradeMe_Helper_Image extends MVentory_TradeMe_Helper_Data
 {
+  const __E_NO_PREPARED_IMGS = <<<'EOT'
+Prepared images don't exist
+EOT;
+
   /**
    * Return full path to prepared main image for uploading to TradeMe
    * It tries to download image by the URL used on the frontend
@@ -56,30 +60,25 @@ class MVentory_TradeMe_Helper_Image extends MVentory_TradeMe_Helper_Data
     if ($store->getId != Mage::app()->getStore()->getId())
       $env = $this->changeStore($store);
 
-    try {
-      $image = $this->_get($image, $size, $store);
-    }
-    catch (Exception $e) {
-      if (isset($env))
-        $this->changeStore($env);
-
-      throw $e;
-    }
+    $images = $this->_get([$image], $size, $store);
 
     if (isset($env))
-        $this->changeStore($env);
+      $this->changeStore($env);
 
-    return $image;
+    if (!($images && isset($images[$image]) && $images[$image]))
+      throw new MVentory_TradeMe_Exception(self::__E_NO_PREPARED_IMGS);
+
+    return $images[$image];
   }
 
   /**
-   * Return full path to prepared image for uploading to TradeMe
+   * Return full path to prepared images for uploading to TradeMe
    * It tries to download image by the URL used on the frontend
    * if product's image doesn't exist on server (e.g. images are served from
    * some CDN service)
    *
-   * @param string
-   *   Product images
+   * @param array
+   *   List of product images
    *
    * @param array $size
    *   Array which contains 'width' and 'height' keys
@@ -87,104 +86,134 @@ class MVentory_TradeMe_Helper_Image extends MVentory_TradeMe_Helper_Data
    * @param Mage_Core_Model_Store $store
    *   Store object
    *
-   * @return string
-   *   Full path to prepared image
+   * @return array
+   *   List of full paths to prepared images
    *
    * @throws Exception
    *   If prepared image doesn't exist
    */
-  public function _get ($image, $size, $store) {
-    $settings = null;
+  public function _get ($images, $size, $store) {
+    if (!$images)
+      return [];
+
+    $padding = $this->_getPadding($store);
+
     $watermarkImg = $this->_getWatermarkImg($store);
+    $watermarkSize = $this->_getWatermarkSize($store);
+    $watermarkOpacity = $this->_getWatermarkOpacity($store);
+    $watermarkPos = $this->_getWatermarkPos($store);
 
-    $imageModel = Mage::getModel('catalog/product_image')
-      ->setDestinationSubdir('image')
-      ->setKeepFrame((bool) $watermarkImg)
-      ->setConstrainOnly(true)
-      ->setWidth($size['width'])
-      ->setHeight($size['height']);
+    //Re-use supplied array to store prepared images.
+    //But use supplied image names as keys, values will be filled with paths
+    //for corresponding prepared images
+    $images = array_flip($images);
 
-    if ($watermarkImg)
-      $imageModel
-        ->setWatermarkFile($watermarkImg)
-        ->setWatermarkSize($this->_getWatermarkSize($store))
-        ->setWatermarkImageOpacity($this->_getWatermarkOpacity($store))
-        ->setWatermarkPosition($this->_getWatermarkPos($store));
+    foreach ($images as $image => &$newImage) try {
+      //Array values are not empty after array_flip function, so set them
+      //to null
+      $newImage = null;
 
-    //Don't call this method in chain because some exts can override it
-    //but don't return correct object
-    $imageModel->setBaseFile($image);
+      $settings = null;
 
-    //Check if resized image exists before resizing it
-    $newImage = ($newImage = $imageModel->getNewFile())
-                ? $newImage
-                : $this->_buildFileName(
-                    $image,
-                    $settings = $this->_extractSettings($imageModel),
-                    $store
-                  );
-
-    if (file_exists($newImage))
-      return $newImage;
-
-    //Check if image processor is instance or child of Varien_Image because
-    //padding code depends on its internal things. It can be redeclared in
-    //some Magento extensions to implement different logic.
-    if (($scaleSize = $this->_getScaleSize($this->_getPadding($store), $size))
-        && ($imgProcessor = $imageModel->getImageProcessor())
-        && ($imgProcessor instanceof Varien_Image)) {
-
-      $imgProcessor->resize($scaleSize['width'], $scaleSize['height']);
-      $this->_pad($imgProcessor, $size);
-
-      unset($imgProcessor);
-    }
-    else
-      $imageModel->resize();
-
-    if ($watermarkImg)
-      $imageModel->setWatermark($watermarkImg);
-
-    $newImage = $imageModel
-      ->saveFile()
-      ->getNewFile();
-
-    if ($newImage && file_exists($newImage))
-      return $newImage;
-
-    $newImage = $this->_download(
-      $imageModel->getUrl(),
-      $this->_buildFileName(
-        $image,
-        $settings ?: $settings = $this->_extractSettings($imageModel),
-        $store
-      )
-    );
-
-    if (file_exists($newImage)) {
-      $image = null;
-
-      if ($scaleSize) {
-        $image = $this->_getVarienImage($newImage, $settings);
-
-        $image->resize($scaleSize['width'], $scaleSize['height']);
-        $this->_pad($image, $size);
-      }
+      $imageModel = Mage::getModel('catalog/product_image')
+        ->setDestinationSubdir('image')
+        ->setKeepFrame((bool) $watermarkImg)
+        ->setConstrainOnly(true)
+        ->setWidth($size['width'])
+        ->setHeight($size['height']);
 
       if ($watermarkImg)
-        $this->_addWatermark(
-          $image = $image ?: $this->_getVarienImage($newImage, $settings),
-          $settings
-        );
+        $imageModel
+          ->setWatermarkFile($watermarkImg)
+          ->setWatermarkSize($watermarkSize)
+          ->setWatermarkImageOpacity($watermarkOpacity)
+          ->setWatermarkPosition($watermarkPos);
 
-      if ($image)
-        $image->save($newImage);
+      //Don't call this method in chain because some exts can override it
+      //but don't return correct object
+      $imageModel->setBaseFile($image);
+
+      //Check if resized image exists before resizing it
+      $newImage = ($newImage = $imageModel->getNewFile())
+                  ? $newImage
+                  : $this->_buildFileName(
+                      $image,
+                      $settings = $this->_extractSettings($imageModel),
+                      $store
+                    );
+
+      if (file_exists($newImage))
+        continue;
+
+      //Check if image processor is instance or child of Varien_Image because
+      //padding code depends on its internal things. It can be redeclared in
+      //some Magento extensions to implement different logic.
+      if (($scaleSize = $this->_getScaleSize($padding, $size))
+          && ($imgProcessor = $imageModel->getImageProcessor())
+          && ($imgProcessor instanceof Varien_Image)) {
+
+        $imgProcessor->resize($scaleSize['width'], $scaleSize['height']);
+        $this->_pad($imgProcessor, $size);
+
+        unset($imgProcessor);
+      }
+      else
+        $imageModel->resize();
+
+      if ($watermarkImg)
+        $imageModel->setWatermark($watermarkImg);
+
+      $newImage = $imageModel
+        ->saveFile()
+        ->getNewFile();
+
+      if ($newImage && file_exists($newImage))
+        continue;
+
+      $newImage = $this->_download(
+        $imageModel->getUrl(),
+        $this->_buildFileName(
+          $image,
+          $settings ?: $settings = $this->_extractSettings($imageModel),
+          $store
+        )
+      );
+
+      if (file_exists($newImage)) {
+        $varienImage = null;
+
+        if ($scaleSize) {
+          $varienImage = $this->_getVarienImage($newImage, $settings);
+
+          $varienImage->resize($scaleSize['width'], $scaleSize['height']);
+          $this->_pad($varienImage, $size);
+        }
+
+        if ($watermarkImg)
+          $this->_addWatermark(
+            $varienImage = $varienImage
+                           ?: $this->_getVarienImage($newImage, $settings),
+            $settings
+          );
+
+        if ($varienImage)
+          $varienImage->save($newImage);
+      }
+
+      if (file_exists($newImage))
+        continue;
+
+      //Failed to prepare image, set it to null in the array of prepared images
+      $newImage = null;
+    }
+    catch (Exception $e) {
+      Mage::logException($e);
+
+      //Failed to prepare image, set it to null in the array of prepared images
+      $newImage = null;
     }
 
-    if (!file_exists($newImage))
-      throw new Exception('Prepared image doesn\'t exist');
-
-    return $newImage;
+    return $images;
   }
 
   /**

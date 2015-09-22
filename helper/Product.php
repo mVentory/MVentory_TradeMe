@@ -87,8 +87,17 @@ EOT;
       'cataloginventory/stock_item',
       'manage_stock',
       'product_id=entity_id',
-      $conds
+      $conds['status']
     );
+
+    if (isset($conds['qty']))
+      $products->joinField(
+        'inventory_qty',
+        'cataloginventory/stock_item',
+        'qty',
+        'product_id=entity_id',
+        $conds['qty']
+      );
 
     return $this;
   }
@@ -150,8 +159,18 @@ EOT;
     if (isset($modes[MVentory_TradeMe_Model_Config::STOCK_NOT_MANAGED]))
       $_modes[] = array('managed' => 0);
 
-    if (isset($modes[MVentory_TradeMe_Model_Config::STOCK_IN]))
-      $_modes[] = array('managed' => 1, 'stock' => 1);
+    if (isset($modes[MVentory_TradeMe_Model_Config::STOCK_IN])) {
+      $_mode = array('managed' => 1, 'stock' => 1);
+
+      $minQty = (int) $store->getConfig(
+        MVentory_TradeMe_Model_Config::_MIN_ALLOWED_QTY
+      );
+
+      if ($minQty > 1)
+        $_mode['min_qty'] = $minQty;
+
+      $_modes[] = $_mode;
+    }
 
     if (isset($modes[MVentory_TradeMe_Model_Config::STOCK_NO]))
       $_modes[] = array('managed' => 1, 'stock' => 0);
@@ -174,9 +193,8 @@ EOT;
    * @param Mage_Core_Model_Store $store
    *   Current store model
    *
-   * @return string|null
-   *   Prepared SQL conditions to filter product collection or null if there's
-   *   no conditions
+   * @return array
+   *   List of prepared SQL conditions to filter product collection
    */
   protected function _convertModesToConds ($modes, $store) {
     $storeManaged = (int) $store->getConfig(
@@ -199,14 +217,25 @@ EOT;
 
         $andCond[] = '{{table}}.use_config_manage_stock = 1';
 
-        if (isset($mode['stock']))
+        if (isset($mode['stock'])) {
           $andCond[] = '{{table}}.is_in_stock = ' . $mode['stock'];
+
+          if (isset($mode['min_qty']))
+            $qtyCond = '{{table}}.qty >= ' . $mode['min_qty'];
+        }
 
         $cond[] = implode(' AND ', $andCond);
       }
     }
 
-    return isset($cond) ? '(' . implode(') OR (', $cond) . ')' : null;
+    $conds = array(
+      'status' => isset($cond) ? '(' . implode(') OR (', $cond) . ')' : null
+    );
+
+    if (isset($qtyCond))
+      $conds['qty'] = $qtyCond;
+
+    return $conds;
   }
 
   /**

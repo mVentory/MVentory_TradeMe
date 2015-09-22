@@ -332,13 +332,7 @@ EOT;
     else
       $title = htmlspecialchars($title);
 
-    $price = $this->_getPrice(
-      $product,
-      $account,
-      $_data,
-      $overwrite,
-      $store->getBaseCurrency()
-    );
+    $price = $this->_getPrice($product, $account, $_data, $store, $overwrite);
 
     $buyNow = '';
 
@@ -648,8 +642,7 @@ EOT;
         $product,
         $account,
         $formData,
-        array(),
-        $store->getBaseCurrency()
+        $store
       );
 
     if(!isset($parameters['ReservePrice']))
@@ -1226,11 +1219,11 @@ EOT;
    * @param array $data
    *   Additional data
    *
+   * @param Mage_Core_Model_Store $store
+   *   Store model
+   *
    * @param array $overwrite
    *   Overwrite values
-   *
-   * @param Mage_Directory_Model_Currency $currency
-   *   Base currency of current store
    *
    * @return float
    *   Final price for TradeMe auction
@@ -1238,34 +1231,16 @@ EOT;
   protected function _getPrice ($product,
                                 $account,
                                 $data,
-                                $overwrite,
-                                $currency) {
+                                $store,
+                                $overwrite = []) {
 
-    if (isset($overwrite['price']))
-      return $overwrite['price'];
-
-    $website = $this->_getWebsite();
-    $helper = Mage::helper('trademe/product');
-
-    $price = $helper->getPrice($product, $website);
-
-    $price += $helper->getShippingRate(
-      $product,
-      $account['name'],
-      $website
-    );
-
-    if ($currency->getCode != MVentory_TradeMe_Model_Config::CURRENCY)
-      $price = $helper->currencyConvert(
-        $price,
-        $currency,
-        MVentory_TradeMe_Model_Config::CURRENCY,
-        $website->getDefaultStore()
-      );
-
-    return $this->_getAddFees($product, $data)
-               ? $helper->addFees($price)
-                 : $price;
+    return isset($overwrite['price'])
+      ? $overwrite['price']
+      : Mage::helper('trademe/auction')->getPrice(
+          $product,
+          array_merge($account, $data),
+          $store
+        );
   }
 
   /**

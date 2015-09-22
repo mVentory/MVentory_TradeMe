@@ -544,21 +544,6 @@ EOT;
         if (!$perShipping)
           continue;
 
-        $minimalPrice = $this->_helper->getMinimalPrice($perShipping);
-        $productPrice = $this->_tmProductHelper->getPrice(
-          $product,
-          $this->_website
-        );
-
-        MVentory_TradeMe_Model_Log::debug(array(
-          'product' => $product,
-          'product price' => $productPrice,
-          'minimal price' => $minimalPrice
-        ));
-
-        if ($minimalPrice && ($productPrice < $minimalPrice))
-          continue;
-
         $nameVariants = $this->_getProductNameVariants(
           $product,
 
@@ -812,24 +797,6 @@ EOT;
         ));
 
         if (!$perShipping)
-          continue;
-
-        $minimalPrice = $this->_helper->getMinimalPrice($perShipping);
-        $productPrice = $this->_tmProductHelper->getPrice(
-          $product,
-          $this->_website
-        );
-
-        MVentory_TradeMe_Model_Log::debug(array(
-          'product' => $product,
-          'product price' => $productPrice,
-          'minimal price' => $minimalPrice
-        ));
-
-        /**
-         * @todo Should we check minimal price limit for $1 auctions?
-         */
-        if ($minimalPrice && ($productPrice < $minimalPrice))
           continue;
 
         try {
@@ -1125,7 +1092,7 @@ EOT;
     if (!$website = $observer->getWebsite())
       return;
 
-    $accounts = Mage::helper('trademe')->getAccounts($website, false);
+    $accounts = Mage::helper('trademe')->getAccounts($website);
 
     foreach ($accounts as $account)
       if (!(isset($account['shipping_types']) && $account['shipping_types']))

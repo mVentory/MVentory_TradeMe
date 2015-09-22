@@ -62,6 +62,9 @@ EOT;
   const __E_AUCTION_DESC = <<<'EOT'
 Length of the description exceeded the limit of %d characters
 EOT;
+  const __E_MATCHING_MISSING = <<<'EOT'
+Product has empty value for %s attribute(s) required by the selected TradeMe category
+EOT;
   const __E_STORE_PAYMENT = <<<'EOT'
 TradeMe Payment methods are not selected
 EOT;
@@ -276,6 +279,11 @@ EOT;
         'Product doesn\'t have matched TradeMe category'
       );
 
+    if ($attrs = $this->_getAttrs($categoryId, $product)) {
+      $attrsXml = $this->_exportAttrsAsXml($attrs);
+      unset($attrs);
+    }
+
     $shippingType = MVentory_TradeMe_Model_Config::SHIPPING_UNDECIDED;
 
     Mage::unregister('product');
@@ -404,43 +412,8 @@ EOT;
                 )
               . '</PaymentMethod></PaymentMethods>';
 
-      /**
-       * @todo Temporarily disabled. Matching code is buggy in some corner cases
-       * and should be fixed and refactored.
-       */
-      //$attributes = $this->getCategoryAttrs($categoryId);
-      $attributes = false;
-
-      if ($attributes) {
-        $attributes = $helper->fillAttributes(
-          $product,
-          $attributes,
-          $helper->getMappingStore()
-        );
-
-        if ($attributes['error']) {
-          if (isset($attributes['required']))
-            return 'Product has empty "' . $attributes['required']
-                   . '" attribute';
-
-          if (isset($attributes['no_match']))
-            return 'Error in matching "' . $attributes['no_match']
-                   . '" attribute: incorrect value in "fake" store';
-        }
-
-        if ($attributes = $attributes['attributes']) {
-          $xml .= '<Attributes>';
-
-          foreach ($attributes as $attributeName => $attributeValue) {
-            $xml .= '<Attribute>';
-            $xml .= '<Name>' . htmlspecialchars($attributeName) . '</Name>';
-            $xml .= '<Value>' . htmlspecialchars($attributeValue) . '</Value>';
-            $xml .= '</Attribute>';
-          }
-
-          $xml .= '</Attributes>';
-        }
-      }
+      if (isset($attrsXml))
+        $xml .= $attrsXml;
 
       $xml .=  '<SKU>' . htmlspecialchars($product->getSku()) . '</SKU>';
       $xml .= '</ListingRequest>';
@@ -1335,6 +1308,40 @@ EOT;
       ',',
       $store->getConfig(MVentory_TradeMe_Model_Config::_PAYMENT_METHODS)
     );
+  }
+
+  protected function _getAttrs ($categoryId, $product) {
+    $attributes = $this->getCategoryAttrs($categoryId);
+    if (!$attributes)
+      return;
+
+    $helper = Mage::helper('trademe/attribute');
+
+    $attributes = $helper->fillAttributes(
+      $product,
+      $attributes,
+      $helper->getMappingStore()
+    );
+
+    if ($attributes['error'] && isset($attributes['required']))
+      throw new MVentory_TradeMe_ApiException(sprintf(
+        self::__E_MATCHING_MISSING,
+        $attributes['required']
+      ));
+
+    return $attributes['attributes'];
+  }
+
+  protected function _exportAttrsAsXml ($attrs) {
+    $xml = '';
+
+    foreach ($attrs as $name => $value)
+      $xml .= '<Attribute>'
+              . '<Name>' . htmlspecialchars($name) . '</Name>'
+              . '<Value>' . htmlspecialchars($value) . '</Value>'
+              .'</Attribute>';
+
+    return '<Attributes>' . $xml . '</Attributes>';
   }
 
   /**

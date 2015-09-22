@@ -27,7 +27,7 @@
 class MVentory_TradeMe_Helper_Image extends MVentory_TradeMe_Helper_Data
 {
   /**
-   * Return full path to prepared image for uploading to TradeMe
+   * Return full path to prepared main image for uploading to TradeMe
    * It tries to download image by the URL used on the frontend
    * if product's image doesn't exist on server (e.g. images are served from
    * someCDN service)
@@ -53,11 +53,48 @@ class MVentory_TradeMe_Helper_Image extends MVentory_TradeMe_Helper_Data
     if (!$image && $image == 'no_selection')
       return;
 
-    $settings = null;
-
     if ($store->getId != Mage::app()->getStore()->getId())
       $env = $this->changeStore($store);
 
+    try {
+      $image = $this->_get($image, $size, $store);
+    }
+    catch (Exception $e) {
+      if (isset($env))
+        $this->changeStore($env);
+
+      throw $e;
+    }
+
+    if (isset($env))
+        $this->changeStore($env);
+
+    return $image;
+  }
+
+  /**
+   * Return full path to prepared image for uploading to TradeMe
+   * It tries to download image by the URL used on the frontend
+   * if product's image doesn't exist on server (e.g. images are served from
+   * some CDN service)
+   *
+   * @param string
+   *   Product images
+   *
+   * @param array $size
+   *   Array which contains 'width' and 'height' keys
+   *
+   * @param Mage_Core_Model_Store $store
+   *   Store object
+   *
+   * @return string
+   *   Full path to prepared image
+   *
+   * @throws Exception
+   *   If prepared image doesn't exist
+   */
+  public function _get ($image, $size, $store) {
+    $settings = null;
     $watermarkImg = $this->_getWatermarkImg($store);
 
     $imageModel = Mage::getModel('catalog/product_image')
@@ -87,12 +124,8 @@ class MVentory_TradeMe_Helper_Image extends MVentory_TradeMe_Helper_Data
                     $store
                   );
 
-    if (file_exists($newImage)) {
-      if (isset($env))
-        $this->changeStore($env);
-
+    if (file_exists($newImage))
       return $newImage;
-    }
 
     //Check if image processor is instance or child of Varien_Image because
     //padding code depends on its internal things. It can be redeclared in
@@ -116,12 +149,8 @@ class MVentory_TradeMe_Helper_Image extends MVentory_TradeMe_Helper_Data
       ->saveFile()
       ->getNewFile();
 
-    if ($newImage && file_exists($newImage)) {
-      if (isset($env))
-        $this->changeStore($env);
-
+    if ($newImage && file_exists($newImage))
       return $newImage;
-    }
 
     $newImage = $this->_download(
       $imageModel->getUrl(),
@@ -151,9 +180,6 @@ class MVentory_TradeMe_Helper_Image extends MVentory_TradeMe_Helper_Data
       if ($image)
         $image->save($newImage);
     }
-
-    if (isset($env))
-      $this->changeStore($env);
 
     if (!file_exists($newImage))
       throw new Exception('Prepared image doesn\'t exist');

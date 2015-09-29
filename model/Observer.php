@@ -23,6 +23,7 @@
  *
  * @package MVentory/TradeMe
  * @author Anatoly A. Kazantsev <anatoly@mventory.com>
+ * @author Andrew Gilman <andrew@mventory.com>
  */
 class MVentory_TradeMe_Model_Observer {
 
@@ -188,14 +189,15 @@ EOT;
     $this->_store = $store;
     $this->_accounts = $accounts;
 
-    //Synch current auctions and list new
+    //Sync current auctions and list new
     $this->_syncAllAuctions();
+    $this->_automatedWithdrawal();
     $this->_listNormalAuctions();
     $this->_listFixedEndAuctions($job);
   }
 
   /**
-   * Synch current auctions
+   * Sync current auctions
    *
    * @return null
    */
@@ -1440,5 +1442,148 @@ EOT;
     );
 
     return $data;
+  }
+
+
+  /**
+   * Cron function to withdraw active listing when related products
+   * become out of stock
+   *
+   * TEMPORARY FIX ONLY. Required because we do not track alternative name auctions
+   * The method works by pulling all auctions from TM and matching their SKUs to a list of
+   * SKUs of all products enabled for TM and out_of_stock and withdrawing any matches.
+   *
+   */
+  public function _automatedWithdrawal () {
+    $helper = Mage::helper('trademe');
+    $connector = new MVentory_TradeMe_Model_Api();
+    $websites = Mage::app()->getWebsites();
+
+    $withdrawnAuctions = array();
+
+    foreach ($websites as $websiteId => $website) {
+      $enabled = $website->getConfig(
+        MVentory_TradeMe_Model_Config::_AUTO_WITHDRAW
+      );
+
+      if (!$enabled)
+        continue;
+
+      if (!$accounts = $helper->getAccounts($website, false))
+        continue;
+
+      if (!$skus = $this->_getSkus(array($websiteId)))
+        continue;
+
+      $websiteCode = $website->getCode();
+
+      $connector->setWebsiteId($website);
+
+      foreach ($accounts as $accountId => $account) {
+        $connector->setAccountId($accountId);
+
+        try {
+          $auctions = $connector->getAllSellingAuctions(10000);
+        }
+        catch (Exception $e) {
+          Mage::logException($e);
+
+          MVentory_TradeMe_Model_Log::debug(array(
+            'website' => $websiteCode,
+            'account' => $accountId,
+            'error on getting selling auctions' => $e->getMessage(),
+            'error' => true
+          ));
+
+          continue;
+        }
+
+        if (!$auctions)
+          continue;
+
+        foreach ($auctions['List'] as $auction) {
+          if (!(isset($auction['SKU'])
+            && ($sku = $auction['SKU'])
+            && isset($skus[$sku])))
+            continue;
+
+          try {
+            $result = $connector->remove(array(
+              'account_id' => $accountId,
+              'listing_id' => $auction['ListingId']
+            ));
+          }
+          catch (Exception $e) {
+            Mage::logException($e);
+            $result = $e->getMessage();
+          }
+
+          if ($result === true)
+            $withdrawnAuctions[] = $auction['ListingId'];
+
+          MVentory_TradeMe_Model_Log::debug(array(
+            'website' => $websiteCode,
+            'account' => $accountId,
+            'sku' => $sku,
+            'auction' => $auction['ListingId'],
+            'result' => $result,
+            'error' => $result !== true
+          ));
+        }
+      }
+    }
+
+    if ($withdrawnAuctions)
+      $this->_unlinkAuctions($withdrawnAuctions);
+
+  }
+
+  /**
+   * Get SKU fro all out of stock products which are allowed for TradeMe
+   * and are assigned to the specified website ID
+   *
+   * @param array $website
+   *   Website IDs to filter product
+   *
+   * @return array
+   *   List of SKU of out of stock products
+   */
+  protected function _getSkus ($website) {
+    return $collection = Mage::getResourceModel('trademe/product_collection')
+      ->addAttributeToFilter('type_id', 'simple')
+
+      //Load all allowed to list products (incl. for $1 dollar auctions)
+      ->addAttributeToFilter('tm_relist', array('gt' => 0))
+      ->addAttributeToFilter('image', array('nin' => array('no_selection', '')))
+      ->addAttributeToFilter(
+        'status',
+        Mage_Catalog_Model_Product_Status::STATUS_ENABLED
+      )
+      ->addWebsiteFilter($website)
+      ->joinField(
+        'inventory_in_stock',
+        'cataloginventory/stock_item',
+        'is_in_stock',
+        'product_id=entity_id',
+        '{{table}}.is_in_stock = 0'
+      )
+      ->getAllSkus();
+  }
+
+  /**
+   * Unlink auctions from related pruducts by supplied list of listing IDs
+   *
+   * @param array $auctions
+   *   List of listing IDs to unlink
+   *
+   * @return MVentory_TradeMe_Model_Cron
+   *   Instance of this class
+   */
+  protected function _unlinkAuctions ($auctions) {
+    Mage::getResourceModel('trademe/auction_collection')
+      ->addFieldToFilter('listing_id', array('in' => $auctions))
+      ->delete();
+
+    return $this;
   }
 }

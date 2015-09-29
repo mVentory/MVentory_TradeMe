@@ -153,9 +153,9 @@
             </unlink_all_auctions>
 
             <cron translate="label comment tooltip">
-              <label>Magento cron interval (in minutes)</label>
+              <label>TradeMe polling interval</label>
               <tooltip><![CDATA[Magento cron must be running for this feature to work.<br/>You can make listings manually with the cron disabled, but the site will not be able to check TradeMe for sales or auction expiration.]]></tooltip>
-              <comment><![CDATA[Interval to poll TradeMe for updates or 0 to disable polling. Enable <a href="https://www.google.co.nz/search?q=magento+cron.php" target="_blank" title="How to configure and troubleshoot Magento cron">Cron.php</a>.]]></comment>
+              <comment><![CDATA[Interval to poll TradeMe for updates (in minutes) or 0 to disable polling. Enable <a href="https://www.google.co.nz/search?q=magento+cron.php" target="_blank" title="How to configure and troubleshoot Magento cron">Cron.php</a>.]]></comment>
               <frontend_type>text</frontend_type>
               <backend_model>trademe/setting_backend_cron</backend_model>
 
@@ -268,6 +268,21 @@
               <sort_order>111</sort_order>
             </min_allowed_qty>
 
+            <auto_withdraw translate="label comment tooltip">
+              <label>Automatic Withdrawal</label>
+              <comment><![CDATA[<b>Please note:</b> you may incur TradeMe <a target="_blank" href="http://www.trademe.co.nz/help/18/fees-and-fee-calculator#general">withdrawal charges</a> with each withdrawal]]></comment>
+              <tooltip>Products that go out of stock can be automatically withdrawn from TradeMe. Polling interval
+                  must be enabled (more than 0) for this feature to work.</tooltip>
+              <frontend_type>select</frontend_type>
+              <source_model>adminhtml/system_config_source_yesno</source_model>
+
+              <show_in_default>0</show_in_default>
+              <show_in_website>1</show_in_website>
+              <show_in_store>0</show_in_store>
+
+              <sort_order>112</sort_order>
+            </auto_withdraw>
+
             <import translate="label comment tooltip">
               <label>Import configuration file</label>
               <comment>A valid config file is required for the extension to work</comment>
@@ -288,7 +303,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>112</sort_order>
+              <sort_order>113</sort_order>
             </import>
 
             <export translate="label">
@@ -299,7 +314,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>113</sort_order>
+              <sort_order>114</sort_order>
             </export>
           </fields>
         </settings>

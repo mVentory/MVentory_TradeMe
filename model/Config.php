@@ -34,6 +34,7 @@ class MVentory_TradeMe_Model_Config
   const _PAYMENT_METHODS = 'trademe/settings/payment_methods';
   const _STOCK_STATUS = 'trademe/settings/stock_status';
   const _MIN_ALLOWED_QTY = 'trademe/settings/min_allowed_qty';
+  const _AUTO_WITHDRAW = 'trademe/settings/auto_withdraw';
 
   const _IMG_MULTIPLE = 'trademe/image/allow_multiple';
   const _IMG_PADDING = 'trademe/image/padding';

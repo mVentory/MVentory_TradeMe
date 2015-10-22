@@ -742,15 +742,15 @@ EOT;
   }
 
   public function massCheck ($auctions) {
-    $items = $this->getAllSellingAuctions(count($auctions) * 10);
+    $items = $this->getAllSellingAuctions();
 
     foreach ($auctions as $auction)
-      foreach ($items['List'] as $item)
+      foreach ($items as $item)
         if (isset($item['ListingId'])
             && $item['ListingId'] == $auction['listing_id'])
           $auction['is_selling'] = true;
 
-    return $items['TotalCount'];
+    return count($items);
   }
 
   public function uploadImage ($image) {
@@ -1051,31 +1051,51 @@ EOT;
   }
 
   /**
-   * Return all selling auctions
-   *
-   * @param int $limit
-   *  Limit number of requested auctions
+   * Request a list of all active auctions from TradeMe.
    *
    * @return array
    *   List of auctions data
    */
-  public function getAllSellingAuctions ($limit) {
+  public function getAllSellingAuctions () {
+    $page = 1;  // response can consist of multiple pages
+
     $accessToken = $this->auth();
 
-    $response = $accessToken
+    $client = $accessToken
       ->getHttpClient($this->getConfig())
       ->setUri(
-          'https://api.'
-          . $this->_host
-          . '.co.nz/v1/MyTradeMe/SellingItems/All.json'
-        )
+        'https://api.'
+        . $this->_host
+        . '.co.nz/v1/MyTradeMe/SellingItems/All.json'
+      )
       ->setMethod(Zend_Http_Client::GET)
+      ->setParameterGet('rows', 5000)         // Request 5000 products per page of response
+      ->setParameterGet('page', $page);
 
-      //Request more rows than number of auctions to be sure that all listings
-      //from account will be included in a response
-      ->setParameterGet('rows', $limit)
-      ->request();
+    $response = $this->_checkSellingItemsResponse($client->request());
+    $itemCount = $response['PageSize'];
+    $items = $response['List'];
 
+      // Request additional pages if required
+    while ($itemCount < $response['TotalCount'] && !empty($response['List'])) {
+      $client->setParameterGet('page',++$page);
+      $response = $this->_checkSellingItemsResponse($client->request());
+      $itemCount += $response['PageSize'];
+      $items = array_merge($items,$response['List']);
+    }
+
+    return $items;
+  }
+
+  /**
+   * Check sanity of TradeMe response, decoding it in the process.
+   *
+   * @param $response
+   * @return mixed
+   *  Checked and decoded response
+   * @throws MVentory_TradeMe_ApiException
+   */
+  private function _checkSellingItemsResponse($response) {
     if (($status = $response->getStatus()) != 200)
       throw new MVentory_TradeMe_ApiException(sprintf(
         self::__E_RESPONSE_STATUS,
@@ -1088,24 +1108,30 @@ EOT;
     if ($body === '')
       throw new MVentory_TradeMe_ApiException(self::__E_RESPONSE_EMPTY);
 
-    $items = json_decode($body, true);
+    $response = json_decode($body, true);
 
-    if ($items === null)
+    if ($response === null)
       throw new MVentory_TradeMe_ApiException(self::__E_RESPONSE_DECODING);
 
-    if (!isset($items['List']))
+    if (!isset($response['List']))
       throw new MVentory_TradeMe_ApiException(sprintf(
         self::__E_RESPONSE_INCOMPLETE,
         'List'
       ));
 
-    if (!isset($items['TotalCount']))
+    if (!isset($response['TotalCount']))
       throw new MVentory_TradeMe_ApiException(sprintf(
         self::__E_RESPONSE_INCOMPLETE,
         'TotalCount'
       ));
 
-    return $items;
+    if (!isset($response['PageSize']))
+      throw new MVentory_TradeMe_ApiException(sprintf(
+        self::__E_RESPONSE_INCOMPLETE,
+        'PageSize'
+      ));
+
+    return $response;
   }
 
   public function _parseCategories (&$list, $categories, $names = array()) {

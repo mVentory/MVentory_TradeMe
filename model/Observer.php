@@ -1483,7 +1483,7 @@ EOT;
         $connector->setAccountId($accountId);
 
         try {
-          $auctions = $connector->getAllSellingAuctions(10000);
+          $auctions = $connector->getAllSellingAuctions();
         }
         catch (Exception $e) {
           Mage::logException($e);
@@ -1501,7 +1501,7 @@ EOT;
         if (!$auctions)
           continue;
 
-        foreach ($auctions['List'] as $auction) {
+        foreach ($auctions as $auction) {
           if (!(isset($auction['SKU'])
             && ($sku = $auction['SKU'])
             && isset($skus[$sku])))

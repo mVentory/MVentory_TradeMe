@@ -523,9 +523,8 @@ EOT;
 
     if ($xml === false)
       throw new MVentory_TradeMe_ApiException(self::__E_RESPONSE_DECODING);
-
-    MVentory_TradeMe_Model_Log::debug(array('response' => $xml));
-
+    MVentory_TradeMe_Model_Log::debug(array('response'    => (string) $xml->Success,
+                                            'description' => (string) $xml->Description));
     if ((string) $xml->Success != 'true')
       throw new MVentory_TradeMe_ApiException((string) $xml->Description);
 

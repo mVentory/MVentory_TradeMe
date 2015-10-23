@@ -23,7 +23,7 @@
  * @package MVentory/TradeMe
  * @author Anatoly A. Kazantsev <anatoly@mventory.com>
  */
-class MVentory_TradeMe_ListingController
+class MVentory_TradeMe_Trademe_ListingController
   extends Mage_Adminhtml_Controller_Action
 {
   public function submitAction () {

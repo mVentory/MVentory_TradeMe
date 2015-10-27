@@ -332,9 +332,21 @@ EOT;
 
     $price = $this->_getPrice($product, $account, $_data, $store, $overwrite);
 
+    $wasPrice = $this->_getWasPrice(
+      $price,
+      $product,
+      $account,
+      $_data,
+      $store,
+      $overwrite
+    );
+
+    if ($wasPrice)
+      $wasPrice = '<WasPrice>' . $wasPrice . '</WasPrice>';
+
     $buyNow = '';
 
-    if ($this->_getAllowBuyNow($_data, $overwrite))
+    if ($this->_getAllowBuyNow($_data, $overwrite) || $wasPrice)
       $buyNow = '<BuyNowPrice>' . $price . '</BuyNowPrice>';
 
     $duration = $this->_durations[$this->_getDuration($account, $overwrite)];
@@ -368,16 +380,21 @@ EOT;
 <IsBrandNew>' . $isBrandNew . '</IsBrandNew>
 <SendPaymentInstructions>true</SendPaymentInstructions>';
 
+      if ($photoIds
+          && isset($account['category_image'])
+          && $account['category_image'])
+        $xml .= '<HasGallery>true</HasGallery>';
+
+      //WasPrice option requires Quantity to be set
+      if ($wasPrice)
+        $xml .= '<Quantity>1</Quantity>';
+
       //Add photo to auction if we have one in the product and use it as gallery
       //image if it's allowed in the settings
-      if ($photoIds) {
-        if (isset($account['category_image']) && $account['category_image'])
-          $xml .= '<HasGallery>true</HasGallery>';
-
+      if ($photoIds)
         $xml .= '<PhotoIds><PhotoId>'
                 . implode('</PhotoId><PhotoId>', $photoIds)
                 . '</PhotoId></PhotoIds>';
-      }
 
       $xml .= '<ShippingOptions>';
 
@@ -408,7 +425,12 @@ EOT;
       if (isset($attrsXml))
         $xml .= $attrsXml;
 
+      //WasPrice option requires IsClearance flag
+      if ($wasPrice)
+        $xml .= '<IsClearance>1</IsClearance>';
+
       $xml .=  '<SKU>' . htmlspecialchars($product->getSku()) . '</SKU>';
+      $xml .= $wasPrice;
       $xml .= '</ListingRequest>';
 
       $client->setRawData($xml, 'application/xml');
@@ -606,6 +628,31 @@ EOT;
         $formData,
         $store
       );
+
+    /**
+     * We can't add WasPrice to existing account because it requires account
+     * to be "buy now only" (BuyNowPrice + Quantity). But we don't support
+     * creating of such auctions.
+     */
+    ////Set WasPrice field
+    //if (!isset($parameters['WasPrice'])) {
+    //  $wasPrice = $this->_getWasPrice(
+    //    $parameters['StartPrice'],
+    //    $product,
+    //    $account,
+    //    $formData,
+    //    $store
+    //  );
+    //
+    //  if ($wasPrice) {
+    //    $parameters['WasPrice'] = $wasPrice;
+    //
+    //    //WasPrice required Quantity and IsClearance options to be set
+    //    $parameters['BuyNowPrice'] = $parameters['StartPrice'];
+    //    $parameters['Quantity'] = 1;
+    //    $parameters['IsClearance'] = 1;
+    //  }
+    //}
 
     if(!isset($parameters['ReservePrice']))
       $parameters['ReservePrice'] = $parameters['StartPrice'];
@@ -1333,6 +1380,66 @@ EOT;
   }
 
   /**
+   * Calculate original price for auction
+   *
+   * @param Mage_Catalog_Model_Product $product
+   *   Product model
+   *
+   * @param array $account
+   *   Current account
+   *
+   * @param array $data
+   *   Additional data
+   *
+   * @param Mage_Core_Model_Store $store
+   *   Store model
+   *
+   * @param array $overwrite
+   *   Overwrite values
+   *
+   * @return float
+   *   Original price for TradeMe auction
+   */
+  protected function _getOriginalPrice ($product,
+                                        $account,
+                                        $data,
+                                        $store,
+                                        $overwrite = []) {
+
+    /**
+     * Remove values of final price and special price in the product
+     * to recalculate its final price based on original price.
+     *
+     * @see Mage_Catalog_Model_Product::getFinalPrice()
+     *   See this method to find why we need to remove final price
+     *
+     * @see Mage_Catalog_Model_Product_Type_Price::getFinalPrice()
+     *   See this method to find how final price is calculated
+     */
+
+    $specialPrice = $product->getSpecialPrice();
+    $finalPrice = $product->getFinalPrice();
+
+    $product
+      ->setSpecialPrice(null)
+      ->setFinalPrice(null);
+
+    $price = $this->_getPrice(
+      $product,
+      $account,
+      $data,
+      $store,
+      $overwrite
+    );
+
+    $product
+      ->setSpecialPrice($specialPrice)
+      ->setFinalPrice($finalPrice);
+
+    return $price;
+  }
+
+  /**
    * Check if Allow but now is allowed
    *
    * @param $data Data
@@ -1472,6 +1579,54 @@ EOT;
     return isset($overwrite['title'])
              ? $overwrite['title']
              : Mage::helper('trademe/auction')->getTitle ($product, $store);
+  }
+
+  /**
+   * Get value for WasPrice field (product's original price)
+   *
+   * @param float $price
+   *   Current auction price
+   *
+   * @param Mage_Catalog_Model_Product $product
+   *   Product model
+   *
+   * @param array $account
+   *   Current account
+   *
+   * @param array $data
+   *   Additional data
+   *
+   * @param Mage_Core_Model_Store $store
+   *   Store model
+   *
+   * @param array $overwrite
+   *   Overwrite values
+   *
+   * @return float
+   *   Value of WasPrice field
+   */
+  protected function _getWasPrice ($price,
+                                   $product,
+                                   $account,
+                                   $data,
+                                   $store,
+                                   $overwrite = []) {
+
+    if (isset($overwrite['price']))
+      return;
+
+    if (!Mage::helper('trademe/product')->hasSpecialPrice($product, $store))
+      return;
+
+    $originalPrice = $this->_getOriginalPrice(
+      $product,
+      $account,
+      $data,
+      $store,
+      $overwrite
+    );
+
+    return ($originalPrice > $price) ? $originalPrice : null;
   }
 
   public function getCategories () {

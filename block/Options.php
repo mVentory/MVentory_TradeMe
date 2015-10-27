@@ -228,10 +228,11 @@ class MVentory_TradeMe_Block_Options
 
     $_shippingTypes = array();
 
-    foreach ($shippingTypes as $value => $label) {
-      $emptyOptions['shipping_type'] = $value;
-      $_shippingTypes[] = $emptyOptions;
-    }
+    foreach ($shippingTypes as $value => $label)
+      $_shippingTypes[$value] = [
+        'condition' => null,
+        'settings' => [$emptyOptions]
+      ];
 
     return $_shippingTypes;
   }

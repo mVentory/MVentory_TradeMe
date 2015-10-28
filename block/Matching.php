@@ -178,9 +178,9 @@ class MVentory_TradeMe_Block_Matching
       'ajax' => true
     );
 
-    $addrule = $this->getUrl('trademe/matching/append/', $params);
-    $remove = $this->getUrl('trademe/matching/remove/', $params);
-    $reorder = $this->getUrl('trademe/matching/reorder/', $params);
+    $addrule = $this->getUrl('adminhtml/trademe_matching/append/', $params);
+    $remove = $this->getUrl('adminhtml/trademe_matching/remove/', $params);
+    $reorder = $this->getUrl('adminhtml/trademe_matching/reorder/', $params);
 
     return Mage::helper('core')->jsonEncode(compact('categories',
                                                     'addrule',

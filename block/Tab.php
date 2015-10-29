@@ -272,7 +272,7 @@ class MVentory_TradeMe_Block_Tab
     $label = $this->__('Remove');
     $onclick = 'setLocation(\''
                . $this->getUrl(
-                   'trademe/listing/remove/',
+                   'adminhtml/trademe_listing/remove/',
                    array('product_id' => $this->getProduct()->getId())
                  )
                . '\')';

@@ -171,7 +171,7 @@ class MVentory_TradeMe_Block_Matching
       'type' => MVentory_TradeMe_Block_Categories::TYPE_RADIO
     );
 
-    $categories = $this->getUrl('trademe/categories', $params);
+    $categories = $this->getUrl('adminhtml/trademe_categories', $params);
 
     $params = array(
       'set_id' => $this->_getSetId(),

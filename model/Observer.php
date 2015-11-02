@@ -1365,7 +1365,7 @@ EOT;
       ));
     } catch (Exception $e) {
       MVentory_TradeMe_Model_Log::debug(array(
-        'error on order creating' => $e->getMessage()
+        'error on order creation' => $e->getMessage()
       ));
 
       throw $e;

@@ -262,7 +262,7 @@ class MVentory_TradeMe_Helper_Order extends MVentory_TradeMe_Helper_Data
       );
 
       try {
-        $order->queueNewOrderEmail();
+        $order->sendNewOrderEmail();
       } catch (Exception $e) {
         Mage::logException($e);
       }

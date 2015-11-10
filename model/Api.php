@@ -284,8 +284,6 @@ EOT;
       unset($attrs);
     }
 
-    $shippingType = MVentory_TradeMe_Model_Config::SHIPPING_UNDECIDED;
-
     Mage::unregister('product');
     Mage::register('product', $product);
 
@@ -341,12 +339,13 @@ EOT;
 
     $duration = $this->_durations[$this->_getDuration($account, $overwrite)];
 
-    $shippingTypes
+    $shippingOpts = $this->_getShippingOptions($account);
+    $availShippingOpts
       = Mage::getModel('trademe/attribute_source_freeshipping')->toArray();
 
-    $shippingType = $shippingTypes[$shippingType];
-
-    unset($shippingTypes);
+    //Add Custom shipping option
+    $availShippingOpts[MVentory_TradeMe_Model_Config::SHIPPING_CUSTOM]
+      = 'Custom';
 
     $pickup = $this->_getPickup($_data, $account);
     $pickup = $this->_pickupValues[$pickup];
@@ -382,17 +381,17 @@ EOT;
 
       $xml .= '<ShippingOptions>';
 
-      if (isset($account['shipping_options']) && $account['shipping_options'])
-        foreach ($account['shipping_options'] as $shippingOption)
-          $xml .= '<ShippingOption><Type>Custom</Type><Price>'
-                  . $shippingOption['price']
-                  . '</Price><Method>'
-                  . $shippingOption['method']
-                  . '</Method></ShippingOption>';
-      else
-        $xml .= '<ShippingOption><Type>'
-                . $shippingType
-                . '</Type></ShippingOption>';
+      foreach ($shippingOpts as $shippingOpt) {
+        $xml .= '<ShippingOption>';
+        $xml .= '<Type>'. $availShippingOpts[$shippingOpt['Type']] . '</Type>';
+
+        if (isset($shippingOpt['Price'], $shippingOpt['Method'])) {
+          $xml .= '<Price>'. $shippingOpt['Price'] . '</Price>';
+          $xml .= '<Method>'. $shippingOpt['Method'] . '</Method>';
+        }
+
+        $xml .= '</ShippingOption>';
+      }
 
       $xml .= '</ShippingOptions>';
 
@@ -578,8 +577,6 @@ EOT;
         if ($value == -1 && isset($account[$key]))
           $formData[$key] = $account[$key];
 
-    $shippingType = MVentory_TradeMe_Model_Config::SHIPPING_UNDECIDED;
-
     if (!isset($parameters['Category']) && isset($formData['category'])
         && $formData['category'])
       $parameters['Category'] = $formData['category'];
@@ -599,15 +596,7 @@ EOT;
     }
 
     if (!isset($parameters['ShippingOptions']))
-      if (isset($account['shipping_options']) && $account['shipping_options'])
-        foreach ($account['shipping_options'] as $shippingOption)
-          $parameters['ShippingOptions'][] = array(
-            'Type' => MVentory_TradeMe_Model_Config::SHIPPING_CUSTOM,
-            'Price' => $shippingOption['price'],
-            'Method' => $shippingOption['method'],
-          );
-      else
-        $parameters['ShippingOptions'][]['Type'] = $shippingType;
+      $parameters['ShippingOptions'] = $this->_getShippingOptions($account);
 
     //set price
     if (!isset($parameters['StartPrice']))
@@ -1382,6 +1371,51 @@ EOT;
       ',',
       $store->getConfig(MVentory_TradeMe_Model_Config::_PAYMENT_METHODS)
     );
+  }
+
+  /**
+   * Return prepared data for shipping options
+   *
+   * @param array $account
+   *   Current account
+   *
+   * @return array
+   *   Prapared shipping options
+   */
+  protected function _getShippingOptions ($account) {
+    if (!isset($account['shipping_options']))
+      return [
+        ['Type' => MVentory_TradeMe_Model_Config::SHIPPING_UNDECIDED]
+      ];
+
+    $options = $account['shipping_options'];
+
+    if (is_array($options) && $options) {
+      $_options = [];
+
+      foreach ($options as $option)
+        $_options[] = [
+          'Type' => MVentory_TradeMe_Model_Config::SHIPPING_CUSTOM,
+          'Price' => $option['price'],
+          'Method' => isset($option['description'])
+            ? $option['description']
+            : $option['method'] //This is deprecated field
+        ];
+
+      return $_options;
+    }
+
+    $availableOptions = Mage::getModel('trademe/attribute_source_freeshipping')
+      ->toArray();
+
+    if (is_int($options) && isset($availableOptions[$options]))
+      return [
+        ['Type' => $options]
+      ];
+
+    return [
+      ['Type' => MVentory_TradeMe_Model_Config::SHIPPING_UNDECIDED]
+    ];
   }
 
   protected function _getAttrs ($categoryId, $product) {

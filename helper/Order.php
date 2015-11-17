@@ -117,6 +117,14 @@ class MVentory_TradeMe_Helper_Order extends MVentory_TradeMe_Helper_Data
    *   Address data
    */
   protected function _setAddresses ($quote, $address) {
+    // Temporary fix for Stores that have Region/Province set as required
+    // TM does not provide this info
+    try {
+      $address->setRegionId(1);
+    } catch (Exception $e) {
+      // try anyway
+    }
+
     $quoteAddress = Mage::getModel('sales/quote_address')
       ->importCustomerAddress($address)
       ->implodeStreetAddress();

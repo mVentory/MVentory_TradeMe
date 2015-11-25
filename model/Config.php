@@ -53,6 +53,8 @@ class MVentory_TradeMe_Model_Config
   const _1AUC_FULL_PRICE = 'trademe/one_dollar/list_full_price';
   const _1AUC_LIMIT = 'trademe/one_dollar/limit';
 
+  const _ORDER_CUSTOMER_ID = 'trademe/order/customer_id';
+
   const TITLE_MAX_LENGTH = 50;
   const DESCRIPTION_MAX_LENGTH = 2048;
   const PAYNOW_PRICE_LIMIT = 3000;

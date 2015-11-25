@@ -1321,12 +1321,6 @@ EOT;
   protected function _createOrder ($product, $account, $saleData) {
     MVentory_TradeMe_Model_Log::debug();
 
-    //Add ID of default buyer to the data array which is passed to
-    //buyer's helper to use it in case loading or creating of buyer fails.
-    $saleData['default_buyer_id'] = isset($account['buyer'])
-      ? (int) $account['buyer']
-      : null;
-
     list($buyer, $address) = Mage::helper('trademe/buyer')->get(
       $saleData,
       $this->_store

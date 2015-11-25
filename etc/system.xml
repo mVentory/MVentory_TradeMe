@@ -606,6 +606,31 @@
           </fields>
         </image>
 
+        <order translate="label">
+          <label>Order</label>
+
+          <show_in_default>1</show_in_default>
+          <show_in_website>1</show_in_website>
+          <show_in_store>0</show_in_store>
+
+          <sort_order>5</sort_order>
+
+          <fields>
+            <customer_id translate="label comment tooltip">
+              <label>Default customer ID</label>
+              <comment></comment>
+              <tooltip></tooltip>
+              <frontend_type>text</frontend_type>
+
+              <show_in_default>1</show_in_default>
+              <show_in_website>1</show_in_website>
+              <show_in_store>0</show_in_store>
+
+              <sort_order>1</sort_order>
+            </customer_id>
+          </fields>
+        </order>
+
         <help>
           <frontend_model>trademe/setting_help</frontend_model>
 
@@ -613,7 +638,7 @@
           <show_in_website>0</show_in_website>
           <show_in_store>0</show_in_store>
 
-          <sort_order>4</sort_order>
+          <sort_order>6</sort_order>
         </help>
 
         <help_account>
@@ -623,7 +648,7 @@
           <show_in_website>1</show_in_website>
           <show_in_store>0</show_in_store>
 
-          <sort_order>5</sort_order>
+          <sort_order>7</sort_order>
         </help_account>
         
         <build_info>
@@ -633,7 +658,7 @@
           <show_in_website>1</show_in_website>
           <show_in_store>1</show_in_store>
           
-          <sort_order>6</sort_order>
+          <sort_order>8</sort_order>
         </build_info>
       </groups>
     </trademe>

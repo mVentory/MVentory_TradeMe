@@ -65,7 +65,7 @@ class MVentory_TradeMe_Helper_Buyer extends MVentory_TradeMe_Helper_Data
     if ($buyer)
       return $buyer;
 */
-    return $this->_default($data['default_buyer_id'], $store);
+    return $this->_default($store);
   }
 
   /**
@@ -174,13 +174,14 @@ class MVentory_TradeMe_Helper_Buyer extends MVentory_TradeMe_Helper_Data
    * @return array
    *   Buyer model and address model
    */
-  protected function _default ($defaultBuyerId, $store) {
-    if (!$defaultBuyerId)
+  protected function _default ($store) {
+    $id = $store->getConfig(MVentory_TradeMe_Model_Config::_ORDER_CUSTOMER_ID);
+    if (!$id)
       return;
 
     $defaultBuyer = Mage::getModel('customer/customer')
       ->setStore($store)
-      ->load($defaultBuyerId);
+      ->load($id);
 
     return $defaultBuyer->getId()
              ? [$defaultBuyer, $defaultBuyer->getDefaultBillingAddress()]

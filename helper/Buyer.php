@@ -33,7 +33,8 @@ class MVentory_TradeMe_Helper_Buyer extends MVentory_TradeMe_Helper_Data
    * @var array
    */
   protected $_defaultAddressData = [
-    'name' => 'Name not specified',
+    'firstname' => 'First name not specified',
+    'lastname' => 'Last name not specified',
     'street' => ['Shipping address not specified', ''],
     'suburb' => '',
     'city' => 'City not specified',
@@ -201,8 +202,9 @@ class MVentory_TradeMe_Helper_Buyer extends MVentory_TradeMe_Helper_Data
    *   Prepare address data
    */
   protected function _prepareAddressData ($data, $buyer) {
-    if (!(isset($data['name']) && $data['name']))
-      $data['name'] = $buyer['nickname'];
+    foreach (['firstname', 'lastname'] as $key)
+      if (!(isset($data[$key]) && $data[$key]))
+        $data[$key] = $buyer['nickname'];
 
     return array_merge($this->_defaultAddressData, $data);
   }
@@ -229,8 +231,8 @@ class MVentory_TradeMe_Helper_Buyer extends MVentory_TradeMe_Helper_Data
 
     //Create address
     $address = Mage::getModel('customer/address')
-      ->setFirstname($data['name'])
-      ->setLastname($data['name'])
+      ->setFirstname($data['firstname'])
+      ->setLastname($data['lastname'])
       ->setStreet($data['street'])
       ->setCity($data['city'])
       ->setCountryId($countryId)

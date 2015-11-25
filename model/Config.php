@@ -55,6 +55,8 @@ class MVentory_TradeMe_Model_Config
 
   const _ORDER_ALLOW = 'trademe/order/allow';
   const _ORDER_CUSTOMER_ID = 'trademe/order/customer_id';
+  const _ORDER_CUSTOMER_DEF = 'trademe/order/only_default_customer';
+  const _ORDER_CUSTOMER_NEW = 'trademe/order/create_new_customer';
 
   const TITLE_MAX_LENGTH = 50;
   const DESCRIPTION_MAX_LENGTH = 2048;

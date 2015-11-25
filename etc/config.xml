@@ -253,6 +253,9 @@
         <!-- 1 = Yes -->
         <allow>1</allow>
 
+        <!-- 1 = Yes -->
+        <create_new_customer>1</create_new_customer>
+
       </order>
     </trademe>
   </default>

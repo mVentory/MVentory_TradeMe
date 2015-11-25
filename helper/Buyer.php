@@ -56,16 +56,26 @@ class MVentory_TradeMe_Helper_Buyer extends MVentory_TradeMe_Helper_Data
    *   Buyer model and address model
    */
   public function get ($data, $store) {
-// temporary disable bringing in of customer details
-// TODO: needs more work (ask Andy)
-/*    $buyer = $this->_load($data, $store);
-    if ($buyer)
-      return $buyer;
+    $onlyDefaultCustomer = Mage::getStoreConfigFlag(
+      MVentory_TradeMe_Model_Config::_ORDER_CUSTOMER_DEF,
+      $store
+    );
 
-    $buyer = $this->_create($data, $store);
-    if ($buyer)
-      return $buyer;
-*/
+    if ($onlyDefaultCustomer)
+      return $this->_default($store);
+
+    $customer = $this->_load($data, $store);
+    if ($customer)
+      return $customer;
+
+    $canCreateCustomer = Mage::getStoreConfigFlag(
+      MVentory_TradeMe_Model_Config::_ORDER_CUSTOMER_NEW,
+      $store
+    );
+
+    if ($canCreateCustomer && ($customer = $this->_create($data, $store)))
+      return $customer;
+
     return $this->_default($store);
   }
 

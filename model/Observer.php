@@ -202,6 +202,11 @@ EOT;
    * @return null
    */
   protected function _syncAllAuctions () {
+    $canCreateOrder = Mage::getStoreConfigFlag(
+      MVentory_TradeMe_Model_Config::_ORDER_ALLOW,
+      $this->_store
+    );
+
     foreach ($this->_accounts as $accountId => &$accountData) {
       $auctions = Mage::getResourceModel('trademe/auction_collection')
         ->addFieldToFilter('account_id', $accountId);
@@ -319,11 +324,12 @@ EOT;
             continue;
           }
 
-          $this->_createOrder(
-            $product,
-            $perShipping,
-            $connector->getSaleDataFromListing($listingDetails)
-          );
+          if ($canCreateOrder)
+            $this->_createOrder(
+              $product,
+              $perShipping,
+              $connector->getSaleDataFromListing($listingDetails)
+            );
         }
 
         $auction->delete();

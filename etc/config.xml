@@ -247,6 +247,13 @@
         <allow_multiple>0</allow_multiple>
 
       </image>
+
+      <order>
+
+        <!-- 1 = Yes -->
+        <allow>1</allow>
+
+      </order>
     </trademe>
   </default>
 

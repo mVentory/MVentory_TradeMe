@@ -644,6 +644,34 @@
               <sort_order>2</sort_order>
             </allow_send_email>
 
+            <create_shipment translate="label comment tooltip">
+              <label>Create shipment</label>
+              <comment></comment>
+              <tooltip></tooltip>
+              <frontend_type>select</frontend_type>
+              <source_model>adminhtml/system_config_source_yesno</source_model>
+
+              <show_in_default>1</show_in_default>
+              <show_in_website>1</show_in_website>
+              <show_in_store>0</show_in_store>
+
+              <sort_order>3</sort_order>
+            </create_shipment>
+
+            <create_invoice translate="label comment tooltip">
+              <label>Create invoice</label>
+              <comment></comment>
+              <tooltip></tooltip>
+              <frontend_type>select</frontend_type>
+              <source_model>adminhtml/system_config_source_yesno</source_model>
+
+              <show_in_default>1</show_in_default>
+              <show_in_website>1</show_in_website>
+              <show_in_store>0</show_in_store>
+
+              <sort_order>4</sort_order>
+            </create_invoice>
+
             <customer_settings translate="label">
               <label>Customer</label>
               <frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
@@ -652,7 +680,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>3</sort_order>
+              <sort_order>5</sort_order>
             </customer_settings>
 
             <customer_id translate="label comment tooltip">
@@ -665,7 +693,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>4</sort_order>
+              <sort_order>6</sort_order>
             </customer_id>
 
             <only_default_customer translate="label comment tooltip">
@@ -679,7 +707,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>5</sort_order>
+              <sort_order>7</sort_order>
             </only_default_customer>
 
             <create_new_customer translate="label comment tooltip">
@@ -698,7 +726,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>6</sort_order>
+              <sort_order>8</sort_order>
             </create_new_customer>
           </fields>
         </order>

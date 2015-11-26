@@ -55,6 +55,8 @@ class MVentory_TradeMe_Model_Config
 
   const _ORDER_ALLOW = 'trademe/order/allow';
   const _ORDER_EMAIL = 'trademe/order/allow_send_email';
+  const _ORDER_SHIPMENT = 'trademe/order/create_shipment';
+  const _ORDER_INVOICE = 'trademe/order/create_invoice';
   const _ORDER_CUSTOMER_ID = 'trademe/order/customer_id';
   const _ORDER_CUSTOMER_DEF = 'trademe/order/only_default_customer';
   const _ORDER_CUSTOMER_NEW = 'trademe/order/create_new_customer';

@@ -63,12 +63,34 @@ class MVentory_TradeMe_Helper_Order extends MVentory_TradeMe_Helper_Data
 
     $order = $this->_createOrder($quote, $store);
 
-    try {
-      $shipment = $this->_createShipment($order);
-      $invoice = $this->_createInvoice($order);
+    $canCreateShipment = Mage::getStoreConfigFlag(
+      MVentory_TradeMe_Model_Config::_ORDER_SHIPMENT,
+      $store
+    );
 
-      $this->_completeOrder($order, $shipment, $invoice);
+    $canCreateInvoice = Mage::getStoreConfigFlag(
+      MVentory_TradeMe_Model_Config::_ORDER_INVOICE,
+      $store
+    );
+
+    try {
+      $shipment = null;
+      if ($canCreateShipment)
+        $shipment = $this->_createShipment($order);
+
+      $invoice = null;
+      if ($canCreateInvoice)
+        $invoice = $this->_createInvoice($order);
     } catch (Exception $e) {
+      Mage::logException($e);
+    }
+
+    $order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, true);
+
+    try {
+      $this->_completeOrder($order, $shipment, $invoice);
+    }
+    catch (Exception $e) {
       Mage::logException($e);
     }
 
@@ -343,9 +365,15 @@ class MVentory_TradeMe_Helper_Order extends MVentory_TradeMe_Helper_Data
    *   Order invoice model
    */
   protected function _completeOrder ($order, $shipment, $invoice) {
-    $transactionSave = Mage::getModel('core/resource_transaction')
-      ->addObject($shipment)
-      ->addObject($invoice)
+    $transaction = Mage::getModel('core/resource_transaction');
+
+    if ($shipment)
+      $transaction->addObject($shipment);
+
+    if ($invoice)
+      $transaction->addObject($invoice);
+
+    $transaction
       ->addObject($order)
       ->save();
   }

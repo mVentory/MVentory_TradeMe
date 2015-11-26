@@ -61,7 +61,7 @@ class MVentory_TradeMe_Helper_Order extends MVentory_TradeMe_Helper_Data
 
     $this->_saveQuote($quote);
 
-    $order = $this->_createOrder($quote);
+    $order = $this->_createOrder($quote, $store);
 
     try {
       $shipment = $this->_createShipment($order);
@@ -251,10 +251,13 @@ class MVentory_TradeMe_Helper_Order extends MVentory_TradeMe_Helper_Data
    * @param Mage_Sales_Model_Quote $quote
    *   Quote model
    *
+   * @param Mage_Core_Model_Store $store
+   *   Store model
+   *
    * @return Mage_Sales_Model_Order
    *   Order model
    */
-  protected function _createOrder ($quote) {
+  protected function _createOrder ($quote, $store) {
     $customerResource = Mage::getModel('checkout/api_resource_customer');
     $customerResource->prepareCustomerForQuote($quote);
 
@@ -273,11 +276,20 @@ class MVentory_TradeMe_Helper_Order extends MVentory_TradeMe_Helper_Data
         ['order' => $order, 'quote' => $quote]
       );
 
-      try {
-        $order->sendNewOrderEmail();
-      } catch (Exception $e) {
-        Mage::logException($e);
-      }
+      $canSendEmail = Mage::getStoreConfigFlag(
+        MVentory_TradeMe_Model_Config::_ORDER_EMAIL,
+        $store
+      );
+
+      if ($canSendEmail)
+        try {
+          if (method_exists($order , 'queueNewOrderEmail'))
+            $order->queueNewOrderEmail();
+          else
+            $order->sendNewOrderEmail();
+        } catch (Exception $e) {
+          Mage::logException($e);
+        }
     }
 
     Mage::dispatchEvent(

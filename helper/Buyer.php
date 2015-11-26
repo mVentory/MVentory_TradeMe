@@ -139,8 +139,8 @@ class MVentory_TradeMe_Helper_Buyer extends MVentory_TradeMe_Helper_Data
 
     $buyer = Mage::getModel('customer/customer')
       ->setStore($store)
-      ->setFirstname($buyer['nickname'])
-      ->setLastname($buyer['memberId'])
+      ->setFirstname($addressData['firstname'])
+      ->setLastname($addressData['lastname'])
       ->setEmail($buyer['email']);
 
     try {

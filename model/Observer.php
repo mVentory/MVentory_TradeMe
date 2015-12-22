@@ -990,107 +990,120 @@ EOT;
     $items = $order->getAllItems();
 
     $productHelper = Mage::helper('mventory/product');
-    $trademe = Mage::helper('trademe');
+
+    $productsToUnlink = [];
 
     foreach ($items as $item) {
-      $productId = (int) $item->getProductId();
-
-      $auction = Mage::getModel('trademe/auction')->loadByProduct($productId);
-
-      if (!$auction->getId())
-        continue;
-
       $stockItem = Mage::getModel('cataloginventory/stock_item')
-        ->loadByProduct($productId);
+        ->loadByProduct($item->getProductId());
 
       if (!($stockItem->getManageStock() && $stockItem->getQty() == 0))
         continue;
 
-      $product = Mage::getModel('catalog/product')->load($productId);
+      $product = Mage::getModel('catalog/product')->load($item->getProductId());
+      if ($product->getId())
+        $productsToUnlink[] = $product;
+    }
 
-      $website = $productHelper->getWebsite($product);
-      $accounts = $trademe->getAccounts($website);
-      $accounts = $trademe->prepareAccounts($accounts, $product);
+    if (!$productsToUnlink)
+      return;
 
-      $accountId = $auction['account_id'];
-      $account = $accountId && isset($accounts[$accountId])
-                   ? $accounts[$accountId]
-                     : null;
+    $errors = $this->_removeAuctions($productsToUnlink);
 
-      //Avoid withdrawal by default
-      $avoidWithdrawal = true;
+    if ($errors) foreach ($errors as $error) {
+      //Send email with error message to website's general contact address
 
-      $fields = $trademe->getFields($product, $account);
+      $productUrl = $productHelper->getUrl($error['product']);
+      $listingId = $error['auction']->getUrl($website);
+
+      $subject = 'TradeMe: error on removing listing';
+      $message = 'Error on increasing price or withdrawing listing ('
+                 . $listingId
+                 . ') linked to product ('
+                 . $productUrl
+                 . ')'
+                 . ' Error: ' . $error['exception']->getMessage();
+
+      $productHelper->sendEmail($subject, $message);
+    }
+  }
+
+  protected function _removeAuctions ($products) {
+    $helper = Mage::helper('trademe');
+    $productHelper = Mage::helper('mventory/product');
+    $api = new MVentory_TradeMe_Model_Api();
+    $errorsData = [];
+
+    foreach ($products as $product) {
+      $auctions = Mage::getResourceModel('trademe/auction_collection')
+        ->addFieldToFilter('product_id', $product->getId());
+
+      if (!count($auctions))
+        continue;
 
       $attrs = $product->getAttributes();
+      $website = $productHelper->getWebsite($product);
+      $accounts = $helper->prepareAccounts(
+        $helper->getAccounts($website),
+        $product
+      );
 
-      if (isset($attrs['tm_avoid_withdrawal'])) {
-        $attr = $attrs['tm_avoid_withdrawal'];
+      foreach ($auctions as $auction) {
+        $accountId = $auction['account_id'];
+        $account = $accountId && isset($accounts[$accountId])
+          ? $accounts[$accountId]
+          : null;
 
-        if ($attr->getDefaultValue() != $fields['avoid_withdrawal']) {
-          $options = $attr
-                      ->getSource()
-                      ->toOptionArray();
+        $fields = $helper->getFields($product, $account);
 
-          if (isset($options[$fields['avoid_withdrawal']]))
-            $avoidWithdrawal = (bool) $fields['avoid_withdrawal'];
+        //Avoid withdrawal by default
+        $avoidWithdrawal = true;
+
+        if (isset($attrs['tm_avoid_withdrawal'])) {
+          $attr = $attrs['tm_avoid_withdrawal'];
+
+          if ($attr->getDefaultValue() != $fields['avoid_withdrawal']) {
+            $options = $attr
+              ->getSource()
+              ->toOptionArray();
+
+            if (isset($options[$fields['avoid_withdrawal']]))
+              $avoidWithdrawal = (bool) $fields['avoid_withdrawal'];
+          }
         }
-      }
-
-      $api = new MVentory_TradeMe_Model_Api();
-
-      if ($avoidWithdrawal) {
-        $price = $product->getPrice() * 5;
-
-        if ($fields['add_fees'])
-          $price = $trademe->addFees($price);
 
         try {
-          $api->update(
-            $product,
-            $auction,
-            array('StartPrice' => $price)
-          );
+          if ($avoidWithdrawal) {
+            $price = $product->getPrice() * 5;
+
+            if ($fields['add_fees'])
+              $price = $helper->addFees($price);
+
+            $api->update($product, $auction, ['StartPrice' => $price]);
+
+          }
+          else
+            $api
+              ->setWebsiteId($website)
+              ->remove($auction);
+
+          $auction->delete();
         }
         catch (Exception $e) {
           Mage::logException($e);
 
           $error = $e->getMessage();
+
+          $errorsData[] = [
+            'exception' => $e,
+            'product' => $products,
+            'auction' => $auction
+          ];
         }
       }
-      else
-        try {
-          $api
-            ->setWebsiteId($website)
-            ->remove($auction);
-        }
-        catch (Exception $e) {
-          Mage::logException($e);
-
-          $error = $e->getMessage();
-        }
-
-      if (isset($error)) {
-        //Send email with error message to website's general contact address
-
-        $productUrl = $productHelper->getUrl($product);
-        $listingId = $auction->getUrl($website);
-
-        $subject = 'TradeMe: error on removing listing';
-        $message = 'Error on increasing price or withdrawing listing ('
-                   . $listingId
-                   . ') linked to product ('
-                   . $productUrl
-                   . ')'
-                   . ' Error: ' . $error;
-
-        $productHelper->sendEmail($subject, $message);
-
-        continue;
-      }
-
-      $auction->delete();
     }
+
+    return $errorsData;
   }
 
   public function addTradeMeData ($observer) {

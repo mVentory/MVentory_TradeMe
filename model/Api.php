@@ -1222,6 +1222,9 @@ EOT;
     if (!isset($details['BidCount']))
       $details['BidCount'] = 0;
 
+    if (!isset($details['Sales']))
+      $details['Sales'] = [];
+
     return $details;
   }
 

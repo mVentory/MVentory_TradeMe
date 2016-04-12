@@ -283,6 +283,19 @@
               <sort_order>112</sort_order>
             </auto_withdraw>
 
+            <promotions translate="label comment">
+              <label>Apply promotions</label>
+              <comment>Select allowed promotions. Hold Ctrl to select multiple items.</comment>
+              <frontend_type>multiselect</frontend_type>
+              <source_model>trademe/setting_source_promotions</source_model>
+
+              <show_in_default>1</show_in_default>
+              <show_in_website>1</show_in_website>
+              <show_in_store>0</show_in_store>
+
+              <sort_order>113</sort_order>
+            </promotions>
+
             <import translate="label comment tooltip">
               <label>Import configuration file</label>
               <comment>A valid config file is required for the extension to work</comment>
@@ -303,7 +316,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>113</sort_order>
+              <sort_order>114</sort_order>
             </import>
 
             <export translate="label">
@@ -314,7 +327,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>114</sort_order>
+              <sort_order>115</sort_order>
             </export>
           </fields>
         </settings>

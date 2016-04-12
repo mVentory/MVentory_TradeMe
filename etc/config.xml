@@ -229,6 +229,9 @@
 
         <!-- 0 = No -->
         <auto_withdraw>0</auto_withdraw>
+
+        <!-- no = No promotion-->
+        <promotions>no</promotions>
       </settings>
 
       <one_dollar>

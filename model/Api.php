@@ -386,8 +386,10 @@ EOT;
           && $account['category_image'])
         $xml .= '<HasGallery>true</HasGallery>';
 
+      //CHANCES CHANGE: all auctions is Buy Now so we must set quantity for
+      //all of them
       //WasPrice option requires Quantity to be set
-      if ($wasPrice)
+      //if ($wasPrice)
         $xml .= '<Quantity>1</Quantity>';
 
       //Add photo to auction if we have one in the product and use it as gallery

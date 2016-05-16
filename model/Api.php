@@ -822,7 +822,7 @@ EOT;
 
     if (isset($sale['DeliveryAddress'])) {
       $_address = $sale['DeliveryAddress'];
-      $_name = array_pad(explode(' ', trim($_address['Name'])), 2, null);
+      $_name = array_pad(explode(' ', trim($_address['Name']), 2), 2, null);
 
       $address = [
         'firstname' => $_name[0],

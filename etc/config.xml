@@ -70,6 +70,7 @@
       </trademe>
     </helpers>
 
+    <!--
     <events>
       <checkout_type_onepage_save_order_after>
         <observers>
@@ -81,6 +82,7 @@
         </observers>
       </checkout_type_onepage_save_order_after>
     </events>
+    -->
 
     <template>
       <email>

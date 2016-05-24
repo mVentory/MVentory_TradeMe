@@ -90,18 +90,24 @@ class MVentory_TradeMe_Model_Account
 
     $token = $consumer->getAccessToken($data, unserialize($requestToken));
 
-    $data = array(
-      Zend_Oauth_Token::TOKEN_PARAM_KEY => $token->getToken(),
-      Zend_Oauth_Token::TOKEN_SECRET_PARAM_KEY => $token->getTokenSecret()
-    );
-
-    $path = 'trademe/' . $this->_accountId . '/access_token';
+    $path = 'trademe/' . $this->_accountId . '/';
     $websiteId = Mage::app()
                    ->getWebsite($this->_website)
                    ->getId();
 
     Mage::getConfig()
-      ->saveConfig($path, serialize($data), 'websites', $websiteId)
+      ->saveConfig(
+          $path . Zend_Oauth_Token::TOKEN_PARAM_KEY,
+          $token->getToken(),
+          'websites',
+          $websiteId
+        )
+      ->saveConfig(
+          $path . Zend_Oauth_Token::TOKEN_SECRET_PARAM_KEY,
+          $token->getTokenSecret(),
+          'websites',
+          $websiteId
+        )
       ->reinit();
 
     Mage::app()->reinitStores();

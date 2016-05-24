@@ -131,7 +131,25 @@ EOT;
         }
 
         foreach ($field as $key => $value)
-          $node->addChild($key, $value);
+
+          /**
+           * @todo Quck fix to add support for conditional fields, e.g.
+           *
+           *     <depends>
+           *       <enabled>1</enabled>
+           *     </depends>
+           *
+           *   The change only allow to add only one additonal level. It can
+           *   be replaced with general code which doesn't have depth limit.
+           */
+          if (is_array($value)) {
+            $subnode = $node->addChild($key);
+
+            foreach ($value as $subKey => $subValue)
+              $subnode->addChild($subKey, $subValue);
+          }
+          else
+            $node->addChild($key, $value);
 
         unset($key);
         unset($value);
@@ -149,14 +167,38 @@ EOT;
 
     $accounts = array();
 
-    foreach ($groups as $id => $group)
-      if (strpos($id, 'account_', 0) === 0)
-        if ($group['fields']['name']['value']
-            && $group['fields']['key']['value']
-            && $group['fields']['secret']['value'])
-          $accounts[$id] = $group['fields']['name']['value'];
-        else
+    //Remove accounts without required fields from the form data and collect
+    //account ID - account name pairs
+    foreach ($groups as $id => $group) {
+      if (strpos($id, 'account_', 0) !== 0)
+        continue;
+
+      $fields = $group['fields'];
+
+      //Account name is required field
+      $name = $fields['name']['value'];
+      if (!$name) {
+        unset($groups[$id]);
+        continue;
+      }
+
+      //Authorization tokens are required
+      $authType = $fields['auth_type']['value'];
+      switch ($authType) {
+        case MVentory_TradeMe_Model_Config::AUTH_CONSUMER_KEYS:
+          if ($fields['key']['value'] && $fields['secret']['value'])
+            break;
+        case MVentory_TradeMe_Model_Config::AUTH_PREGEN_KEYS:
+          if ($fields['oauth_token']['value']
+              && $fields['oauth_token_secret']['value'])
+            break;
+        default:
           unset($groups[$id]);
+          continue 2;
+      }
+
+      $accounts[$id] = $name;
+    }
 
     $configData->setGroups($groups);
 

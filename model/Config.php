@@ -61,6 +61,10 @@ class MVentory_TradeMe_Model_Config
   const _ORDER_CUSTOMER_DEF = 'trademe/order/only_default_customer';
   const _ORDER_CUSTOMER_NEW = 'trademe/order/create_new_customer';
 
+  //Type of TradeMe API authorization
+  const AUTH_CONSUMER_KEYS = 0;
+  const AUTH_PREGEN_KEYS = 1;
+
   const TITLE_MAX_LENGTH = 50;
   const DESCRIPTION_MAX_LENGTH = 2048;
   const PAYNOW_PRICE_LIMIT = 3000;

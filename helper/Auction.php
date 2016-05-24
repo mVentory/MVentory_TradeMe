@@ -215,7 +215,8 @@ class MVentory_TradeMe_Helper_Auction extends MVentory_TradeMe_Helper_Data
       return 3;
 
     //Auction was sold
-    if ($listingDetails['BidCount'] > 0)
+    //NOTE: Buy Now Only auctions don't have bids
+    if ($listingDetails['Sales'] || $listingDetails['BidCount'] > 0)
       return 2;
 
     //Auction wasn't sold or was withdrawn

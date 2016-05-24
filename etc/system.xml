@@ -86,29 +86,87 @@
               <sort_order>1</sort_order>
             </name>
 
-            <key translate="label comment tooltip">
-              <label>Consumer Key</label>
-              <comment><![CDATA[Copy from <a href="http://www.trademe.co.nz/MyTradeMe/Api/DeveloperOptions.aspx" target="_blank" title="Get the key now">My Trade Me</a>]]></comment>
-              <tooltip>Register a new TradeMe application of type "client" and copy the keys here. Application name and description can be anything you like.</tooltip>
-              <frontend_type>text</frontend_type>
+            <auth_type translate="label comment tooltip">
+              <label>Authorization type</label>
+              <comment></comment>
+              <tooltip></tooltip>
+              <frontend_type>select</frontend_type>
+              <source_model>trademe/setting_source_authtype</source_model>
 
               <show_in_default>0</show_in_default>
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
               <sort_order>2</sort_order>
-            </key>
+            </auth_type>
 
-            <secret translate="label">
-              <label>Consumer Secret</label>
+            <key translate="label comment tooltip">
+              <label>Consumer Key</label>
+              <comment><![CDATA[Copy from <a href="http://www.trademe.co.nz/MyTradeMe/Api/DeveloperOptions.aspx" target="_blank" title="Get the key now">My Trade Me</a>]]></comment>
+              <tooltip>Register a new TradeMe application of type "client" and copy the keys here. Application name and description can be anything you like.</tooltip>
               <frontend_type>text</frontend_type>
+
+              <depends>
+                <!-- 0 = Using consumer keys -->
+                <auth_type>0</auth_type>
+              </depends>
 
               <show_in_default>0</show_in_default>
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
               <sort_order>3</sort_order>
+            </key>
+
+            <secret translate="label">
+              <label>Consumer Secret</label>
+              <frontend_type>text</frontend_type>
+
+              <depends>
+                <!-- 0 = Using consumer keys -->
+                <auth_type>0</auth_type>
+              </depends>
+
+              <show_in_default>0</show_in_default>
+              <show_in_website>1</show_in_website>
+              <show_in_store>0</show_in_store>
+
+              <sort_order>4</sort_order>
             </secret>
+
+            <oauth_token translate="label comment tooltip">
+              <label>OAuth Token</label>
+              <comment></comment>
+              <tooltip></tooltip>
+              <frontend_type>text</frontend_type>
+
+              <depends>
+                <!-- 1 = Using pregenerated keys -->
+                <auth_type>1</auth_type>
+              </depends>
+
+              <show_in_default>0</show_in_default>
+              <show_in_website>1</show_in_website>
+              <show_in_store>0</show_in_store>
+
+              <sort_order>5</sort_order>
+            </oauth_token>
+
+            <oauth_token_secret translate="label">
+              <label>OAuth Token Secret</label>
+              <frontend_type>text</frontend_type>
+
+              <depends>
+                <!-- 1 = Using pregenerated keys -->
+                <auth_type>1</auth_type>
+              </depends>
+
+              <show_in_default>0</show_in_default>
+              <show_in_website>1</show_in_website>
+              <show_in_store>0</show_in_store>
+
+              <sort_order>6</sort_order>
+            </oauth_token_secret>
 
             <max_listings translate="label comment tooltip">
               <label>Max Number of Listings</label>
@@ -120,7 +178,7 @@
               <show_in_website>1</show_in_website>
               <show_in_store>0</show_in_store>
 
-              <sort_order>4</sort_order>
+              <sort_order>7</sort_order>
             </max_listings>
           </account_template>
 

@@ -19,16 +19,6 @@ This extension has been used by our customers for more than a year, but we only 
 
 Note, this extension requires installation of our [Magento Mobile API extension](https://github.com/mVentory/MVentory_API), but you do not have to use the [Android app](https://play.google.com/store/apps/details?id=com.mageventory) for it. We are working on removing this cross dependency.
 
-## License
-
-This source file is subject to a Commercial Software License.
-
-* No sharing - This file cannot be shared, published or distributed outside of the licensed organisation.
-
-* No Derivatives - You can make changes to this file for your own use, but you cannot share or redistribute the changes.
-
-The full text of the license was supplied to your organisation as part of the licensing agreement with mVentory.
-
 
 ## About the extension
 
